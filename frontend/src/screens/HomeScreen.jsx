@@ -1,7 +1,7 @@
 import { Row, Col } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useGetProductsQuery } from '../slices/recommendApiSlice';
+import { useGetProductRecommendationQuery } from '../slices/recommendApiSlice'
 import { Link } from 'react-router-dom';
 import Product from '../components/Product';
 import Loader from '../components/Loader';
@@ -14,11 +14,12 @@ const HomeScreen = () => {
   const { pageNumber, keyword } = useParams();
   const { cartItems } = useSelector((state) => state.cart);
 
-  const { data, isLoading, error } = useGetProductsQuery({
+  const { data, isLoading, error } = useGetProductRecommendationQuery({
     keyword,
     pageNumber,
     cartItems,
   });
+  
 
   return (
     <>
@@ -40,15 +41,15 @@ const HomeScreen = () => {
           <Meta />
           <h1>Recommended Products</h1>
           <Row>
-            {data.products.map((product) => (
+            {data.products?.map((product) => (
               <Col key={product._id} sm={12} md={6} lg={4} xl={3}>
                 <Product product={product} />
               </Col>
             ))}
           </Row>
           <Paginate
-            pages={data.pages}
-            page={data.page}
+            pages={data?.pages}
+            page={data?.page}
             keyword={keyword ? keyword : ''}
           />
         </>
