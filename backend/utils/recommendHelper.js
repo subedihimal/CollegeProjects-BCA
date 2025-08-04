@@ -30,25 +30,42 @@ const getRecommendedProducts = async (requestData) => {
   try {
     console.log('Request data received:', requestData);
     
-    // Extract cartItems from the request data
-    const cartItems = requestData.cartItems || requestData || [];
-    console.log('Cart items extracted:', cartItems);
+    // Extract data from request
+    const cartItems = requestData.cartItems || [];
+    const keyword = requestData.keyword || {};
+    const pageSize = Number(requestData.pageSize) || 8;
+    const page = Number(requestData.page) || 1;
     
+    console.log('Cart items extracted:', cartItems);
+    console.log('Cart items length:', cartItems.length);
+    
+    // If no cart items, return regular paginated products
+    if (!cartItems.length) {
+      console.log('No cart items, returning regular products with pagination');
+      
+      const count = await Product.countDocuments({ ...keyword });
+      const products = await Product.find({ ...keyword })
+        .limit(pageSize)
+        .skip(pageSize * (page - 1));
+      
+      return {
+        products,
+        page,
+        pages: Math.ceil(count / pageSize),
+      };
+    }
+    
+    // If cart items exist, do recommendation logic
     const products = await Product.find({});
     console.log('Products found:', products.length);
 
     if (!products.length) {
       console.log('No products found in database');
-      return [];
-    }
-
-    if (!cartItems.length) {
-      console.log('No cart items, returning popular products');
-      // Return top-rated or random products when cart is empty
-      const popularProducts = products
-        .sort((a, b) => b.rating - a.rating) // Sort by rating
-        .slice(0, 8); // Get top 8
-      return popularProducts;
+      return {
+        products: [],
+        page: 1,
+        pages: 1
+      };
     }
 
     const allCategories = [...new Set(products.map((p) => p.category))];
@@ -70,7 +87,11 @@ const getRecommendedProducts = async (requestData) => {
     // Handle case where no valid cart vectors found
     if (!cartVectors.length) {
       console.log('No valid cart vectors found');
-      return [];
+      return {
+        products: [],
+        page: 1,
+        pages: 1
+      };
     }
 
     console.log('Cart vectors length:', cartVectors.length);
@@ -86,21 +107,35 @@ const getRecommendedProducts = async (requestData) => {
       return { product, similarity };
     });
 
-    // Sort and return top results (excluding items already in cart)
+    // Sort all products by similarity (including cart items)
     const cartIds = new Set(cartItems.map((i) => i._id));
-    const recommended = scored
-      .filter((item) => !cartIds.has(item.product._id.toString()))
+    const allRecommended = scored
       .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, 10)
-      .map((item) => item.product);
+      .map((item) => ({
+        ...item.product.toObject(),
+        similarity: item.similarity,
+        inCart: cartIds.has(item.product._id.toString())
+      }));
 
-    console.log('Recommended products:', recommended.length);
+    console.log('Total recommended products:', allRecommended.length);
+    
+    // Calculate pagination
+    const totalRecommended = allRecommended.length;
+    const totalPages = Math.ceil(totalRecommended / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    
+    // Get products for current page
+    const paginatedRecommended = allRecommended.slice(startIndex, endIndex);
+
+    console.log(`Recommended products for page ${page}:`, paginatedRecommended.length);
+    console.log(`Total pages: ${totalPages}`);
     
     // Return in the format expected by getProducts function
     return {
-      products: recommended,
-      page: requestData.page || 1,
-      pages: Math.ceil(recommended.length / (requestData.pageSize || 8))
+      products: paginatedRecommended,
+      page: page,
+      pages: totalPages
     };
     
   } catch (error) {
@@ -114,25 +149,3 @@ const getRecommendedProducts = async (requestData) => {
 };
 
 export default getRecommendedProducts;
-
-
-
-//ORGINALL CODE
-
-// import Product from '../models/productModel.js';
-
-// const getRecommendedProducts = async ({ cartItems = [], keyword, pageSize, page }) => {
-
-//     const count = await Product.countDocuments({ ...keyword });
-//     const products = await Product.find({ ...keyword })
-//     .limit(pageSize)
-//     .skip(pageSize * (page - 1));
-    
-//   return {
-//     products,
-//     page,
-//     pages: Math.ceil(count / pageSize),
-//   };
-// };
-
-// export default getRecommendedProducts;

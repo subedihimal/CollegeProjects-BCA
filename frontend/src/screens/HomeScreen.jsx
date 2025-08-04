@@ -1,8 +1,8 @@
 import { Row, Col } from 'react-bootstrap';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useGetProductRecommendationQuery } from '../slices/recommendApiSlice'
-import { Link } from 'react-router-dom';
+import { useGetProductRecommendationQuery } from '../slices/recommendApiSlice';
+import { useGetProductsQuery } from '../slices/productsApiSlice';
 import Product from '../components/Product';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
@@ -14,12 +14,19 @@ const HomeScreen = () => {
   const { pageNumber, keyword } = useParams();
   const { cartItems } = useSelector((state) => state.cart);
 
-  const { data, isLoading, error } = useGetProductRecommendationQuery({
+  // Call both hooks unconditionally
+  const searched = useGetProductsQuery({ keyword, pageNumber });
+  const recommended = useGetProductRecommendationQuery({
     keyword,
     pageNumber,
     cartItems,
   });
-  
+
+  // Select correct hook result
+  const isSearch = Boolean(keyword);
+  const data = isSearch ? searched.data : recommended.data;
+  const isLoading = isSearch ? searched.isLoading : recommended.isLoading;
+  const error = isSearch ? searched.error : recommended.error;
 
   return (
     <>
@@ -30,6 +37,7 @@ const HomeScreen = () => {
           Go Back
         </Link>
       )}
+
       {isLoading ? (
         <Loader />
       ) : error ? (
@@ -39,11 +47,11 @@ const HomeScreen = () => {
       ) : (
         <>
           <Meta />
-          <h1>Recommended Products</h1>
+          <h1>{isSearch ? 'Search Results' : 'Recommended Products'}</h1>
           <Row>
-            {data.products?.map((product) => (
+            {data?.products?.map((product) => (
               <Col key={product._id} sm={12} md={6} lg={4} xl={3}>
-                <Product product={product} />
+                <Product product={product} showInCartFlag = {true} />
               </Col>
             ))}
           </Row>
