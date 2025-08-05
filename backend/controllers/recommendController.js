@@ -11,14 +11,16 @@ const getProducts = asyncHandler(async (req, res) => {
   const userId = req.body.userId;
   const viewedProducts = req.body.viewedProducts || [];
   
-  const keyword = req.body.keyword
+  // Fix the keyword logic
+  const keyword = req.body.keyword && req.body.keyword.name
     ? {
         name: {
-          $regex: req.query.keyword,
+          $regex: req.body.keyword.name, // Make sure this is a string
           $options: 'i',
         },
       }
     : {};
+    
   const result = await getRecommendedProducts({
     keyword,
     cartItems,
