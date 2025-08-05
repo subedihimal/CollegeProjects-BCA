@@ -20,17 +20,26 @@ const Paginate = ({ pages, page, isAdmin = false, keyword = '' }) => {
             <Pagination.Item 
               key={x + 1} 
               active={x + 1 === page}
-              // Remove the as={Link} - this might be causing issues
+              style={{ 
+                padding: '0',     // Remove all padding
+                margin: '0',      // Remove margin
+                border: 'none'    // Remove border conflicts
+              }}
             >
               <Link 
                 to={targetUrl}
                 
-  style={{ 
-    textDecoration: 'none', 
-    color: 'inherit',
-    padding: '0.75rem 1rem', // Bigger clickable area
-    display: 'inline-block'
-  }}
+              style={{ 
+                textDecoration: 'none', 
+                color: 'inherit',
+                display: 'block',
+                width: '100%',
+                height: '100%',
+                padding: '0.5rem 0.75rem',
+                textAlign: 'center',
+                position: 'relative',  // This helps cover everything
+                zIndex: '1'    
+              }}
             
                 onClick={() => console.log('React Router Link clicked:', targetUrl)}
               >
