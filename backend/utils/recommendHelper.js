@@ -145,24 +145,13 @@ const getRecommendedProducts = async (requestData) => {
     const userId = requestData.userId;
     const pageSize = Number(requestData.pageSize) || 8;
     const page = Number(requestData.page) || 1;
-    
-    // Handle keyword search
-    const rawKeyword = requestData.keyword || {};
-    const keyword = rawKeyword?.name ? {
-      name: { $regex: String(rawKeyword.name), $options: 'i' }
-    } : {};
-    
+       
     // Get purchase history
     const purchaseHistory = await getUserPurchaseHistory(userId);
     
     // If no user activity, return latest products
     if (cartItems.length === 0 && purchaseHistory.length === 0 && viewedProducts.length === 0) {
-      const count = await Product.countDocuments({ ...keyword });
-      const products = await Product.find({ ...keyword })
-        .sort({ createdAt: -1 })
-        .limit(pageSize)
-        .skip(pageSize * (page - 1));
-      
+
       return {
         products: products.map(product => ({
           ...product.toObject(),
