@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -21,6 +21,7 @@ import Loader from '../components/Loader';
 import Message from '../components/Message';
 import Meta from '../components/Meta';
 import { addToCart } from '../slices/cartSlice';
+import { trackProductView } from '../slices/productViewsSlice';
 
 const ProductScreen = () => {
   const { id: productId } = useParams();
@@ -48,6 +49,24 @@ const ProductScreen = () => {
 
   const [createReview, { isLoading: loadingProductReview }] =
     useCreateReviewMutation();
+
+  // Track product view when component mounts and product data is available
+  useEffect(() => {
+    if (product) {
+      dispatch(trackProductView({
+        productId: product._id,
+        productData: {
+          _id: product._id,
+          name: product.name,
+          image: product.image,
+          brand: product.brand,
+          category: product.category,
+          price: product.price,
+          rating: product.rating
+        }
+      }));
+    }
+  }, [dispatch, product]);
 
   const submitHandler = async (e) => {
     e.preventDefault();

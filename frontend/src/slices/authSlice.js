@@ -16,11 +16,10 @@ const authSlice = createSlice({
     },
     logout: (state, action) => {
       state.userInfo = null;
-      // Remove specific items instead of clearing everything
+      // Clear all localStorage items
       localStorage.removeItem('userInfo');
       localStorage.removeItem('cart');
-      // Or if you want to clear everything:
-      // localStorage.clear();
+      localStorage.removeItem('productViews'); // Add this line
     },
   },
 });
