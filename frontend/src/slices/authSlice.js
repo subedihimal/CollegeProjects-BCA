@@ -16,13 +16,16 @@ const authSlice = createSlice({
     },
     logout: (state, action) => {
       state.userInfo = null;
-      localStorage.clear();
+      // Remove specific items instead of clearing everything
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('cart');
+      // Or if you want to clear everything:
+      // localStorage.clear();
     },
   },
 });
 
 export const { setCredentials, logout } = authSlice.actions;
 export const selectCurrentUserId = (state) => state.auth.userInfo?._id || null;
-
 
 export default authSlice.reducer;

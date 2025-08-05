@@ -10,7 +10,6 @@ const getProducts = asyncHandler(async (req, res) => {
   const page = Number(req.body.pageNumber) || 1;
   const cartItems = req.body.cartItems;
   const userId = req.body.userId;
-  console.log('User ID:', userId);
   
   const keyword = req.body.keyword
     ? {

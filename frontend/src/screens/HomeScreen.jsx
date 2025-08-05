@@ -1,4 +1,4 @@
-import { Row, Col } from 'react-bootstrap';
+import { Row, Col, Badge } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useGetProductRecommendationQuery } from '../slices/recommendApiSlice';
@@ -50,7 +50,17 @@ const HomeScreen = () => {
       ) : (
         <>
           <Meta />
-          <h1>{isSearch ? 'Search Results' : 'Recommended Products'}</h1>
+          <div className="d-flex align-items-center justify-content-between mb-3">
+              <h1 className="mb-0">
+                {isSearch ? 'Search Results' : 'Recommended Products'}
+              </h1>
+              
+              {!isSearch && data?.isExploreMode && (
+                <Badge bg="success" className="fs-6 px-3 py-2">
+                  🔍 Explore more to get recommendations
+                </Badge>
+              )}
+            </div>
           <Row>
             {data?.products?.map((product) => (
               <Col key={product._id} sm={12} md={6} lg={4} xl={3}>

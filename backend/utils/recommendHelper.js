@@ -6,7 +6,7 @@ const getUserPurchaseHistory = async (userId) => {
   if (!userId) return [];
   
   try {
-    // Get user's completed/paid orders
+    // Get user's orders (paid or unpaid)
     const orders = await Order.find({ 
       user: userId,
     }).populate('orderItems.product');
@@ -141,15 +141,59 @@ const getRecommendedProducts = async (requestData) => {
     // Get user's purchase history
     const purchaseHistory = await getUserPurchaseHistory(userId);
     
+    // If no cart items and no purchase history, return latest products with explore flag
+    if (cartItems.length === 0 && purchaseHistory.length === 0) {
+      const count = await Product.countDocuments({ ...keyword });
+      const products = await Product.find({ ...keyword })
+        .sort({ createdAt: -1 }) // Sort by latest products
+        .limit(pageSize)
+        .skip(pageSize * (page - 1));
+      
+      // Add explore flag to each product
+      const productsWithExploreFlag = products.map(product => ({
+        ...product.toObject(),
+        exploreToGetRecommendations: true, // Flag for frontend
+        inCart: false,
+        previouslyPurchased: false
+      }));
+      
+      return {
+        products: productsWithExploreFlag,
+        page,
+        pages: Math.ceil(count / pageSize),
+        isExploreMode: true // Flag for frontend to show explore message
+      };
+    }
+    
     // Combine cart items with recent purchases for better recommendations
     const allUserItems = [...cartItems];
     
-    // Add recent purchases (last 10) to recommendation base with recency weighting
-    if (purchaseHistory.length > 0) {
+    // If cart is empty but user has purchase history, use only purchase history for recommendations
+    if (cartItems.length === 0 && purchaseHistory.length > 0) {
+      // Use only recent purchases for recommendations
       const recentPurchases = purchaseHistory.slice(0, 10).map((product, index) => {
-        const recencyWeight = 1 - (index * 0.1); // Newer purchases get higher weight
+        const recencyWeight = 1 - (index * 0.1);
         return {
-          _id: product._id,
+          _id: product._id.toString(), // Convert ObjectId to string
+          name: product.name,
+          brand: product.brand,
+          category: product.category,
+          description: product.description,
+          price: product.price,
+          rating: product.rating,
+          weight: recencyWeight,
+          purchaseDate: product.purchaseDate
+        };
+      });
+      
+      allUserItems.push(...recentPurchases);
+    }
+    // If cart has items and user has purchase history, combine both
+    else if (cartItems.length > 0 && purchaseHistory.length > 0) {
+      const recentPurchases = purchaseHistory.slice(0, 10).map((product, index) => {
+        const recencyWeight = 1 - (index * 0.1);
+        return {
+          _id: product._id.toString(), // Convert ObjectId to string
           name: product.name,
           brand: product.brand,
           category: product.category,
@@ -164,17 +208,13 @@ const getRecommendedProducts = async (requestData) => {
       allUserItems.push(...recentPurchases);
     }
     
-    // If no cart items and no purchase history, return regular paginated products
-    if (!allUserItems.length) {
-      const count = await Product.countDocuments({ ...keyword });
-      const products = await Product.find({ ...keyword })
-        .limit(pageSize)
-        .skip(pageSize * (page - 1));
-      
+    // If still no user items (shouldn't happen), return empty
+    if (allUserItems.length === 0) {
       return {
-        products,
-        page,
-        pages: Math.ceil(count / pageSize),
+        products: [],
+        page: 1,
+        pages: 1,
+        isExploreMode: false
       };
     }
     
@@ -199,7 +239,9 @@ const getRecommendedProducts = async (requestData) => {
 
     // Build user vector (average of product vectors from cart + purchases)
     const userVectors = allUserItems.map((item) => {
-      const product = products.find((p) => p._id.toString() === item._id);
+      // Convert ObjectId to string for comparison
+      const itemId = item._id.toString();
+      const product = products.find((p) => p._id.toString() === itemId);
       return product
         ? buildFeatureVector(product, allCategories, allBrands, priceRange, ratingRange)
         : null;
@@ -294,7 +336,8 @@ const getRecommendedProducts = async (requestData) => {
     return {
       products: paginatedRecommended,
       page: page,
-      pages: totalPages
+      pages: totalPages,
+      isExploreMode: false // Not in explore mode when we have recommendations
     };
     
   } catch (error) {
