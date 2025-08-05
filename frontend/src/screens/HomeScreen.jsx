@@ -10,11 +10,15 @@ import Message from '../components/Message';
 import Paginate from '../components/Paginate';
 import ProductCarousel from '../components/ProductCarousel';
 import Meta from '../components/Meta';
+import { selectViewedProducts } from '../slices/productViewsSlice'; 
 
 const HomeScreen = () => {
   const { pageNumber, keyword } = useParams();
   const { cartItems } = useSelector((state) => state.cart);
-    const userId = useSelector(selectCurrentUserId);
+  const userId = useSelector(selectCurrentUserId);
+  const viewedProducts = useSelector(selectViewedProducts);
+  // Convert viewed products object to array format
+  const viewedProductsArray = Object.values(viewedProducts);
 
   // Call both hooks unconditionally
   const searched = useGetProductsQuery({ keyword, pageNumber });
@@ -22,7 +26,8 @@ const HomeScreen = () => {
     keyword,
     pageNumber,
     cartItems,
-    userId
+    userId,
+    viewedProducts: viewedProductsArray
   });
 
   // Select correct hook result

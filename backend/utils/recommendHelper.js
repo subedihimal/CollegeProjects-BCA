@@ -137,12 +137,13 @@ const getRecommendedProducts = async (requestData) => {
     const pageSize = Number(requestData.pageSize) || 8;
     const page = Number(requestData.page) || 1;
     const userId = requestData.userId;
+    const viewedProducts = requestData.viewedProducts || []; // Add viewed products
     
     // Get user's purchase history
     const purchaseHistory = await getUserPurchaseHistory(userId);
     
-    // If no cart items and no purchase history, return latest products with explore flag
-    if (cartItems.length === 0 && purchaseHistory.length === 0) {
+    // If no cart items, no purchase history, and no viewed products, return latest products with explore flag
+    if (cartItems.length === 0 && purchaseHistory.length === 0 && viewedProducts.length === 0) {
       const count = await Product.countDocuments({ ...keyword });
       const products = await Product.find({ ...keyword })
         .sort({ createdAt: -1 }) // Sort by latest products
@@ -165,47 +166,86 @@ const getRecommendedProducts = async (requestData) => {
       };
     }
     
-    // Combine cart items with recent purchases for better recommendations
+    // Combine cart items with recent purchases and viewed products for better recommendations
     const allUserItems = [...cartItems];
     
-    // If cart is empty but user has purchase history, use only purchase history for recommendations
-    if (cartItems.length === 0 && purchaseHistory.length > 0) {
-      // Use only recent purchases for recommendations
-      const recentPurchases = purchaseHistory.slice(0, 10).map((product, index) => {
-        const recencyWeight = 1 - (index * 0.1);
+    // Add viewed products to recommendation base (weight by view count)
+    if (viewedProducts.length > 0) {
+      const viewedProductsForRecommendation = viewedProducts.map((product) => {
+        // Progressive weighting based on view count
+        let viewWeight;
+        if (product.viewCount === 1) {
+          viewWeight = 0.2; // Single view - low influence
+        } else if (product.viewCount <= 3) {
+          viewWeight = 0.4; // 2-3 views - moderate influence
+        } else if (product.viewCount <= 5) {
+          viewWeight = 0.6; // 4-5 views - good influence
+        } else if (product.viewCount <= 10) {
+          viewWeight = 0.8; // 6-10 views - strong influence
+        } else {
+          viewWeight = 1.0; // 10+ views - maximum influence
+        }
+        
         return {
-          _id: product._id.toString(), // Convert ObjectId to string
+          _id: product._id.toString(),
           name: product.name,
           brand: product.brand,
           category: product.category,
           description: product.description,
           price: product.price,
           rating: product.rating,
-          weight: recencyWeight,
-          purchaseDate: product.purchaseDate
+          weight: viewWeight,
+          viewCount: product.viewCount,
+          lastViewed: product.lastViewed
         };
       });
       
-      allUserItems.push(...recentPurchases);
+      allUserItems.push(...viewedProductsForRecommendation);
     }
-    // If cart has items and user has purchase history, combine both
-    else if (cartItems.length > 0 && purchaseHistory.length > 0) {
-      const recentPurchases = purchaseHistory.slice(0, 10).map((product, index) => {
-        const recencyWeight = 1 - (index * 0.1);
-        return {
-          _id: product._id.toString(), // Convert ObjectId to string
-          name: product.name,
-          brand: product.brand,
-          category: product.category,
-          description: product.description,
-          price: product.price,
-          rating: product.rating,
-          weight: recencyWeight,
-          purchaseDate: product.purchaseDate
-        };
-      });
-      
-      allUserItems.push(...recentPurchases);
+    
+    // If cart is empty but user has purchase history or viewed products, use them for recommendations
+    if (cartItems.length === 0 && (purchaseHistory.length > 0 || viewedProducts.length > 0)) {
+      // Use recent purchases for recommendations
+      if (purchaseHistory.length > 0) {
+        const recentPurchases = purchaseHistory.slice(0, 10).map((product, index) => {
+          const recencyWeight = 1 - (index * 0.1);
+          return {
+            _id: product._id.toString(), // Convert ObjectId to string
+            name: product.name,
+            brand: product.brand,
+            category: product.category,
+            description: product.description,
+            price: product.price,
+            rating: product.rating,
+            weight: recencyWeight,
+            purchaseDate: product.purchaseDate
+          };
+        });
+        
+        allUserItems.push(...recentPurchases);
+      }
+    }
+    // If cart has items and user has purchase history or viewed products, combine all
+    else if (cartItems.length > 0 && (purchaseHistory.length > 0 || viewedProducts.length > 0)) {
+      // Add purchase history
+      if (purchaseHistory.length > 0) {
+        const recentPurchases = purchaseHistory.slice(0, 10).map((product, index) => {
+          const recencyWeight = 1 - (index * 0.1);
+          return {
+            _id: product._id.toString(), // Convert ObjectId to string
+            name: product.name,
+            brand: product.brand,
+            category: product.category,
+            description: product.description,
+            price: product.price,
+            rating: product.rating,
+            weight: recencyWeight,
+            purchaseDate: product.purchaseDate
+          };
+        });
+        
+        allUserItems.push(...recentPurchases);
+      }
     }
     
     // If still no user items (shouldn't happen), return empty
@@ -260,7 +300,7 @@ const getRecommendedProducts = async (requestData) => {
       userVectors.reduce((sum, vec) => sum + vec[i], 0) / userVectors.length
     );
 
-    // Extract key-value features from all user items (cart + purchases)
+    // Extract key-value features from all user items (cart + purchases + views)
     const userFeatures = allUserItems.map(item => 
       extractKeyValuePairs(item.description)
     );
@@ -268,6 +308,7 @@ const getRecommendedProducts = async (requestData) => {
     // Create sets for quick lookup
     const cartIds = new Set(cartItems.map((i) => i._id));
     const purchasedIds = new Set(purchaseHistory.map((p) => p._id.toString()));
+    const viewedProductIds = new Set(viewedProducts.map((v) => v._id.toString())); // Changed name to avoid conflict
 
     // Compute similarity of all products to user preferences
     const scored = products.map((product) => {
@@ -283,7 +324,7 @@ const getRecommendedProducts = async (requestData) => {
       });
       featureSimilarity = featureSimilarity / userFeatures.length;
       
-      // Advanced weighting system
+      // Advanced weighting system with view count influence
       let itemWeight = 1.0;
       
       // Current cart items get highest priority
@@ -295,6 +336,24 @@ const getRecommendedProducts = async (requestData) => {
         const purchaseItem = purchaseHistory.find(p => p._id.toString() === product._id.toString());
         const daysSincePurchase = (new Date() - new Date(purchaseItem.purchaseDate)) / (1000 * 60 * 60 * 24);
         itemWeight = Math.max(0.3, 0.8 - (daysSincePurchase / 180)); // Reduce weight over 6 months
+      }
+      // Viewed items get progressive weight based on view count
+      else if (viewedProductIds.has(product._id.toString())) {
+        const viewedItem = viewedProducts.find(v => v._id.toString() === product._id.toString());
+        const viewCount = viewedItem.viewCount;
+        
+        // Progressive view count weighting - more views = exponentially higher weight
+        if (viewCount === 1) {
+          itemWeight = 0.3; // Single view - minimal influence
+        } else if (viewCount <= 3) {
+          itemWeight = 0.5; // 2-3 views - moderate influence
+        } else if (viewCount <= 5) {
+          itemWeight = 0.7; // 4-5 views - good influence
+        } else if (viewCount <= 10) {
+          itemWeight = 0.85; // 6-10 views - strong influence
+        } else {
+          itemWeight = 0.95; // 10+ views - very strong influence (almost as high as cart)
+        }
       }
       // New recommendations get standard weight
       else {
@@ -320,7 +379,8 @@ const getRecommendedProducts = async (requestData) => {
         ...item.product.toObject(),
         similarity: item.similarity,
         inCart: cartIds.has(item.product._id.toString()),
-        previouslyPurchased: purchasedIds.has(item.product._id.toString())
+        previouslyPurchased: purchasedIds.has(item.product._id.toString()),
+        viewCount: viewedProducts.find(v => v._id.toString() === item.product._id.toString())?.viewCount || 0
       }));
     
     // Calculate pagination

@@ -1,5 +1,4 @@
 import asyncHandler from '../middleware/asyncHandler.js';
-import Product from '../models/productModel.js';
 import getRecommendedProducts from '../utils/recommendHelper.js'
 
 // @desc    Fetch all products
@@ -10,6 +9,7 @@ const getProducts = asyncHandler(async (req, res) => {
   const page = Number(req.body.pageNumber) || 1;
   const cartItems = req.body.cartItems;
   const userId = req.body.userId;
+  const viewedProducts = req.body.viewedProducts || [];
   
   const keyword = req.body.keyword
     ? {
@@ -19,13 +19,13 @@ const getProducts = asyncHandler(async (req, res) => {
         },
       }
     : {};
-    
   const result = await getRecommendedProducts({
     keyword,
     cartItems,
     pageSize,
     page,
-    userId, // ← Add userId here
+    userId,
+    viewedProducts,
   });    
 
   res.json(result);
