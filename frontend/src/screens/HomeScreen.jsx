@@ -17,13 +17,12 @@ const HomeScreen = () => {
   const { cartItems } = useSelector((state) => state.cart);
   const userId = useSelector(selectCurrentUserId);
   const viewedProducts = useSelector(selectViewedProducts);
-  // Convert viewed products object to array format
   const viewedProductsArray = Object.values(viewedProducts);
 
-  // Call both hooks unconditionally
   const searched = useGetProductsQuery({ keyword, pageNumber });
+  
+
   const recommended = useGetProductRecommendationQuery({
-    keyword,
     pageNumber,
     cartItems,
     userId,

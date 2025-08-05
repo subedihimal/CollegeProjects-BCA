@@ -6,7 +6,7 @@ import getRecommendedProducts from '../utils/recommendHelper.js'
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
   const pageSize = process.env.PAGINATION_LIMIT || 8;
-  const page = Number(req.body.pageNumber) || 1;
+  const page = Number(req.body.pageNumber);
   const cartItems = req.body.cartItems;
   const userId = req.body.userId;
   const viewedProducts = req.body.viewedProducts || [];

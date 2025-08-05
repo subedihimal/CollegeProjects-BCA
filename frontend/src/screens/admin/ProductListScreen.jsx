@@ -12,10 +12,10 @@ import {
 import { toast } from 'react-toastify';
 
 const ProductListScreen = () => {
-  const { pageNumber } = useParams();
-
+  const { pageNumber } = useParams()
+  const currentPage = Number(pageNumber) || 1;
   const { data, isLoading, error, refetch } = useGetProductsQuery({
-    pageNumber,
+    pageNumber: currentPage,
   });
 
   const [deleteProduct, { isLoading: loadingDelete }] =
@@ -107,7 +107,7 @@ const ProductListScreen = () => {
               ))}
             </tbody>
           </Table>
-          <Paginate pages={data.pages} page={data.page} isAdmin={true} />
+          <Paginate pages={data.pages} page={currentPage} isAdmin={true} />
         </>
       )}
     </>
