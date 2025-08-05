@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useGetProductRecommendationQuery } from '../slices/recommendApiSlice';
 import { useGetProductsQuery } from '../slices/productsApiSlice';
+import { selectCurrentUserId } from '../slices/authSlice';
 import Product from '../components/Product';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
@@ -13,6 +14,7 @@ import Meta from '../components/Meta';
 const HomeScreen = () => {
   const { pageNumber, keyword } = useParams();
   const { cartItems } = useSelector((state) => state.cart);
+    const userId = useSelector(selectCurrentUserId);
 
   // Call both hooks unconditionally
   const searched = useGetProductsQuery({ keyword, pageNumber });
@@ -20,6 +22,7 @@ const HomeScreen = () => {
     keyword,
     pageNumber,
     cartItems,
+    userId
   });
 
   // Select correct hook result

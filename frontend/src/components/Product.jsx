@@ -1,10 +1,10 @@
-import { Card, Badge } from 'react-bootstrap'; // Add Badge import
+import { Card, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import Rating from './Rating';
 
-const Product = ({ product, showInCartFlag = false }) => { // Add showInCartFlag prop
+const Product = ({ product, showInCartFlag = false }) => {
   return (
-    <Card className='my-3 p-3 rounded position-relative'> {/* Add position-relative for absolute positioning */}
+    <Card className='my-3 p-3 rounded position-relative'>
       <Link to={`/product/${product._id}`}>
         <Card.Img src={product.image} variant='top' />
       </Link>
@@ -23,9 +23,17 @@ const Product = ({ product, showInCartFlag = false }) => { // Add showInCartFlag
           />
         </Card.Text>
         
+        {/* In Cart badge - top right */}
         {showInCartFlag && product.inCart && (
           <div className="position-absolute top-0 end-0 m-2">
-            <Badge bg="success">In Cart</Badge> {/* Use Badge component */}
+            <Badge bg="success">In Cart</Badge>
+          </div>
+        )}
+
+        {/* Previously Purchased badge - top left */}
+        {showInCartFlag && product.previouslyPurchased && (
+          <div className="position-absolute top-0 start-0 m-2">
+            <Badge bg="danger">Purchase Again</Badge>
           </div>
         )}
 

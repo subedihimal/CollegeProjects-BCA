@@ -9,7 +9,9 @@ const getProducts = asyncHandler(async (req, res) => {
   const pageSize = process.env.PAGINATION_LIMIT || 8;
   const page = Number(req.body.pageNumber) || 1;
   const cartItems = req.body.cartItems;
-
+  const userId = req.body.userId;
+  console.log('User ID:', userId);
+  
   const keyword = req.body.keyword
     ? {
         name: {
@@ -18,15 +20,16 @@ const getProducts = asyncHandler(async (req, res) => {
         },
       }
     : {};
-    const result = await getRecommendedProducts({
-        keyword,
-        cartItems,
-        pageSize,
-        page,
-    });    
+    
+  const result = await getRecommendedProducts({
+    keyword,
+    cartItems,
+    pageSize,
+    page,
+    userId, // ← Add userId here
+  });    
 
-    res.json(result);
-
+  res.json(result);
 });
 
 export {
