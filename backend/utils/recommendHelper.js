@@ -151,9 +151,12 @@ const getRecommendedProducts = async (requestData) => {
     
     // If no user activity, return latest products
     if (cartItems.length === 0 && purchaseHistory.length === 0 && viewedProducts.length === 0) {
-
+      const allProducts = await Product.find({}).sort({ createdAt: -1 }); // Get latest products
+      const totalCount = allProducts.length;
+      const startIndex = (page - 1) * pageSize;
+      const paginatedProducts = allProducts.slice(startIndex, startIndex + pageSize);
       return {
-        products: products.map(product => ({
+        products: paginatedProducts.map(product => ({
           ...product.toObject(),
           exploreToGetRecommendations: true,
           inCart: false,
@@ -161,7 +164,7 @@ const getRecommendedProducts = async (requestData) => {
           viewCount: 0
         })),
         page,
-        pages: Math.ceil(count / pageSize),
+        pages: Math.ceil(totalCount / pageSize),
         isExploreMode: true
       };
     }
