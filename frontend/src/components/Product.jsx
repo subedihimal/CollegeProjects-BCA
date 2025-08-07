@@ -7,11 +7,63 @@ import Rating from './Rating';
 const Product = ({ product, showInCartFlag = false }) => {
   const viewCount = useSelector(selectProductViewCount(product._id));
 
+  const cardStyle = {
+    transition: 'all 0.3s ease',
+    border: 'none',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+    cursor: 'pointer',
+  };
+
+  const imageContainerStyle = {
+    height: '250px',
+    overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '8px',
+  };
+
+  const imageStyle = {
+    maxWidth: '100%',
+    maxHeight: '100%',
+    width: 'auto',
+    height: 'auto',
+    objectFit: 'contain',
+    transition: 'transform 0.2s ease',
+  };
+
+  const priceStyle = {
+    fontSize: '1.5rem',
+    fontWeight: '700',
+    color: '#2c3e50',
+    margin: '10px 0 0 0'
+  };
+
   return (
     <div className="position-relative">
-      <Card className='my-3 p-3 rounded'>
+      <Card 
+        className='my-3 p-3' 
+        style={cardStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+        }}
+      >
         <Link to={`/product/${product._id}`}>
-          <Card.Img src={product.image} variant='top' />
+          <div style={imageContainerStyle}>
+            <Card.Img 
+              src={product.image} 
+              alt={product.name}
+              style={imageStyle}
+              onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+              onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+            />
+          </div>
         </Link>
 
         <Card.Body>
@@ -42,11 +94,11 @@ const Product = ({ product, showInCartFlag = false }) => {
             </div>
           )}
 
-          <Card.Text as='h3'>${product.price}</Card.Text>
+          <Card.Text as='h3' style={priceStyle}> ₹ {product.price}</Card.Text>
         </Card.Body>
       </Card>
 
-      {/* View count badge - positioned outside the card to not affect height */}
+      {/* View count badge */}
       {viewCount > 0 && (
         <div 
           className="position-absolute" 
