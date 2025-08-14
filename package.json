@@ -1,13 +1,12 @@
 {
-  "name": "proshop2",
-  "version": "2.0.0",
+  "name": "DigiMart",
   "type": "module",
   "description": "Ecommerce application built with the MERN stack",
   "main": "server.js",
   "scripts": {
     "start": "node backend/server.js",
-    "server": "nodemon backend/server.js",
-    "client": "npm start --prefix frontend",
+    "server": "set NODE_NO_WARNINGS=1 && nodemon backend/server.js --quiet",
+    "client": "set NODE_NO_WARNINGS=1 && npm start --prefix frontend",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "data:import": "node backend/seeder",
     "data:destroy": "node backend/seeder -d",
