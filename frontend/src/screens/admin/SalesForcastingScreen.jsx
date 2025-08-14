@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Table, Badge, Dropdown, Button } from 'react-bootstrap';
 import { FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown, FaDownload } from 'react-icons/fa';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import Message from '../../components/Message';
 import Loader from '../../components/Loader';
 
 const SalesForcastingScreen = () => {
@@ -11,50 +9,29 @@ const SalesForcastingScreen = () => {
   const [error, setError] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState('3months');
 
-  // Mock data - replace with your API call
   useEffect(() => {
     const fetchForecastData = async () => {
       try {
         setIsLoading(true);
-        // Replace this with your actual API call
-        // const response = await fetch(`/api/sales/forecast?period=${selectedPeriod}`);
-        // const data = await response.json();
+        const response = await fetch(`/api/sales/forecast?period=${selectedPeriod}`);
         
-        // Mock data for demonstration
-        const mockData = {
-          summary: {
-            predictedRevenue: 245000,
-            growthRate: 12.5,
-            confidence: 85,
-            bestCase: 280000,
-            worstCase: 210000
-          },
-          monthlyForecast: [
-            { month: 'Jan 2025', predicted: 45000, actual: 42000, confidence: 90 },
-            { month: 'Feb 2025', predicted: 48000, actual: null, confidence: 88 },
-            { month: 'Mar 2025', predicted: 52000, actual: null, confidence: 85 },
-            { month: 'Apr 2025', predicted: 55000, actual: null, confidence: 82 },
-            { month: 'May 2025', predicted: 58000, actual: null, confidence: 80 },
-            { month: 'Jun 2025', predicted: 61000, actual: null, confidence: 78 }
-          ],
-          topProducts: [
-            { name: 'Product A', predictedSales: 15000, growth: 8.2 },
-            { name: 'Product B', predictedSales: 12000, growth: -2.1 },
-            { name: 'Product C', predictedSales: 10000, growth: 15.3 },
-            { name: 'Product D', predictedSales: 8500, growth: 5.7 },
-            { name: 'Product E', predictedSales: 7200, growth: -1.8 }
-          ],
-          trends: {
-            seasonality: 'High demand expected in Q2',
-            marketFactors: ['Economic recovery', 'New product launches', 'Marketing campaigns'],
-            risks: ['Supply chain delays', 'Competition increase', 'Economic uncertainty']
-          }
-        };
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
-        setForecastData(mockData);
-        setError(null);
+        const data = await response.json();
+        
+        if (!data || Object.keys(data).length === 0) {
+          setForecastData(null);
+          setError(null); // Don't set as error, just no data
+        } else {
+          setForecastData(data);
+          setError(null);
+        }
       } catch (err) {
-        setError(err.message);
+        console.error('Error fetching forecast data:', err);
+        setForecastData(null);
+        setError(null); // Don't show error, just render with no data
       } finally {
         setIsLoading(false);
       }
@@ -64,6 +41,7 @@ const SalesForcastingScreen = () => {
   }, [selectedPeriod]);
 
   const formatCurrency = (amount) => {
+    if (!amount) return '₹0';
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -71,9 +49,28 @@ const SalesForcastingScreen = () => {
     }).format(amount);
   };
 
+  // Mock data structure for when there's no data
+  const mockData = {
+    summary: {
+      predictedRevenue: 0,
+      growthRate: 0,
+      confidence: 0,
+      bestCase: 0,
+      worstCase: 0
+    },
+    monthlyForecast: [],
+    topProducts: [],
+    trends: {
+      seasonality: 'No data available',
+      marketFactors: ['No data available'],
+      risks: ['No data available']
+    }
+  };
+
+  const displayData = forecastData || mockData;
+  const hasData = forecastData && Object.keys(forecastData).length > 0;
+
   if (isLoading) return <Loader />;
-  if (error) return <Message variant='danger'>{error}</Message>;
-  if (!forecastData) return <Message variant='info'>No forecast data available</Message>;
 
   return (
     <div style={styles.container}>
@@ -99,10 +96,6 @@ const SalesForcastingScreen = () => {
                   <Dropdown.Item onClick={() => setSelectedPeriod('1year')}>1 Year</Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
-              <Button variant="outline-light" size="sm">
-                <FaDownload style={{ marginRight: '8px' }} />
-                Export
-              </Button>
             </div>
           </div>
         </Card.Body>
@@ -115,7 +108,9 @@ const SalesForcastingScreen = () => {
             <Card.Body style={styles.metricBody}>
               <div style={styles.metricContent}>
                 <div>
-                  <h3 style={styles.metricValue}>{formatCurrency(forecastData.summary.predictedRevenue)}</h3>
+                  <h3 style={styles.metricValue}>
+                    {hasData ? formatCurrency(displayData.summary.predictedRevenue) : 'No Data'}
+                  </h3>
                   <p style={styles.metricLabel}>Predicted Revenue</p>
                 </div>
                 <FaChartLine style={styles.metricIcon} />
@@ -129,14 +124,19 @@ const SalesForcastingScreen = () => {
             <Card.Body style={styles.metricBody}>
               <div style={styles.metricContent}>
                 <div>
-                  <h3 style={{...styles.metricValue, color: forecastData.summary.growthRate > 0 ? '#28a745' : '#dc3545'}}>
-                    {forecastData.summary.growthRate > 0 ? '+' : ''}{forecastData.summary.growthRate}%
+                  <h3 style={{
+                    ...styles.metricValue, 
+                    color: hasData ? (displayData.summary.growthRate > 0 ? '#28a745' : '#dc3545') : '#6c757d'
+                  }}>
+                    {hasData ? `${displayData.summary.growthRate > 0 ? '+' : ''}${displayData.summary.growthRate}%` : 'No Data'}
                   </h3>
                   <p style={styles.metricLabel}>Growth Rate</p>
                 </div>
-                {forecastData.summary.growthRate > 0 ? 
+                {hasData && displayData.summary.growthRate > 0 ? 
                   <FaArrowUp style={{...styles.metricIcon, color: '#28a745'}} /> :
-                  <FaArrowDown style={{...styles.metricIcon, color: '#dc3545'}} />
+                  hasData && displayData.summary.growthRate < 0 ?
+                  <FaArrowDown style={{...styles.metricIcon, color: '#dc3545'}} /> :
+                  <FaChartLine style={styles.metricIcon} />
                 }
               </div>
             </Card.Body>
@@ -148,10 +148,15 @@ const SalesForcastingScreen = () => {
             <Card.Body style={styles.metricBody}>
               <div style={styles.metricContent}>
                 <div>
-                  <h3 style={styles.metricValue}>{forecastData.summary.confidence}%</h3>
+                  <h3 style={styles.metricValue}>
+                    {hasData ? `${displayData.summary.confidence}%` : 'No Data'}
+                  </h3>
                   <p style={styles.metricLabel}>Confidence Level</p>
                 </div>
-                <div style={{...styles.confidenceBar, width: `${forecastData.summary.confidence}%`}}></div>
+                <div style={{
+                  ...styles.confidenceBar, 
+                  width: hasData ? `${displayData.summary.confidence}%` : '0%'
+                }}></div>
               </div>
             </Card.Body>
           </Card>
@@ -163,14 +168,14 @@ const SalesForcastingScreen = () => {
               <div style={styles.scenarioContent}>
                 <div style={styles.scenarioItem}>
                   <span style={styles.scenarioLabel}>Best Case</span>
-                  <span style={{...styles.scenarioValue, color: '#28a745'}}>
-                    {formatCurrency(forecastData.summary.bestCase)}
+                  <span style={{...styles.scenarioValue, color: hasData ? '#28a745' : '#6c757d'}}>
+                    {hasData ? formatCurrency(displayData.summary.bestCase) : 'No Data'}
                   </span>
                 </div>
                 <div style={styles.scenarioItem}>
                   <span style={styles.scenarioLabel}>Worst Case</span>
-                  <span style={{...styles.scenarioValue, color: '#dc3545'}}>
-                    {formatCurrency(forecastData.summary.worstCase)}
+                  <span style={{...styles.scenarioValue, color: hasData ? '#dc3545' : '#6c757d'}}>
+                    {hasData ? formatCurrency(displayData.summary.worstCase) : 'No Data'}
                   </span>
                 </div>
               </div>
@@ -189,48 +194,30 @@ const SalesForcastingScreen = () => {
                 <h4 style={styles.chartTitle}>Monthly Sales Forecast</h4>
                 <Badge bg="info" style={styles.chartBadge}>Predicted vs Actual</Badge>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={forecastData.monthlyForecast}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" />
-                  <XAxis 
-                    dataKey="month" 
-                    stroke="#6c757d"
-                    fontSize={12}
-                  />
-                  <YAxis 
-                    stroke="#6c757d"
-                    fontSize={12}
-                    tickFormatter={(value) => `₹${value/1000}k`}
-                  />
-                  <Tooltip 
-                    formatter={(value) => [`₹${value.toLocaleString()}`, '']}
-                    labelStyle={{ color: '#495057' }}
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="predicted" 
-                    stroke="#007bff" 
-                    strokeWidth={3}
-                    name="Predicted"
-                    dot={{ fill: '#007bff', strokeWidth: 2, r: 4 }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="actual" 
-                    stroke="#28a745" 
-                    strokeWidth={2}
-                    name="Actual"
-                    dot={{ fill: '#28a745', strokeWidth: 2, r: 4 }}
-                    connectNulls={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <div style={styles.chartPlaceholder}>
+                <FaChartLine style={styles.chartPlaceholderIcon} />
+                <p style={styles.chartPlaceholderText}>
+                  {hasData ? 'Sales Forecast Chart' : 'No Data Available'}
+                </p>
+                {hasData && displayData.monthlyForecast && displayData.monthlyForecast.length > 0 ? (
+                  <div style={styles.chartData}>
+                    {displayData.monthlyForecast.map((item, index) => (
+                      <div key={index} style={styles.chartDataItem}>
+                        <span style={styles.chartMonth}>{item.month}</span>
+                        <span style={styles.chartValue}>₹{(item.predicted/1000).toFixed(0)}k</span>
+                        <div style={{
+                          ...styles.chartBar,
+                          height: `${(item.predicted / Math.max(...displayData.monthlyForecast.map(d => d.predicted))) * 100}%`
+                        }}></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={styles.noDataMessage}>
+                    <p>No forecast data available for the selected period</p>
+                  </div>
+                )}
+              </div>
             </Card.Body>
           </Card>
         </Col>
@@ -241,20 +228,26 @@ const SalesForcastingScreen = () => {
             <Card.Body>
               <h4 style={styles.chartTitle}>Top Products Forecast</h4>
               <div style={styles.productsList}>
-                {forecastData.topProducts.map((product, index) => (
-                  <div key={index} style={styles.productItem}>
-                    <div style={styles.productInfo}>
-                      <span style={styles.productName}>{product.name}</span>
-                      <span style={styles.productSales}>{formatCurrency(product.predictedSales)}</span>
+                {hasData && displayData.topProducts && displayData.topProducts.length > 0 ? (
+                  displayData.topProducts.map((product, index) => (
+                    <div key={index} style={styles.productItem}>
+                      <div style={styles.productInfo}>
+                        <span style={styles.productName}>{product.name}</span>
+                        <span style={styles.productSales}>{formatCurrency(product.predictedSales)}</span>
+                      </div>
+                      <Badge 
+                        bg={product.growth > 0 ? 'success' : 'danger'}
+                        style={styles.productGrowth}
+                      >
+                        {product.growth > 0 ? '+' : ''}{product.growth}%
+                      </Badge>
                     </div>
-                    <Badge 
-                      bg={product.growth > 0 ? 'success' : 'danger'}
-                      style={styles.productGrowth}
-                    >
-                      {product.growth > 0 ? '+' : ''}{product.growth}%
-                    </Badge>
+                  ))
+                ) : (
+                  <div style={styles.noDataMessage}>
+                    <p>No product forecast data available</p>
                   </div>
-                ))}
+                )}
               </div>
             </Card.Body>
           </Card>
@@ -278,40 +271,48 @@ const SalesForcastingScreen = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {forecastData.monthlyForecast.map((item, index) => {
-                    const variance = item.actual ? ((item.predicted - item.actual) / item.actual * 100) : null;
-                    return (
-                      <tr key={index} style={styles.tableRow}>
-                        <td style={styles.tableCell}>{item.month}</td>
-                        <td style={styles.tableCell}>
-                          <span style={styles.predictedValue}>{formatCurrency(item.predicted)}</span>
-                        </td>
-                        <td style={styles.tableCell}>
-                          {item.actual ? formatCurrency(item.actual) : 
-                            <span style={styles.pendingValue}>Pending</span>
-                          }
-                        </td>
-                        <td style={styles.tableCell}>
-                          <Badge 
-                            bg={item.confidence > 85 ? 'success' : item.confidence > 75 ? 'warning' : 'danger'}
-                            style={styles.confidenceBadge}
-                          >
-                            {item.confidence}%
-                          </Badge>
-                        </td>
-                        <td style={styles.tableCell}>
-                          {variance !== null ? (
-                            <span style={{
-                              color: Math.abs(variance) < 5 ? '#28a745' : Math.abs(variance) < 15 ? '#ffc107' : '#dc3545',
-                              fontWeight: '600'
-                            }}>
-                              {variance > 0 ? '+' : ''}{variance.toFixed(1)}%
-                            </span>
-                          ) : '-'}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {hasData && displayData.monthlyForecast && displayData.monthlyForecast.length > 0 ? (
+                    displayData.monthlyForecast.map((item, index) => {
+                      const variance = item.actual ? ((item.predicted - item.actual) / item.actual * 100) : null;
+                      return (
+                        <tr key={index} style={styles.tableRow}>
+                          <td style={styles.tableCell}>{item.month}</td>
+                          <td style={styles.tableCell}>
+                            <span style={styles.predictedValue}>{formatCurrency(item.predicted)}</span>
+                          </td>
+                          <td style={styles.tableCell}>
+                            {item.actual ? formatCurrency(item.actual) : 
+                              <span style={styles.pendingValue}>Pending</span>
+                            }
+                          </td>
+                          <td style={styles.tableCell}>
+                            <Badge 
+                              bg={item.confidence > 85 ? 'success' : item.confidence > 75 ? 'warning' : 'danger'}
+                              style={styles.confidenceBadge}
+                            >
+                              {item.confidence}%
+                            </Badge>
+                          </td>
+                          <td style={styles.tableCell}>
+                            {variance !== null ? (
+                              <span style={{
+                                color: Math.abs(variance) < 5 ? '#28a745' : Math.abs(variance) < 15 ? '#ffc107' : '#dc3545',
+                                fontWeight: '600'
+                              }}>
+                                {variance > 0 ? '+' : ''}{variance.toFixed(1)}%
+                              </span>
+                            ) : '-'}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="5" style={{...styles.tableCell, textAlign: 'center', color: '#6c757d'}}>
+                        No forecast data available
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </Table>
             </Card.Body>
@@ -326,24 +327,32 @@ const SalesForcastingScreen = () => {
               
               <div style={styles.insightSection}>
                 <h6 style={styles.insightTitle}>Seasonality</h6>
-                <p style={styles.insightText}>{forecastData.trends.seasonality}</p>
+                <p style={styles.insightText}>
+                  {hasData ? displayData.trends.seasonality : 'No seasonality data available'}
+                </p>
               </div>
 
               <div style={styles.insightSection}>
                 <h6 style={styles.insightTitle}>Growth Factors</h6>
                 <ul style={styles.insightList}>
-                  {forecastData.trends.marketFactors.map((factor, index) => (
-                    <li key={index} style={styles.insightItem}>{factor}</li>
-                  ))}
+                  {hasData && displayData.trends.marketFactors ? 
+                    displayData.trends.marketFactors.map((factor, index) => (
+                      <li key={index} style={styles.insightItem}>{factor}</li>
+                    )) : 
+                    <li style={styles.insightItem}>No growth factor data available</li>
+                  }
                 </ul>
               </div>
 
               <div style={styles.insightSection}>
                 <h6 style={styles.insightTitle}>Risk Factors</h6>
                 <ul style={styles.insightList}>
-                  {forecastData.trends.risks.map((risk, index) => (
-                    <li key={index} style={{...styles.insightItem, color: '#dc3545'}}>{risk}</li>
-                  ))}
+                  {hasData && displayData.trends.risks ? 
+                    displayData.trends.risks.map((risk, index) => (
+                      <li key={index} style={{...styles.insightItem, color: '#dc3545'}}>{risk}</li>
+                    )) :
+                    <li style={{...styles.insightItem, color: '#6c757d'}}>No risk factor data available</li>
+                  }
                 </ul>
               </div>
             </Card.Body>
@@ -484,6 +493,65 @@ const styles = {
     padding: '6px 12px',
     fontSize: '0.8rem'
   },
+  chartPlaceholder: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '40px 20px',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '8px',
+    border: '2px dashed #dee2e6'
+  },
+  chartPlaceholderIcon: {
+    fontSize: '3rem',
+    color: '#6c757d',
+    marginBottom: '15px'
+  },
+  chartPlaceholderText: {
+    fontSize: '1.1rem',
+    color: '#6c757d',
+    margin: '0 0 20px 0',
+    fontWeight: '500'
+  },
+  chartData: {
+    display: 'flex',
+    gap: '15px',
+    alignItems: 'end',
+    marginTop: '20px'
+  },
+  chartDataItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '8px',
+    position: 'relative'
+  },
+  chartMonth: {
+    fontSize: '0.8rem',
+    color: '#6c757d',
+    fontWeight: '500'
+  },
+  chartValue: {
+    fontSize: '0.85rem',
+    color: '#2c2c2c',
+    fontWeight: '600'
+  },
+  chartBar: {
+    width: '30px',
+    backgroundColor: '#667eea',
+    borderRadius: '3px 3px 0 0',
+    minHeight: '20px',
+    transition: 'height 0.3s ease'
+  },
+
+  // No Data Message
+  noDataMessage: {
+    textAlign: 'center',
+    color: '#6c757d',
+    fontSize: '0.95rem',
+    fontStyle: 'italic',
+    padding: '20px'
+  },
 
   // Products List
   productsList: {
@@ -594,16 +662,14 @@ const styles = {
     color: '#6c757d',
     padding: '4px 0',
     position: 'relative',
-    paddingLeft: '16px'
+    paddingLeft: '16px',
+    '&::before': {
+      content: '•',
+      color: '#667eea',
+      position: 'absolute',
+      left: 0
+    }
   }
-};
-
-// Add bullet points to list items
-styles.insightItem['&::before'] = {
-  content: '•',
-  color: '#667eea',
-  position: 'absolute',
-  left: 0
 };
 
 export default SalesForcastingScreen;

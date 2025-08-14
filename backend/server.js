@@ -10,6 +10,8 @@ import orderRoutes from './routes/orderRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import recommendRoutes from './routes/recommendedRoutes.js'
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
+import salesRoutes from './routes/salesRoutes.js';
+
 
 const port = process.env.PORT || 5000;
 
@@ -26,6 +28,9 @@ app.use('/api/recommend', recommendRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/sales', salesRoutes);
+
+
 
 app.get('/api/config/paypal', (req, res) =>
   res.send({ clientId: process.env.PAYPAL_CLIENT_ID })
