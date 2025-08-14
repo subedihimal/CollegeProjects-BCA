@@ -1,84 +1,16 @@
-import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Row, Col, Image, Card, Button, Badge } from 'react-bootstrap';
-import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
-import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import { FaShippingFast, FaCreditCard, FaShoppingCart, FaCheck, FaTimes, FaArrowLeft } from 'react-icons/fa';
+import { Row, Col, Image, Card } from 'react-bootstrap';
+import { FaShoppingCart, FaArrowLeft } from 'react-icons/fa';
 import Message from '../components/Message';
 import Loader from '../components/Loader';
 import {
-  useDeliverOrderMutation,
   useGetOrderDetailsQuery,
-  useGetPaypalClientIdQuery,
-  usePayOrderMutation,
 } from '../slices/ordersApiSlice';
 
 const OrderScreen = () => {
   const { id: orderId } = useParams();
 
-  const { data: order, refetch, isLoading, error } = useGetOrderDetailsQuery(orderId);
-  const [payOrder, { isLoading: loadingPay }] = usePayOrderMutation();
-  const [deliverOrder, { isLoading: loadingDeliver }] = useDeliverOrderMutation();
-  const { userInfo } = useSelector((state) => state.auth);
-  const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
-  const { data: paypal, isLoading: loadingPayPal, error: errorPayPal } = useGetPaypalClientIdQuery();
-
-  useEffect(() => {
-    if (!errorPayPal && !loadingPayPal && paypal.clientId) {
-      const loadPaypalScript = async () => {
-        paypalDispatch({
-          type: 'resetOptions',
-          value: {
-            'client-id': paypal.clientId,
-            currency: 'USD',
-          },
-        });
-        paypalDispatch({ type: 'setLoadingStatus', value: 'pending' });
-      };
-      if (order && !order.isPaid) {
-        if (!window.paypal) {
-          loadPaypalScript();
-        }
-      }
-    }
-  }, [errorPayPal, loadingPayPal, order, paypal, paypalDispatch]);
-
-  function onApprove(data, actions) {
-    return actions.order.capture().then(async function (details) {
-      try {
-        await payOrder({ orderId, details });
-        refetch();
-        toast.success('Order is paid');
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
-    });
-  }
-
-  function onError(err) {
-    toast.error(err.message);
-  }
-
-  function createOrder(data, actions) {
-    return actions.order
-      .create({
-        purchase_units: [
-          {
-            amount: { value: order.totalPrice },
-          },
-        ],
-      })
-      .then((orderID) => {
-        return orderID;
-      });
-  }
-
-  const deliverHandler = async () => {
-    await deliverOrder(orderId);
-    refetch();
-    toast.success('Order marked as delivered');
-  };
+  const { data: order, isLoading, error } = useGetOrderDetailsQuery(orderId);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -115,8 +47,6 @@ const OrderScreen = () => {
           {/* Shipping Information */}
           <Card style={styles.card} className="mb-4">
             <Card.Body>
-              
-              
               <div style={styles.infoGrid}>
                 <div style={styles.infoItem}>
                   <span style={styles.infoLabel}>Customer:</span>
@@ -134,12 +64,6 @@ const OrderScreen = () => {
                     {order.shippingAddress.address}, {order.shippingAddress.city} {order.shippingAddress.postalCode}, {order.shippingAddress.country}
                   </span>
                 </div>
-                {order.isDelivered && (
-                  <div style={styles.infoItem}>
-                    <span style={styles.infoLabel}>Delivered:</span>
-                    <span style={styles.deliveredDate}>{formatDate(order.deliveredAt)}</span>
-                  </div>
-                )}
               </div>
             </Card.Body>
           </Card>
@@ -152,12 +76,6 @@ const OrderScreen = () => {
                   <span style={styles.infoLabel}>Method:</span>
                   <span style={styles.infoValue}>{order.paymentMethod}</span>
                 </div>
-                {order.isPaid && (
-                  <div style={styles.infoItem}>
-                    <span style={styles.infoLabel}>Paid:</span>
-                    <span style={styles.paidDate}>{formatDate(order.paidAt)}</span>
-                  </div>
-                )}
               </div>
             </Card.Body>
           </Card>
@@ -223,39 +141,6 @@ const OrderScreen = () => {
                   <span> ₹ {order.totalPrice}</span>
                 </div>
               </div>
-
-              {/* PayPal Payment */}
-              {!order.isPaid && (
-                <div style={styles.paymentSection}>
-                  {loadingPay && <Loader />}
-                  {isPending ? (
-                    <Loader />
-                  ) : (
-                    <div style={styles.paypalContainer}>
-                      <PayPalButtons
-                        createOrder={createOrder}
-                        onApprove={onApprove}
-                        onError={onError}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Admin Delivery Button */}
-              {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && (
-                <div style={styles.adminSection}>
-                  {loadingDeliver && <Loader />}
-                  <Button
-                    onClick={deliverHandler}
-                    disabled={loadingDeliver}
-                    style={styles.deliverButton}
-                  >
-                    <FaShippingFast style={styles.buttonIcon} />
-                    Mark as Delivered
-                  </Button>
-                </div>
-              )}
             </Card.Body>
           </Card>
         </Col>
@@ -385,18 +270,6 @@ const styles = {
   emailLink: {
     color: '#007bff',
     textDecoration: 'none'
-  },
-  deliveredDate: {
-    color: '#28a745',
-    fontWeight: '600',
-    textAlign: 'right',
-    flex: '1'
-  },
-  paidDate: {
-    color: '#28a745',
-    fontWeight: '600',
-    textAlign: 'right',
-    flex: '1'
   },
 
   // Order Items Styles

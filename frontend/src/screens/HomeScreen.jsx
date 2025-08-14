@@ -36,7 +36,7 @@ const HomeScreen = () => {
   const error = isSearch ? searched.error : recommended.error;
 
   return (
-    <>
+    <>\
       {!keyword ? (
         <ProductCarousel />
       ) : (
