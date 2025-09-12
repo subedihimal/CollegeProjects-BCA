@@ -1,15 +1,300 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Table, Badge, Dropdown, Button } from 'react-bootstrap';
-import { FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown, FaDownload } from 'react-icons/fa';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import Loader from '../../components/Loader';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Card, Row, Col, Table, Badge, Dropdown } from 'react-bootstrap';
+import { FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown, FaCaretDown } from 'react-icons/fa';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+// Constants
+const MOCK_DATA = {
+  summary: {
+    predictedRevenue: 0,
+    growthRate: 0,
+    confidence: 0,
+    bestCase: 0,
+    worstCase: 0,
+    dailyAverage: 0
+  },
+  dailyForecast: [],
+  lineGraphData: [],
+  topProducts: []
+};
+
+const PERIOD_OPTIONS = {
+  '7days': '7 Days',
+  '15days': '15 Days'
+};
+
+const REVENUE_SCENARIOS = {
+  'predicted': { label: 'Expected Revenue', key: 'predictedRevenue', description: 'Most likely outcome' },
+  'best': { label: 'Best Case', key: 'bestCase', description: 'Optimistic estimate' },
+  'worst': { label: 'Worst Case', key: 'worstCase', description: 'Conservative estimate' }
+};
+
+// Utility functions
+const formatCurrency = (amount) => {
+  if (!amount) return '₹0';
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0
+  }).format(amount);
+};
+
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString('en-IN', {
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const formatDateWithYear = (dateString) => {
+  return new Date(dateString).toLocaleDateString('en-IN', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
+
+// Components
+const ForecastingLoader = () => {
+  const [dots, setDots] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots(prev => prev === '...' ? '' : prev + '.');
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="d-flex flex-column align-items-center justify-content-center" 
+         style={{ height: '60vh', backgroundColor: '#f8f9fa' }}>
+      <div style={{
+        width: '60px',
+        height: '60px',
+        border: '6px solid #e3e3e3',
+        borderTop: '6px solid #667eea',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+        marginBottom: '20px'
+      }}></div>
+      <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#667eea' }}>
+        Forecasting{dots}
+      </h3>
+    </div>
+  );
+};
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  
+  return (
+    <div style={{
+      backgroundColor: '#ffffff',
+      padding: '12px 16px',
+      borderRadius: '8px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+      border: '1px solid #e2e8f0',
+      maxWidth: '300px'
+    }}>
+      <p style={{ fontSize: '0.9rem', fontWeight: '600', color: '#2c2c2c', margin: '0 0 8px 0' }}>
+        Date: {formatDateWithYear(label)}
+      </p>
+      {payload.map((entry, index) => (
+        <p key={index} style={{ fontSize: '0.85rem', fontWeight: '500', margin: '4px 0', color: entry.color }}>
+          {entry.name}: {formatCurrency(entry.value)}
+          {entry.payload.confidence && (
+            <span style={{ fontSize: '0.8rem', marginLeft: '8px' }}>
+              ({entry.payload.confidence}% confidence)
+            </span>
+          )}
+        </p>
+      ))}
+    </div>
+  );
+};
+
+const MetricCard = ({ title, value, icon: Icon, color, hasData }) => {
+  const iconColor = color || '#667eea';
+  const valueColor = color || '#2c2c2c';
+  
+  return (
+    <Card className="border-0 shadow-sm h-100">
+      <Card.Body className="p-3">
+        <div className="d-flex justify-content-between align-items-center h-100">
+          <div>
+            <h3 className="mb-1" style={{ fontSize: '1.8rem', fontWeight: '700', color: valueColor }}>
+              {hasData ? value : 'No Data'}
+            </h3>
+            <p className="mb-0 text-muted" style={{ fontSize: '0.9rem', fontWeight: '500' }}>
+              {title}
+            </p>
+            {title === 'Avg Confidence' && hasData && (
+              <div style={{
+                height: '4px',
+                backgroundColor: '#28a745',
+                borderRadius: '2px',
+                marginTop: '10px',
+                width: value,
+                transition: 'width 0.3s ease'
+              }}></div>
+            )}
+          </div>
+          <Icon style={{ fontSize: '2.5rem', color: iconColor, opacity: 0.7 }} />
+        </div>
+      </Card.Body>
+    </Card>
+  );
+};
+const RevenueMetricCard = ({ displayData, hasData, selectedScenario, onScenarioChange }) => {
+  const currentScenario = REVENUE_SCENARIOS[selectedScenario];
+  const currentValue = displayData.summary[currentScenario.key];
+  
+  return (
+    <Card className="border-0 shadow-sm h-100">
+      <Card.Body className="p-3">
+        <div className="d-flex justify-content-between align-items-center h-100">
+          <div className="flex-grow-1">
+            <Dropdown>
+              <Dropdown.Toggle 
+                as="div"
+                style={{ 
+                  cursor: 'pointer',
+                  border: 'none',
+                  background: 'none',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  position: 'relative'
+                }}
+              >
+                <h3 className="mb-1" style={{ fontSize: '1.8rem', fontWeight: '700', color: '#2c2c2c' }}>
+                  {hasData ? formatCurrency(currentValue) : 'No Data'}
+                </h3>
+                <FaCaretDown style={{ 
+                  fontSize: '1rem', 
+                  color: '#6c757d',
+                  marginLeft: '4px',
+                  transition: 'color 0.2s ease'
+                }} />
+              </Dropdown.Toggle>
+              
+              <Dropdown.Menu style={{
+                minWidth: '280px',
+                padding: '8px 0',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                marginTop: '8px'
+              }}>
+                {Object.entries(REVENUE_SCENARIOS).map(([key, scenario]) => (
+                  <Dropdown.Item 
+                    key={key} 
+                    onClick={() => onScenarioChange(key)}
+                    active={selectedScenario === key}
+                    style={{
+                      padding: '12px 20px',
+                      margin: '4px 8px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: selectedScenario === key ? '#f0f9ff' : 'transparent',
+                      borderLeft: selectedScenario === key ? '3px solid #667eea' : '3px solid transparent',
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedScenario !== key) {
+                        e.target.style.backgroundColor = '#f8fafc';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedScenario !== key) {
+                        e.target.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    <div>
+                      <div style={{ 
+                        fontWeight: '600', 
+                        fontSize: '0.95rem',
+                        color: key === 'predicted' ? '#16a34a' :
+                               key === 'best' ? '#2563eb' :
+                               key === 'worst' ? '#dc3545' : '#2c2c2c',
+                        marginBottom: '4px'
+                      }}>
+                        {scenario.label}
+                      </div>
+                      <div style={{ 
+                        fontSize: '0.85rem', 
+                        color: key === 'predicted' ? '#16a34a' :
+                               key === 'best' ? '#2563eb' :
+                               key === 'worst' ? '#dc3545' : '#16a34a',
+                        fontWeight: '600',
+                        marginBottom: '2px'
+                      }}>
+                        {hasData ? formatCurrency(displayData.summary[scenario.key]) : 'No Data'}
+                      </div>
+                      <div style={{ 
+                        fontSize: '0.75rem', 
+                        color: '#6c757d', 
+                        fontStyle: 'italic',
+                        lineHeight: '1.3'
+                      }}>
+                        {scenario.description}
+                      </div>
+                    </div>
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+            
+            <p className="mb-0 text-muted" style={{ 
+              fontSize: '0.9rem', 
+              fontWeight: '500',
+              marginTop: '4px'
+            }}>
+              {currentScenario.label}
+            </p>
+            <small className="text-muted" style={{ 
+              fontSize: '0.8rem', 
+              fontStyle: 'italic',
+              color: '#6c757d'
+            }}>
+              {currentScenario.description}
+            </small>
+          </div>
+          <FaChartLine style={{ 
+            fontSize: '2.5rem', 
+            color: '#667eea', 
+            opacity: 0.7,
+            marginLeft: '16px'
+          }} />
+        </div>
+      </Card.Body>
+      
+      <style jsx>{`
+        .dropdown-toggle::after {
+          display: none !important;
+        }
+        
+        .dropdown-item:hover {
+          background-color: transparent !important;
+        }
+        
+        .dropdown-item.active {
+          background-color: transparent !important;
+        }
+      `}</style>
+    </Card>
+  );
+};
 const SalesForcastingScreen = () => {
   const [forecastData, setForecastData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedPeriod, setSelectedPeriod] = useState('3months');
+  const [selectedPeriod, setSelectedPeriod] = useState('7days');
+  const [selectedScenario, setSelectedScenario] = useState('predicted');
 
+  // Fetch data
   useEffect(() => {
     const fetchForecastData = async () => {
       try {
@@ -21,18 +306,10 @@ const SalesForcastingScreen = () => {
         }
         
         const data = await response.json();
-        
-        if (!data || Object.keys(data).length === 0) {
-          setForecastData(null);
-          setError(null); // Don't set as error, just no data
-        } else {
-          setForecastData(data);
-          setError(null);
-        }
+        setForecastData(data && Object.keys(data).length > 0 ? data : null);
       } catch (err) {
         console.error('Error fetching forecast data:', err);
         setForecastData(null);
-        setError(null); // Don't show error, just render with no data
       } finally {
         setIsLoading(false);
       }
@@ -41,208 +318,158 @@ const SalesForcastingScreen = () => {
     fetchForecastData();
   }, [selectedPeriod]);
 
-  const formatCurrency = (amount) => {
-    if (!amount) return '₹0';
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
+  // Memoized values
+  const displayData = useMemo(() => forecastData || MOCK_DATA, [forecastData]);
+  const hasData = useMemo(() => forecastData && Object.keys(forecastData).length > 0, [forecastData]);
+  
+  const chartInterval = useMemo(() => {
+    if (!displayData.lineGraphData?.length) return 0;
+    return Math.max(1, Math.floor(displayData.lineGraphData.length / 20));
+  }, [displayData.lineGraphData]);
 
-  // Custom tooltip for the chart
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div style={styles.tooltipContainer}>
-          <p style={styles.tooltipLabel}>{`Month: ${label}`}</p>
-          {payload.map((entry, index) => (
-            <p key={index} style={{
-              ...styles.tooltipValue,
-              color: entry.color
-            }}>
-              {`${entry.name}: ${formatCurrency(entry.value)}`}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+  const growthIcon = useMemo(() => {
+    if (!hasData) return FaChartLine;
+    const growth = displayData.summary.growthRate;
+    return growth > 0 ? FaArrowUp : growth < 0 ? FaArrowDown : FaChartLine;
+  }, [hasData, displayData.summary.growthRate]);
 
-  // Mock data structure for when there's no data
-  const mockData = {
-    summary: {
-      predictedRevenue: 0,
-      growthRate: 0,
-      confidence: 0,
-      bestCase: 0,
-      worstCase: 0
-    },
-    monthlyForecast: [],
-    topProducts: [],
-    trends: {
-      seasonality: 'No data available',
-      marketFactors: ['No data available'],
-      risks: ['No data available']
-    }
-  };
+  const growthColor = useMemo(() => {
+    if (!hasData) return '#6c757d';
+    const growth = displayData.summary.growthRate;
+    return growth > 0 ? '#28a745' : growth < 0 ? '#dc3545' : '#6c757d';
+  }, [hasData, displayData.summary.growthRate]);
 
-  const displayData = forecastData || mockData;
-  const hasData = forecastData && Object.keys(forecastData).length > 0;
+  // Event handlers
+  const handlePeriodChange = useCallback((period) => {
+    setSelectedPeriod(period);
+  }, []);
 
-  if (isLoading) return <Loader />;
+  const handleScenarioChange = useCallback((scenario) => {
+    setSelectedScenario(scenario);
+  }, []);
+
+  if (isLoading) return <ForecastingLoader />;
 
   return (
-    <div style={styles.container}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
       {/* Header */}
-      <Card style={styles.headerCard}>
+      <Card className="border-0 mb-4" style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        borderRadius: '15px',
+        boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+        color: 'white'
+      }}>
         <Card.Body>
-          <div style={styles.headerContent}>
-            <FaChartLine style={styles.headerIcon} />
-            <div style={styles.headerText}>
-              <h1 style={styles.title}>Sales Forecasting</h1>
-              <p style={styles.subtitle}>Predictive analytics for future sales performance</p>
+          <div className="d-flex align-items-center justify-content-between flex-wrap" style={{ gap: '20px' }}>
+            <div className="d-flex align-items-center flex-grow-1">
+              <FaChartLine style={{ fontSize: '3rem', marginRight: '20px' }} />
+              <div>
+                <h1 className="mb-2" style={{ fontSize: '2.5rem', fontWeight: '700' }}>
+                  Daily Sales Forecasting
+                </h1>
+                <p className="mb-0" style={{ fontSize: '1.1rem', opacity: 0.8 }}>
+                  Complete historical data & predictive analytics for daily sales performance
+                </p>
+              </div>
             </div>
-            <div style={styles.headerControls}>
-              <Dropdown>
-                <Dropdown.Toggle variant="outline-light" id="period-dropdown">
-                  <FaCalendarAlt style={{ marginRight: '8px' }} />
-                  {selectedPeriod === '3months' ? '3 Months' : 
-                   selectedPeriod === '6months' ? '6 Months' : '1 Year'}
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item onClick={() => setSelectedPeriod('3months')}>3 Months</Dropdown.Item>
-                  <Dropdown.Item onClick={() => setSelectedPeriod('6months')}>6 Months</Dropdown.Item>
-                  <Dropdown.Item onClick={() => setSelectedPeriod('1year')}>1 Year</Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
-            </div>
+            <Dropdown>
+              <Dropdown.Toggle variant="outline-light">
+                <FaCalendarAlt className="me-2" />
+                {PERIOD_OPTIONS[selectedPeriod]}
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                {Object.entries(PERIOD_OPTIONS).map(([key, label]) => (
+                  <Dropdown.Item key={key} onClick={() => handlePeriodChange(key)}>
+                    {label}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
           </div>
         </Card.Body>
       </Card>
 
       {/* Key Metrics */}
-      <Row className="mt-4">
-        <Col lg={3} md={6} className="mb-3">
-          <Card style={styles.metricCard}>
-            <Card.Body style={styles.metricBody}>
-              <div style={styles.metricContent}>
-                <div>
-                  <h3 style={styles.metricValue}>
-                    {hasData ? formatCurrency(displayData.summary.predictedRevenue) : 'No Data'}
-                  </h3>
-                  <p style={styles.metricLabel}>Predicted Revenue</p>
-                </div>
-                <FaChartLine style={styles.metricIcon} />
-              </div>
-            </Card.Body>
-          </Card>
+      <Row className="g-3 mb-4">
+        <Col lg={3} md={6}>
+          <RevenueMetricCard
+            displayData={displayData}
+            hasData={hasData}
+            selectedScenario={selectedScenario}
+            onScenarioChange={handleScenarioChange}
+          />
         </Col>
-        
-        <Col lg={3} md={6} className="mb-3">
-          <Card style={styles.metricCard}>
-            <Card.Body style={styles.metricBody}>
-              <div style={styles.metricContent}>
-                <div>
-                  <h3 style={{
-                    ...styles.metricValue, 
-                    color: hasData ? (displayData.summary.growthRate > 0 ? '#28a745' : '#dc3545') : '#6c757d'
-                  }}>
-                    {hasData ? `${displayData.summary.growthRate > 0 ? '+' : ''}${displayData.summary.growthRate}%` : 'No Data'}
-                  </h3>
-                  <p style={styles.metricLabel}>Growth Rate</p>
-                </div>
-                {hasData && displayData.summary.growthRate > 0 ? 
-                  <FaArrowUp style={{...styles.metricIcon, color: '#28a745'}} /> :
-                  hasData && displayData.summary.growthRate < 0 ?
-                  <FaArrowDown style={{...styles.metricIcon, color: '#dc3545'}} /> :
-                  <FaChartLine style={styles.metricIcon} />
-                }
-              </div>
-            </Card.Body>
-          </Card>
+        <Col lg={3} md={6}>
+          <MetricCard
+            title="Daily Average"
+            value={formatCurrency(displayData.summary.dailyAverage)}
+            icon={FaCalendarAlt}
+            hasData={hasData}
+          />
         </Col>
-        
-        <Col lg={3} md={6} className="mb-3">
-          <Card style={styles.metricCard}>
-            <Card.Body style={styles.metricBody}>
-              <div style={styles.metricContent}>
-                <div>
-                  <h3 style={styles.metricValue}>
-                    {hasData ? `${displayData.summary.confidence}%` : 'No Data'}
-                  </h3>
-                  <p style={styles.metricLabel}>Confidence Level</p>
-                </div>
-                <div style={{
-                  ...styles.confidenceBar, 
-                  width: hasData ? `${displayData.summary.confidence}%` : '0%'
-                }}></div>
-              </div>
-            </Card.Body>
-          </Card>
+        <Col lg={3} md={6}>
+          <MetricCard
+            title="Growth Rate"
+            value={hasData ? `${displayData.summary.growthRate > 0 ? '+' : ''}${displayData.summary.growthRate}%` : 'No Data'}
+            icon={growthIcon}
+            color={growthColor}
+            hasData={hasData}
+          />
         </Col>
-        
-        <Col lg={3} md={6} className="mb-3">
-          <Card style={styles.metricCard}>
-            <Card.Body style={styles.metricBody}>
-              <div style={styles.scenarioContent}>
-                <div style={styles.scenarioItem}>
-                  <span style={styles.scenarioLabel}>Best Case</span>
-                  <span style={{...styles.scenarioValue, color: hasData ? '#28a745' : '#6c757d'}}>
-                    {hasData ? formatCurrency(displayData.summary.bestCase) : 'No Data'}
-                  </span>
-                </div>
-                <div style={styles.scenarioItem}>
-                  <span style={styles.scenarioLabel}>Worst Case</span>
-                  <span style={{...styles.scenarioValue, color: hasData ? '#dc3545' : '#6c757d'}}>
-                    {hasData ? formatCurrency(displayData.summary.worstCase) : 'No Data'}
-                  </span>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
+        <Col lg={3} md={6}>
+          <MetricCard
+            title="Avg Confidence"
+            value={hasData ? `${displayData.summary.confidence}%` : 'No Data'}
+            icon={FaChartLine}
+            hasData={hasData}
+          />
         </Col>
       </Row>
 
-      {/* Charts Row */}
-      <Row className="mt-4">
-        {/* Sales Forecast Chart */}
-        <Col lg={8} className="mb-4">
-          <Card style={styles.chartCard}>
+      {/* Main Chart */}
+      <Row className="mb-4">
+        <Col lg={12}>
+          <Card className="border-0 shadow-sm">
             <Card.Body>
-              <div style={styles.chartHeader}>
-                <h4 style={styles.chartTitle}>Monthly Sales Forecast</h4>
-                <div style={styles.chartLegend}>
-                  <div style={styles.legendItem}>
-                    <div style={{...styles.legendColor, backgroundColor: '#2563eb'}}></div>
-                    <span style={styles.legendText}>Actual Sales</span>
+              <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap" style={{ gap: '15px' }}>
+                <div>
+                  <h4 className="mb-0" style={{ fontSize: '1.3rem', fontWeight: '600', color: '#2c2c2c' }}>
+                    Complete Sales History & Forecast
+                    {forecastData?.modelInfo?.dateRange && (
+                      <small className="d-block text-muted mt-1" style={{ fontSize: '0.8rem' }}>
+                        {forecastData.modelInfo.dateRange} ({forecastData.modelInfo.totalHistoricalDays} days)
+                      </small>
+                    )}
+                  </h4>
+                </div>
+                <div className="d-flex gap-4 align-items-center">
+                  <div className="d-flex align-items-center gap-2">
+                    <div style={{ width: '12px', height: '12px', backgroundColor: '#2563eb', borderRadius: '2px' }}></div>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Historical Sales</span>
                   </div>
-                  <div style={styles.legendItem}>
-                    <div style={{...styles.legendColor, backgroundColor: '#16a34a'}}></div>
-                    <span style={styles.legendText}>Predicted Sales</span>
+                  <div className="d-flex align-items-center gap-2">
+                    <div style={{ width: '12px', height: '12px', backgroundColor: '#16a34a', borderRadius: '2px' }}></div>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Predicted Sales</span>
                   </div>
                 </div>
               </div>
-              <div style={styles.chartContainer}>
-                {hasData && displayData.monthlyForecast && displayData.monthlyForecast.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={350}>
-                    <LineChart
-                      data={displayData.monthlyForecast}
-                      margin={{
-                        top: 20,
-                        right: 30,
-                        left: 20,
-                        bottom: 20,
-                      }}
-                    >
+              
+              <div style={{ width: '100%', minHeight: '600px', position: 'relative' }}>
+                {hasData && displayData.lineGraphData?.length ? (
+                  <ResponsiveContainer width="100%" height={600}>
+                    <LineChart data={displayData.lineGraphData} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis 
-                        dataKey="month" 
+                        dataKey="date" 
                         stroke="#64748b"
-                        fontSize={12}
+                        fontSize={10}
                         tickLine={false}
                         axisLine={false}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                        tickFormatter={formatDate}
+                        interval={chartInterval}
                       />
                       <YAxis 
                         stroke="#64748b"
@@ -250,17 +477,18 @@ const SalesForcastingScreen = () => {
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+                        width={60}
                       />
                       <Tooltip content={<CustomTooltip />} />
                       <Line
                         type="monotone"
                         dataKey="actual"
                         stroke="#2563eb"
-                        strokeWidth={3}
-                        dot={{ fill: '#2563eb', strokeWidth: 2, r: 6 }}
-                        activeDot={{ r: 8, stroke: '#2563eb', strokeWidth: 2 }}
+                        strokeWidth={1.5}
+                        dot={false}
+                        activeDot={{ r: 6, stroke: '#2563eb', strokeWidth: 2 }}
                         connectNulls={false}
-                        name="Actual Sales"
+                        name="Historical Sales"
                       />
                       <Line
                         type="monotone"
@@ -268,49 +496,73 @@ const SalesForcastingScreen = () => {
                         stroke="#16a34a"
                         strokeWidth={3}
                         strokeDasharray="5 5"
-                        dot={{ fill: '#16a34a', strokeWidth: 2, r: 6 }}
-                        activeDot={{ r: 8, stroke: '#16a34a', strokeWidth: 2 }}
+                        dot={false}
+                        activeDot={{ r: 7, stroke: '#16a34a', strokeWidth: 2 }}
+                        connectNulls={false}
                         name="Predicted Sales"
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div style={styles.chartPlaceholder}>
-                    <FaChartLine style={styles.chartPlaceholderIcon} />
-                    <p style={styles.chartPlaceholderText}>
+                  <div className="d-flex flex-column align-items-center justify-content-center bg-light rounded border-2 border-dashed" 
+                       style={{ padding: '60px 20px', minHeight: '600px', borderColor: '#dee2e6' }}>
+                    <FaChartLine style={{ fontSize: '4rem', color: '#6c757d', marginBottom: '20px' }} />
+                    <p className="mb-0 text-muted text-center" style={{ fontSize: '1.1rem', fontWeight: '500' }}>
                       No forecast data available for the selected period
                     </p>
                   </div>
                 )}
               </div>
+              
+              {/* Data Summary */}
+              {hasData && forecastData?.modelInfo && (
+                <div className="mt-4 p-3 bg-light rounded border-top border-primary border-3">
+                  <div className="d-flex justify-content-around align-items-center flex-wrap" style={{ gap: '15px' }}>
+                    <span style={{ fontSize: '0.9rem', color: '#495057', textAlign: 'center' }}>
+                      <strong>Total Data Points:</strong> {forecastData.modelInfo.totalHistoricalDays || forecastData.modelInfo.dataPoints}
+                    </span>
+                    <span style={{ fontSize: '0.9rem', color: '#495057', textAlign: 'center' }}>
+                      <strong>Model:</strong> {forecastData.modelInfo.type}
+                    </span>
+                    <span style={{ fontSize: '0.9rem', color: '#495057', textAlign: 'center' }}>
+                      <strong>Last Updated:</strong> {forecastData.modelInfo.lastDataDate}
+                    </span>
+                  </div>
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>
+      </Row>
 
-        {/* Top Products Forecast */}
-        <Col lg={4} className="mb-4">
-          <Card style={styles.chartCard}>
+      {/* Secondary Content - Only Top Products */}
+      <Row className="g-4 mb-4">
+        <Col lg={12}>
+          <Card className="border-0 shadow-sm h-100">
             <Card.Body>
-              <h4 style={styles.chartTitle}>Top Products Forecast</h4>
-              <div style={styles.productsList}>
-                {hasData && displayData.topProducts && displayData.topProducts.length > 0 ? (
+              <h4 className="mb-4" style={{ fontSize: '1.3rem', fontWeight: '600', color: '#2c2c2c' }}>
+                Top Products Forecast
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {hasData && displayData.topProducts?.length ? (
                   displayData.topProducts.map((product, index) => (
-                    <div key={index} style={styles.productItem}>
-                      <div style={styles.productInfo}>
-                        <span style={styles.productName}>{product.name}</span>
-                        <span style={styles.productSales}>{formatCurrency(product.predictedSales)}</span>
+                    <div key={index} className="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                      <div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: '600', color: '#2c2c2c' }}>
+                          {product.name}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                          {formatCurrency(product.predictedSales)}
+                        </div>
                       </div>
-                      <Badge 
-                        bg={product.growth > 0 ? 'success' : 'danger'}
-                        style={styles.productGrowth}
-                      >
+                      <Badge bg={product.growth > 0 ? 'success' : 'danger'} style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
                         {product.growth > 0 ? '+' : ''}{product.growth}%
                       </Badge>
                     </div>
                   ))
                 ) : (
-                  <div style={styles.noDataMessage}>
-                    <p>No product forecast data available</p>
+                  <div className="text-center text-muted p-4">
+                    <p className="mb-0">No product forecast data available</p>
                   </div>
                 )}
               </div>
@@ -320,60 +572,57 @@ const SalesForcastingScreen = () => {
       </Row>
 
       {/* Forecast Details Table */}
-      <Row className="mt-4">
-        <Col lg={8} className="mb-4">
-          <Card style={styles.tableCard}>
+      <Row>
+        <Col lg={12}>
+          <Card className="border-0 shadow-sm">
             <Card.Body>
-              <h4 style={styles.chartTitle}>Detailed Forecast</h4>
-              <Table hover responsive style={styles.table}>
-                <thead style={styles.tableHead}>
+              <h4 className="mb-4" style={{ fontSize: '1.3rem', fontWeight: '600', color: '#2c2c2c' }}>
+                Daily Forecast Details
+              </h4>
+              <Table hover responsive className="mb-0" style={{ fontSize: '0.9rem' }}>
+                <thead className="bg-light">
                   <tr>
-                    <th style={styles.tableHeader}>Month</th>
-                    <th style={styles.tableHeader}>Predicted Sales</th>
-                    <th style={styles.tableHeader}>Actual Sales</th>
-                    <th style={styles.tableHeader}>Confidence</th>
-                    <th style={styles.tableHeader}>Variance</th>
+                    {['Date', 'Day', 'Predicted Sales', 'Confidence', 'Weekend'].map((header) => (
+                      <th key={header} className="p-3 fw-semibold text-muted border-bottom-2" 
+                          style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        {header}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {hasData && displayData.monthlyForecast && displayData.monthlyForecast.length > 0 ? (
-                    displayData.monthlyForecast.map((item, index) => {
-                      const variance = item.actual ? ((item.predicted - item.actual) / item.actual * 100) : null;
-                      return (
-                        <tr key={index} style={styles.tableRow}>
-                          <td style={styles.tableCell}>{item.month}</td>
-                          <td style={styles.tableCell}>
-                            <span style={styles.predictedValue}>{formatCurrency(item.predicted)}</span>
-                          </td>
-                          <td style={styles.tableCell}>
-                            {item.actual ? formatCurrency(item.actual) : 
-                              <span style={styles.pendingValue}>Pending</span>
-                            }
-                          </td>
-                          <td style={styles.tableCell}>
-                            <Badge 
-                              bg={item.confidence > 85 ? 'success' : item.confidence > 75 ? 'warning' : 'danger'}
-                              style={styles.confidenceBadge}
-                            >
-                              {item.confidence}%
-                            </Badge>
-                          </td>
-                          <td style={styles.tableCell}>
-                            {variance !== null ? (
-                              <span style={{
-                                color: Math.abs(variance) < 5 ? '#28a745' : Math.abs(variance) < 15 ? '#ffc107' : '#dc3545',
-                                fontWeight: '600'
-                              }}>
-                                {variance > 0 ? '+' : ''}{variance.toFixed(1)}%
-                              </span>
-                            ) : '-'}
-                          </td>
-                        </tr>
-                      );
-                    })
+                  {hasData && displayData.dailyForecast?.length ? (
+                    displayData.dailyForecast.map((item, index) => (
+                      <tr key={index}>
+                        <td className="p-3 border-bottom">{formatDate(item.date)}</td>
+                        <td className="p-3 border-bottom">
+                          <Badge bg={item.is_weekend ? 'warning' : 'primary'} style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
+                            {item.day_name}
+                          </Badge>
+                        </td>
+                        <td className="p-3 border-bottom">
+                          <span className="fw-semibold" style={{ color: '#16a34a' }}>
+                            {formatCurrency(item.predicted)}
+                          </span>
+                        </td>
+                        <td className="p-3 border-bottom">
+                          <Badge 
+                            bg={item.confidence > 80 ? 'success' : item.confidence > 70 ? 'warning' : 'danger'}
+                            style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+                          >
+                            {item.confidence}%
+                          </Badge>
+                        </td>
+                        <td className="p-3 border-bottom">
+                          <Badge bg={item.is_weekend ? 'warning' : 'light'} text={item.is_weekend ? 'dark' : 'dark'}>
+                            {item.is_weekend ? 'Weekend' : 'Weekday'}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))
                   ) : (
                     <tr>
-                      <td colSpan="5" style={{...styles.tableCell, textAlign: 'center', color: '#6c757d'}}>
+                      <td colSpan="5" className="p-3 text-center text-muted border-bottom">
                         No forecast data available
                       </td>
                     </tr>
@@ -383,373 +632,16 @@ const SalesForcastingScreen = () => {
             </Card.Body>
           </Card>
         </Col>
-
-        {/* Market Insights */}
-        <Col lg={4} className="mb-4">
-          <Card style={styles.insightsCard}>
-            <Card.Body>
-              <h4 style={styles.chartTitle}>Market Insights</h4>
-              
-              <div style={styles.insightSection}>
-                <h6 style={styles.insightTitle}>Seasonality</h6>
-                <p style={styles.insightText}>
-                  {hasData ? displayData.trends.seasonality : 'No seasonality data available'}
-                </p>
-              </div>
-
-              <div style={styles.insightSection}>
-                <h6 style={styles.insightTitle}>Growth Factors</h6>
-                <ul style={styles.insightList}>
-                  {hasData && displayData.trends.marketFactors ? 
-                    displayData.trends.marketFactors.map((factor, index) => (
-                      <li key={index} style={styles.insightItem}>{factor}</li>
-                    )) : 
-                    <li style={styles.insightItem}>No growth factor data available</li>
-                  }
-                </ul>
-              </div>
-
-              <div style={styles.insightSection}>
-                <h6 style={styles.insightTitle}>Risk Factors</h6>
-                <ul style={styles.insightList}>
-                  {hasData && displayData.trends.risks ? 
-                    displayData.trends.risks.map((risk, index) => (
-                      <li key={index} style={{...styles.insightItem, color: '#dc3545'}}>{risk}</li>
-                    )) :
-                    <li style={{...styles.insightItem, color: '#6c757d'}}>No risk factor data available</li>
-                  }
-                </ul>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
       </Row>
+      
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    padding: '20px'
-  },
-
-  // Header Styles
-  headerCard: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    border: 'none',
-    borderRadius: '15px',
-    boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
-    color: 'white'
-  },
-  headerContent: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: '20px'
-  },
-  headerText: {
-    flex: 1
-  },
-  headerIcon: {
-    fontSize: '3rem',
-    color: 'white',
-    marginRight: '20px'
-  },
-  title: {
-    fontSize: '2.5rem',
-    fontWeight: '700',
-    margin: '0 0 8px 0',
-    color: 'white'
-  },
-  subtitle: {
-    fontSize: '1.1rem',
-    color: 'rgba(255,255,255,0.8)',
-    margin: '0'
-  },
-  headerControls: {
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'center'
-  },
-
-  // Metric Cards
-  metricCard: {
-    border: 'none',
-    borderRadius: '12px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-    height: '120px'
-  },
-  metricBody: {
-    padding: '20px'
-  },
-  metricContent: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    height: '100%'
-  },
-  metricValue: {
-    fontSize: '1.8rem',
-    fontWeight: '700',
-    color: '#2c2c2c',
-    margin: '0 0 5px 0'
-  },
-  metricLabel: {
-    fontSize: '0.9rem',
-    color: '#6c757d',
-    margin: 0,
-    fontWeight: '500'
-  },
-  metricIcon: {
-    fontSize: '2.5rem',
-    color: '#667eea',
-    opacity: 0.7
-  },
-  confidenceBar: {
-    height: '4px',
-    backgroundColor: '#28a745',
-    borderRadius: '2px',
-    marginTop: '10px',
-    transition: 'width 0.3s ease'
-  },
-  scenarioContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    width: '100%'
-  },
-  scenarioItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  scenarioLabel: {
-    fontSize: '0.85rem',
-    color: '#6c757d',
-    fontWeight: '500'
-  },
-  scenarioValue: {
-    fontSize: '1.1rem',
-    fontWeight: '700'
-  },
-
-  // Chart Cards
-  chartCard: {
-    border: 'none',
-    borderRadius: '15px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-  },
-  chartHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-    flexWrap: 'wrap',
-    gap: '15px'
-  },
-  chartTitle: {
-    fontSize: '1.3rem',
-    fontWeight: '600',
-    color: '#2c2c2c',
-    margin: 0
-  },
-  chartLegend: {
-    display: 'flex',
-    gap: '20px',
-    alignItems: 'center'
-  },
-  legendItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-  },
-  legendColor: {
-    width: '12px',
-    height: '12px',
-    borderRadius: '2px'
-  },
-  legendText: {
-    fontSize: '0.85rem',
-    color: '#64748b',
-    fontWeight: '500'
-  },
-  chartContainer: {
-    width: '100%',
-    minHeight: '350px'
-  },
-  chartPlaceholder: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '60px 20px',
-    backgroundColor: '#f8f9fa',
-    borderRadius: '8px',
-    border: '2px dashed #dee2e6',
-    minHeight: '350px'
-  },
-  chartPlaceholderIcon: {
-    fontSize: '4rem',
-    color: '#6c757d',
-    marginBottom: '20px'
-  },
-  chartPlaceholderText: {
-    fontSize: '1.1rem',
-    color: '#6c757d',
-    margin: 0,
-    fontWeight: '500',
-    textAlign: 'center'
-  },
-
-  // Tooltip Styles
-  tooltipContainer: {
-    backgroundColor: '#ffffff',
-    padding: '12px 16px',
-    borderRadius: '8px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-    border: '1px solid #e2e8f0'
-  },
-  tooltipLabel: {
-    fontSize: '0.9rem',
-    fontWeight: '600',
-    color: '#2c2c2c',
-    margin: '0 0 8px 0'
-  },
-  tooltipValue: {
-    fontSize: '0.85rem',
-    fontWeight: '500',
-    margin: '4px 0'
-  },
-
-  // No Data Message
-  noDataMessage: {
-    textAlign: 'center',
-    color: '#6c757d',
-    fontSize: '0.95rem',
-    fontStyle: 'italic',
-    padding: '20px'
-  },
-
-  // Products List
-  productsList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-    marginTop: '20px'
-  },
-  productItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '12px',
-    backgroundColor: '#f8f9fa',
-    borderRadius: '8px'
-  },
-  productInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px'
-  },
-  productName: {
-    fontSize: '0.95rem',
-    fontWeight: '600',
-    color: '#2c2c2c'
-  },
-  productSales: {
-    fontSize: '0.85rem',
-    color: '#6c757d'
-  },
-  productGrowth: {
-    fontSize: '0.8rem',
-    padding: '4px 8px'
-  },
-
-  // Table Styles
-  tableCard: {
-    border: 'none',
-    borderRadius: '15px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-  },
-  table: {
-    marginBottom: 0,
-    fontSize: '0.9rem'
-  },
-  tableHead: {
-    backgroundColor: '#f8f9fa'
-  },
-  tableHeader: {
-    padding: '16px',
-    fontWeight: '600',
-    color: '#495057',
-    borderBottom: '2px solid #dee2e6',
-    fontSize: '0.85rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
-  },
-  tableRow: {
-    transition: 'background-color 0.2s ease'
-  },
-  tableCell: {
-    padding: '16px',
-    verticalAlign: 'middle',
-    borderBottom: '1px solid #e9ecef'
-  },
-  predictedValue: {
-    fontWeight: '600',
-    color: '#16a34a'
-  },
-  pendingValue: {
-    color: '#6c757d',
-    fontStyle: 'italic'
-  },
-  confidenceBadge: {
-    fontSize: '0.8rem',
-    padding: '4px 8px'
-  },
-
-  // Insights Card
-  insightsCard: {
-    border: 'none',
-    borderRadius: '15px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-    height: 'fit-content'
-  },
-  insightSection: {
-    marginBottom: '20px'
-  },
-  insightTitle: {
-    fontSize: '1rem',
-    fontWeight: '600',
-    color: '#2c2c2c',
-    marginBottom: '8px'
-  },
-  insightText: {
-    fontSize: '0.9rem',
-    color: '#6c757d',
-    lineHeight: '1.5',
-    margin: 0
-  },
-  insightList: {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0
-  },
-  insightItem: {
-    fontSize: '0.85rem',
-    color: '#6c757d',
-    padding: '4px 0',
-    position: 'relative',
-    paddingLeft: '16px',
-    '&::before': {
-      content: '•',
-      color: '#667eea',
-      position: 'absolute',
-      left: 0
-    }
-  }
 };
 
 export default SalesForcastingScreen;

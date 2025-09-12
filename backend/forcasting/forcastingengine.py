@@ -8,7 +8,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 class ARIMAModel:
-    """Optimized ARIMA Model implementation from scratch"""
+    """Optimized ARIMA Model implementation"""
     
     def __init__(self, p=1, d=1, q=1):
         self.p = p
@@ -32,11 +32,7 @@ class ARIMAModel:
         result = diff_data.copy()
         
         for i in range(d):
-            if len(original_data) > d - i - 1:
-                last_value = original_data[-(d-i)]
-            else:
-                last_value = original_data[-1]
-            
+            last_value = original_data[-(d-i)] if len(original_data) > d - i - 1 else original_data[-1]
             reconstructed = [last_value]
             for val in result:
                 reconstructed.append(reconstructed[-1] + val)
@@ -68,8 +64,6 @@ class ARIMAModel:
             return np.array([])
         
         autocorr = self.autocorrelation(data, p)
-        
-        # Yule-Walker equations
         R = np.zeros((p, p))
         r = np.zeros(p)
         
@@ -91,30 +85,20 @@ class ARIMAModel:
             return np.array([])
         
         autocorr = self.autocorrelation(residuals, q)
-        theta = np.zeros(q)
-        
-        for i in range(q):
-            theta[i] = -autocorr[i + 1] * 0.8
-        
-        return theta
+        return np.array([-autocorr[i + 1] * 0.8 for i in range(q)])
     
     def fit(self, data):
         """Fit ARIMA model to data"""
         self.original_data = np.array(data)
         
         # Apply differencing
-        if self.d > 0:
-            differenced_data = self.difference(self.original_data, self.d)
-        else:
-            differenced_data = self.original_data.copy()
+        differenced_data = self.difference(self.original_data, self.d) if self.d > 0 else self.original_data.copy()
         
         self.mean = np.mean(differenced_data)
         centered_data = differenced_data - self.mean
         
         # Estimate parameters
         self.params_ar = self.estimate_ar_params(centered_data, self.p)
-        
-        # Calculate residuals for MA estimation
         residuals = self._calculate_residuals(centered_data)
         self.params_ma = self.estimate_ma_params(residuals, self.q)
         
@@ -155,10 +139,7 @@ class ARIMAModel:
     
     def forecast(self, steps=1):
         """Generate forecasts"""
-        if self.d > 0:
-            differenced_data = self.difference(self.original_data, self.d)
-        else:
-            differenced_data = self.original_data.copy()
+        differenced_data = self.difference(self.original_data, self.d) if self.d > 0 else self.original_data.copy()
             
         forecasts = []
         last_values = differenced_data.copy()
@@ -248,22 +229,23 @@ class SalesForecastingEngine:
         self.daily_sales.columns = ['Date', 'Revenue', 'Units_Sold', 'Customers']
         self.daily_sales['Date'] = pd.to_datetime(self.daily_sales['Date'])
         
-        # Fill missing days
+        # Fill missing days and sort
         self._fill_missing_days()
         self.daily_sales = self.daily_sales.sort_values('Date').reset_index(drop=True)
         
-        print(f"Prepared {len(self.daily_sales)} days of data from {self.daily_sales['Date'].min()} to {self.daily_sales['Date'].max()}")
+        print(f"Prepared {len(self.daily_sales)} days of data")
         
     def _fill_missing_days(self):
         """Fill missing days in time series"""
         if self.daily_sales.empty:
             return
         
-        start_date = self.daily_sales['Date'].min()
-        end_date = self.daily_sales['Date'].max()
-        
-        complete_dates = pd.date_range(start=start_date, end=end_date, freq='D')
-        complete_df = pd.DataFrame({'Date': complete_dates})
+        date_range = pd.date_range(
+            start=self.daily_sales['Date'].min(),
+            end=self.daily_sales['Date'].max(),
+            freq='D'
+        )
+        complete_df = pd.DataFrame({'Date': date_range})
         
         self.daily_sales = complete_df.merge(self.daily_sales, on='Date', how='left')
         self.daily_sales[['Revenue', 'Units_Sold', 'Customers']] = \
@@ -313,14 +295,12 @@ class SalesForecastingEngine:
             print(f"Error fitting model: {str(e)}")
     
     def generate_forecast(self, period='7days'):
-        """Generate comprehensive forecast with complete historical data"""
+        """Generate comprehensive forecast with ALL historical data"""
         if self.arima_model is None:
             return self._get_empty_forecast()
         
         try:
             forecast_steps = 7 if period == '7days' else 15
-            
-            # Generate forecasts
             forecasts = self.arima_model.forecast(steps=forecast_steps)
             last_date = self.daily_sales['Date'].max()
             
@@ -356,10 +336,10 @@ class SalesForecastingEngine:
             avg_confidence = np.mean([f['confidence'] for f in daily_forecasts])
             uncertainty_factor = (100 - avg_confidence) / 100
             
-            # Prepare complete line graph data with ALL historical data
+            # Prepare ALL historical data + forecast data for line graph
             line_graph_data = []
             
-            # Add ALL historical data points (no limitation)
+            # Add ALL historical data points
             for _, row in self.daily_sales.iterrows():
                 line_graph_data.append({
                     'date': row['Date'].strftime('%Y-%m-%d'),
@@ -394,9 +374,7 @@ class SalesForecastingEngine:
                     'type': f'ARIMA({self.arima_model.p},{self.arima_model.d},{self.arima_model.q})',
                     'dataPoints': len(self.daily_sales),
                     'forecastHorizon': f'{forecast_steps} days',
-                    'lastDataDate': self.daily_sales['Date'].max().strftime('%Y-%m-%d'),
-                    'totalHistoricalDays': len(self.daily_sales),
-                    'dateRange': f"{self.daily_sales['Date'].min().strftime('%Y-%m-%d')} to {self.daily_sales['Date'].max().strftime('%Y-%m-%d')}"
+                    'lastDataDate': self.daily_sales['Date'].max().strftime('%Y-%m-%d')
                 }
             }
             
@@ -454,9 +432,7 @@ class SalesForecastingEngine:
                 'type': 'No model available',
                 'dataPoints': 0,
                 'forecastHorizon': 'N/A',
-                'lastDataDate': 'N/A',
-                'totalHistoricalDays': 0,
-                'dateRange': 'N/A'
+                'lastDataDate': 'N/A'
             }
         }
 
@@ -487,8 +463,7 @@ def get_sales_forecast():
     
     try:
         period = request.args.get('period', '7days')
-        if period not in ['7days', '15days']:
-            period = '7days'
+        period = '7days' if period not in ['7days', '15days'] else period
         
         forecast_data = forecasting_engine.generate_forecast(period)
         return jsonify(forecast_data)
@@ -551,4 +526,4 @@ if __name__ == '__main__':
     print("- POST /api/sales/retrain")
     print("- GET  /health")
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)

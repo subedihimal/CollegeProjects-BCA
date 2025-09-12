@@ -1,107 +1,50 @@
-// @desc    Get sales forecast data
+// @desc    Get sales forecast data (Daily: 7 or 15 days) with complete historical data
 // @route   GET /api/sales/forecast
 // @access  Private/Admin
 const getSalesForecast = async (req, res) => {
   try {
-    const { period = '3months' } = req.query;
+    const { period = '7days' } = req.query;
     
     // Validate period parameter
-    const validPeriods = ['3months', '6months', '1year'];
-    if (!validPeriods.includes(period)) {
+    if (!['7days', '15days'].includes(period)) {
       return res.status(400).json({
-        message: 'Invalid period. Must be one of: 3months, 6months, 1year'
+        message: 'Invalid period. Must be one of: 7days, 15days'
       });
     }
     
     // Call the Python ARIMA forecasting engine
     const forecastResponse = await fetch(
-      `http://localhost:5000/api/sales/forecast?period=${period}`,
+      `http://localhost:5001/api/sales/forecast?period=${period}`,
       {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Add timeout to prevent hanging
-        timeout: 30000, // 30 seconds
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 30000,
       }
     );
     
-    // Check if the Python service is available
+    // Handle service unavailable
     if (!forecastResponse.ok) {
-      if (forecastResponse.status === 500) {
-        // Python service returned an error
-        const errorData = await forecastResponse.json().catch(() => ({}));
-        return res.status(200).json({
-          summary: {
-            predictedRevenue: 0,
-            growthRate: 0,
-            confidence: 0,
-            bestCase: 0,
-            worstCase: 0
-          },
-          monthlyForecast: [],
-          topProducts: [],
-          trends: {
-            seasonality: 'Forecasting service temporarily unavailable',
-            marketFactors: ['Service maintenance in progress'],
-            risks: ['Forecasting data not available']
-          },
-          serviceStatus: 'error',
-          message: errorData.error || 'Forecasting engine error'
-        });
-      }
-      
-      throw new Error(`Forecasting service responded with status: ${forecastResponse.status}`);
+      return res.status(200).json(getEmptyForecastResponse(
+        forecastResponse.status === 500 ? 'Forecasting engine error' : 'Service temporarily unavailable'
+      ));
     }
     
-    // Parse the forecast data from Python service
+    // Parse and return forecast data
     const forecastData = await forecastResponse.json();
-    
-    // Add metadata about the service call
     forecastData.serviceStatus = 'success';
     forecastData.timestamp = new Date().toISOString();
     forecastData.period = period;
-    
-    // Log successful forecast generation (for monitoring)
-    console.log(`Sales forecast generated successfully for period: ${period}`);
-    console.log(`Predicted revenue: ${forecastData.summary?.predictedRevenue || 0}`);
-    
+        
     res.json(forecastData);
     
   } catch (error) {
     console.error('Error in getSalesForecast:', error);
     
-    // Check if it's a connection error to Python service
+    // Handle connection errors gracefully
     if (error.code === 'ECONNREFUSED' || error.message.includes('fetch')) {
-      console.error('Python forecasting service is not running on localhost:5000');
-      
-      // Return graceful fallback response
-      return res.status(200).json({
-        summary: {
-          predictedRevenue: 0,
-          growthRate: 0,
-          confidence: 0,
-          bestCase: 0,
-          worstCase: 0
-        },
-        monthlyForecast: [],
-        topProducts: [],
-        trends: {
-          seasonality: 'Forecasting service unavailable',
-          marketFactors: ['Please start the Python forecasting engine'],
-          risks: ['Run: python forecasting_engine.py']
-        },
-        serviceStatus: 'unavailable',
-        message: 'Forecasting service not running. Please start the Python ARIMA engine.',
-        troubleshooting: {
-          step1: 'Ensure cleaned_customer_data.csv exists',
-          step2: 'Run: python forecasting_engine.py',
-          step3: 'Verify service is running on localhost:5000'
-        }
-      });
+      return res.status(200).json(getEmptyForecastResponse('Forecasting service not running'));
     }
     
-    // Generic error response
     res.status(500).json({
       message: 'Unable to generate sales forecast',
       error: error.message,
@@ -110,44 +53,45 @@ const getSalesForecast = async (req, res) => {
   }
 };
 
-// @desc    Get forecasting model information
-// @route   GET /api/sales/model-info
+// @desc    Get data status for forecasting engine
+// @route   GET /api/sales/data-status
 // @access  Private/Admin
-const getModelInfo = async (req, res) => {
+const getDataStatus = async (req, res) => {
   try {
-    const modelResponse = await fetch('http://localhost:5000/api/sales/model-info', {
+    const statusResponse = await fetch('http://localhost:5001/api/sales/data-status', {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 10000, // 10 seconds
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 10000,
     });
     
-    if (!modelResponse.ok) {
-      throw new Error(`Model info service responded with status: ${modelResponse.status}`);
+    if (!statusResponse.ok) {
+      throw new Error(`Data status service error: ${statusResponse.status}`);
     }
     
-    const modelData = await modelResponse.json();
+    const statusData = await statusResponse.json();
+    statusData.timestamp = new Date().toISOString();
     
-    // Add timestamp
-    modelData.timestamp = new Date().toISOString();
-    
-    res.json(modelData);
+    res.json(statusData);
     
   } catch (error) {
-    console.error('Error in getModelInfo:', error);
+    console.error('Error in getDataStatus:', error);
     
     if (error.code === 'ECONNREFUSED' || error.message.includes('fetch')) {
       return res.status(200).json({
-        model: 'Service Unavailable',
-        parameters: null,
-        data_points: 0,
-        message: 'Python forecasting service not running',
+        status: 'error',
+        message: 'Forecasting service not running',
+        data_available: false,
+        record_count: 0,
+        models_trained: false,
+        daily_data_points: 0,
         serviceStatus: 'unavailable'
       });
     }
     
-    res.status(500).json({});
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
   }
 };
 
@@ -157,20 +101,18 @@ const getModelInfo = async (req, res) => {
 const checkForecastingHealth = async (req, res) => {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    const healthResponse = await fetch('http://localhost:5000/health', {
+    const healthResponse = await fetch('http://localhost:5001/health', {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       signal: controller.signal
     });
     
     clearTimeout(timeoutId);
     
     if (!healthResponse.ok) {
-      throw new Error(`Health check failed with status: ${healthResponse.status}`);
+      throw new Error(`Health check failed: ${healthResponse.status}`);
     }
     
     const healthData = await healthResponse.json();
@@ -178,73 +120,313 @@ const checkForecastingHealth = async (req, res) => {
     res.json({
       status: 'healthy',
       forecasting_service: healthData,
+      capabilities: {
+        daily_forecasting: true,
+        periods_supported: ['7days', '15days'],
+        features: ['ARIMA modeling', 'Complete historical data', 'Weekend adjustments', 'Full data range visualization']
+      },
       timestamp: new Date().toISOString()
     });
     
   } catch (error) {
-    console.error('Forecasting service health check failed:', error);
+    console.error('Health check failed:', error);
     
     res.status(200).json({
       status: 'unhealthy',
-      forecasting_service: {
-        status: 'unavailable',
-        error: error.message
-      },
+      forecasting_service: { status: 'unavailable', error: error.message },
       timestamp: new Date().toISOString(),
       instructions: [
-        '1. Ensure Python dependencies are installed',
-        '2. Run: python forecasting_engine.py',
-        '3. Verify localhost:5000 is accessible'
+        'Ensure data.csv exists in forecasting directory',
+        'Run: python forecastingengine.py',
+        'Verify localhost:5001 accessibility',
+        'Check data contains records from 2023 onwards'
       ]
     });
   }
 };
 
-// @desc    Refresh forecast cache (trigger model retrain)
+// @desc    Refresh forecast models (trigger retrain)
 // @route   POST /api/sales/refresh
 // @access  Private/Admin
 const refreshForecastModels = async (req, res) => {
   try {
-    const refreshResponse = await fetch('http://localhost:5000/api/sales/retrain', {
+    console.log('Initiating model refresh...');
+    
+    const refreshResponse = await fetch('http://localhost:5001/api/sales/retrain', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 60000, // 60 seconds for model retraining
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 120000, // 2 minutes for retraining
     });
     
     if (!refreshResponse.ok) {
-      throw new Error(`Refresh failed with status: ${refreshResponse.status}`);
+      const errorData = await refreshResponse.json().catch(() => ({}));
+      throw new Error(`Refresh failed: ${refreshResponse.status}, ${errorData.message || 'Unknown error'}`);
     }
     
     const refreshData = await refreshResponse.json();
+    console.log('Model refresh completed');
     
     res.json({
       message: 'Forecast models refreshed successfully',
       details: refreshData,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      note: 'All historical data from 2023 onwards will be included'
     });
     
   } catch (error) {
-    console.error('Error refreshing forecast models:', error);
+    console.error('Error refreshing models:', error);
     
     if (error.code === 'ECONNREFUSED' || error.message.includes('fetch')) {
       return res.status(503).json({
-        message: 'Forecasting service unavailable for refresh',
+        message: 'Forecasting service unavailable',
         error: 'Python service not running'
       });
     }
     
+    if (error.name === 'AbortError' || error.message.includes('timeout')) {
+      return res.status(504).json({
+        message: 'Model refresh timeout',
+        error: 'Operation took longer than expected'
+      });
+    }
+    
     res.status(500).json({
-      message: 'Failed to refresh forecast models',
+      message: 'Failed to refresh models',
       error: error.message
+    });
+  }
+};
+
+// @desc    Get historical data summary for visualization
+// @route   GET /api/sales/history-summary
+// @access  Private/Admin
+const getHistorySummary = async (req, res) => {
+  try {
+    const statusResponse = await fetch('http://localhost:5001/api/sales/data-status', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 10000,
+    });
+    
+    if (!statusResponse.ok) {
+      throw new Error(`History summary service error: ${statusResponse.status}`);
+    }
+    
+    const statusData = await statusResponse.json();
+    
+    // Get a sample forecast to extract date range information
+    const forecastResponse = await fetch('http://localhost:5001/api/sales/forecast?period=7days', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 15000,
+    });
+    
+    let dateRangeInfo = {};
+    if (forecastResponse.ok) {
+      const forecastData = await forecastResponse.json();
+      dateRangeInfo = {
+        dateRange: forecastData.modelInfo?.dateRange || 'Unknown',
+        totalDays: forecastData.modelInfo?.totalHistoricalDays || 0,
+        lastDataDate: forecastData.modelInfo?.lastDataDate || 'Unknown'
+      };
+    }
+    
+    res.json({
+      status: 'success',
+      ...statusData,
+      ...dateRangeInfo,
+      message: 'Complete historical data available for visualization',
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Error in getHistorySummary:', error);
+    
+    res.status(500).json({
+      status: 'error',
+      message: 'Unable to retrieve history summary',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get sample historical data for testing
+// @route   GET /api/sales/sample-data
+// @access  Private/Admin
+const getSampleData = async (req, res) => {
+  try {
+    const { limit = 100 } = req.query;
+    
+    // This would typically fetch from your database
+    // For now, it calls the Python service to get some sample data
+    const forecastResponse = await fetch('http://localhost:5001/api/sales/forecast?period=7days', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 15000,
+    });
+    
+    if (!forecastResponse.ok) {
+      throw new Error('Unable to fetch sample data');
+    }
+    
+    const forecastData = await forecastResponse.json();
+    
+    // Return a sample of the historical data
+    const sampleHistoricalData = forecastData.lineGraphData
+      ? forecastData.lineGraphData.filter(item => item.type === 'historical').slice(-limit)
+      : [];
+    
+    res.json({
+      status: 'success',
+      sampleData: sampleHistoricalData,
+      totalHistoricalPoints: forecastData.modelInfo?.totalHistoricalDays || 0,
+      dateRange: forecastData.modelInfo?.dateRange || 'Unknown',
+      message: `Showing last ${Math.min(limit, sampleHistoricalData.length)} historical data points`,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Error in getSampleData:', error);
+    
+    res.status(500).json({
+      status: 'error',
+      message: 'Unable to retrieve sample data',
+      error: error.message
+    });
+  }
+};
+
+// Helper function to generate empty forecast response
+const getEmptyForecastResponse = (reason = 'Service unavailable') => ({
+  summary: {
+    predictedRevenue: 0,
+    growthRate: 0,
+    confidence: 0,
+    bestCase: 0,
+    worstCase: 0,
+    dailyAverage: 0
+  },
+  dailyForecast: [],
+  lineGraphData: [],
+  topProducts: [],
+  modelInfo: {
+    type: 'No model available',
+    dataPoints: 0,
+    forecastHorizon: 'N/A',
+    lastDataDate: 'N/A',
+    totalHistoricalDays: 0,
+    dateRange: 'N/A'
+  },
+  serviceStatus: 'unavailable',
+  message: reason,
+  note: 'Please ensure the Python forecasting service is running and data.csv contains historical data from 2023 onwards'
+});
+
+// Helper function to validate forecast response
+const validateForecastResponse = (data) => {
+  const requiredFields = ['summary', 'dailyForecast', 'lineGraphData', 'modelInfo'];
+  const summaryFields = ['predictedRevenue', 'growthRate', 'confidence', 'bestCase', 'worstCase', 'dailyAverage'];
+  
+  // Check main structure
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      console.warn(`Missing field in forecast response: ${field}`);
+      return false;
+    }
+  }
+  
+  // Check summary fields
+  for (const field of summaryFields) {
+    if (data.summary[field] === undefined || data.summary[field] === null) {
+      console.warn(`Missing summary field: ${field}`);
+      return false;
+    }
+  }
+  
+  // Validate data arrays
+  if (!Array.isArray(data.dailyForecast) || !Array.isArray(data.lineGraphData)) {
+    console.warn('Invalid array structure in forecast response');
+    return false;
+  }
+  
+  return true;
+};
+
+// @desc    Validate forecast data integrity
+// @route   GET /api/sales/validate
+// @access  Private/Admin
+const validateForecastData = async (req, res) => {
+  try {
+    const { period = '7days' } = req.query;
+    
+    const forecastResponse = await fetch(
+      `http://localhost:5001/api/sales/forecast?period=${period}`,
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 15000,
+      }
+    );
+    
+    if (!forecastResponse.ok) {
+      return res.json({
+        valid: false,
+        message: 'Forecasting service unavailable',
+        status: 'service_error'
+      });
+    }
+    
+    const forecastData = await forecastResponse.json();
+    const isValid = validateForecastResponse(forecastData);
+    
+    const validation = {
+      valid: isValid,
+      status: isValid ? 'valid' : 'invalid',
+      checks: {
+        hasHistoricalData: forecastData.lineGraphData?.some(item => item.type === 'historical') || false,
+        hasForecastData: forecastData.lineGraphData?.some(item => item.type === 'forecast') || false,
+        historicalDataPoints: forecastData.modelInfo?.totalHistoricalDays || 0,
+        forecastDataPoints: forecastData.dailyForecast?.length || 0,
+        dateRangeCoverage: forecastData.modelInfo?.dateRange || 'Unknown',
+        modelTrained: !!forecastData.modelInfo?.type && forecastData.modelInfo.type !== 'No model available'
+      },
+      recommendations: []
+    };
+    
+    // Add recommendations based on validation
+    if (validation.checks.historicalDataPoints < 30) {
+      validation.recommendations.push('Consider adding more historical data for better predictions');
+    }
+    
+    if (!validation.checks.modelTrained) {
+      validation.recommendations.push('Model needs to be trained with valid data');
+    }
+    
+    if (!validation.checks.hasHistoricalData) {
+      validation.recommendations.push('No historical data available for visualization');
+    }
+    
+    res.json(validation);
+    
+  } catch (error) {
+    console.error('Error in validateForecastData:', error);
+    
+    res.json({
+      valid: false,
+      status: 'error',
+      message: error.message,
+      checks: {},
+      recommendations: ['Check if forecasting service is running', 'Verify data.csv exists and contains valid data']
     });
   }
 };
 
 export { 
   getSalesForecast,
-  getModelInfo,
+  getDataStatus,
   checkForecastingHealth,
-  refreshForecastModels
+  refreshForecastModels,
+  getHistorySummary,
+  getSampleData,
+  validateForecastData
 };
