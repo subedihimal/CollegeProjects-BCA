@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Table, Badge, Dropdown, Button } from 'react-bootstrap';
 import { FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown, FaDownload } from 'react-icons/fa';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Loader from '../../components/Loader';
 
 const SalesForcastingScreen = () => {
@@ -47,6 +48,26 @@ const SalesForcastingScreen = () => {
       currency: 'INR',
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  // Custom tooltip for the chart
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={styles.tooltipContainer}>
+          <p style={styles.tooltipLabel}>{`Month: ${label}`}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{
+              ...styles.tooltipValue,
+              color: entry.color
+            }}>
+              {`${entry.name}: ${formatCurrency(entry.value)}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
   };
 
   // Mock data structure for when there's no data
@@ -192,29 +213,73 @@ const SalesForcastingScreen = () => {
             <Card.Body>
               <div style={styles.chartHeader}>
                 <h4 style={styles.chartTitle}>Monthly Sales Forecast</h4>
-                <Badge bg="info" style={styles.chartBadge}>Predicted vs Actual</Badge>
-              </div>
-              <div style={styles.chartPlaceholder}>
-                <FaChartLine style={styles.chartPlaceholderIcon} />
-                <p style={styles.chartPlaceholderText}>
-                  {hasData ? 'Sales Forecast Chart' : 'No Data Available'}
-                </p>
-                {hasData && displayData.monthlyForecast && displayData.monthlyForecast.length > 0 ? (
-                  <div style={styles.chartData}>
-                    {displayData.monthlyForecast.map((item, index) => (
-                      <div key={index} style={styles.chartDataItem}>
-                        <span style={styles.chartMonth}>{item.month}</span>
-                        <span style={styles.chartValue}>₹{(item.predicted/1000).toFixed(0)}k</span>
-                        <div style={{
-                          ...styles.chartBar,
-                          height: `${(item.predicted / Math.max(...displayData.monthlyForecast.map(d => d.predicted))) * 100}%`
-                        }}></div>
-                      </div>
-                    ))}
+                <div style={styles.chartLegend}>
+                  <div style={styles.legendItem}>
+                    <div style={{...styles.legendColor, backgroundColor: '#2563eb'}}></div>
+                    <span style={styles.legendText}>Actual Sales</span>
                   </div>
+                  <div style={styles.legendItem}>
+                    <div style={{...styles.legendColor, backgroundColor: '#16a34a'}}></div>
+                    <span style={styles.legendText}>Predicted Sales</span>
+                  </div>
+                </div>
+              </div>
+              <div style={styles.chartContainer}>
+                {hasData && displayData.monthlyForecast && displayData.monthlyForecast.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <LineChart
+                      data={displayData.monthlyForecast}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 20,
+                        bottom: 20,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="#64748b"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis 
+                        stroke="#64748b"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line
+                        type="monotone"
+                        dataKey="actual"
+                        stroke="#2563eb"
+                        strokeWidth={3}
+                        dot={{ fill: '#2563eb', strokeWidth: 2, r: 6 }}
+                        activeDot={{ r: 8, stroke: '#2563eb', strokeWidth: 2 }}
+                        connectNulls={false}
+                        name="Actual Sales"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="predicted"
+                        stroke="#16a34a"
+                        strokeWidth={3}
+                        strokeDasharray="5 5"
+                        dot={{ fill: '#16a34a', strokeWidth: 2, r: 6 }}
+                        activeDot={{ r: 8, stroke: '#16a34a', strokeWidth: 2 }}
+                        name="Predicted Sales"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 ) : (
-                  <div style={styles.noDataMessage}>
-                    <p>No forecast data available for the selected period</p>
+                  <div style={styles.chartPlaceholder}>
+                    <FaChartLine style={styles.chartPlaceholderIcon} />
+                    <p style={styles.chartPlaceholderText}>
+                      No forecast data available for the selected period
+                    </p>
                   </div>
                 )}
               </div>
@@ -481,7 +546,9 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '20px'
+    marginBottom: '20px',
+    flexWrap: 'wrap',
+    gap: '15px'
   },
   chartTitle: {
     fontSize: '1.3rem',
@@ -489,59 +556,72 @@ const styles = {
     color: '#2c2c2c',
     margin: 0
   },
-  chartBadge: {
-    padding: '6px 12px',
-    fontSize: '0.8rem'
+  chartLegend: {
+    display: 'flex',
+    gap: '20px',
+    alignItems: 'center'
+  },
+  legendItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  legendColor: {
+    width: '12px',
+    height: '12px',
+    borderRadius: '2px'
+  },
+  legendText: {
+    fontSize: '0.85rem',
+    color: '#64748b',
+    fontWeight: '500'
+  },
+  chartContainer: {
+    width: '100%',
+    minHeight: '350px'
   },
   chartPlaceholder: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '40px 20px',
+    justifyContent: 'center',
+    padding: '60px 20px',
     backgroundColor: '#f8f9fa',
     borderRadius: '8px',
-    border: '2px dashed #dee2e6'
+    border: '2px dashed #dee2e6',
+    minHeight: '350px'
   },
   chartPlaceholderIcon: {
-    fontSize: '3rem',
+    fontSize: '4rem',
     color: '#6c757d',
-    marginBottom: '15px'
+    marginBottom: '20px'
   },
   chartPlaceholderText: {
     fontSize: '1.1rem',
     color: '#6c757d',
-    margin: '0 0 20px 0',
-    fontWeight: '500'
+    margin: 0,
+    fontWeight: '500',
+    textAlign: 'center'
   },
-  chartData: {
-    display: 'flex',
-    gap: '15px',
-    alignItems: 'end',
-    marginTop: '20px'
+
+  // Tooltip Styles
+  tooltipContainer: {
+    backgroundColor: '#ffffff',
+    padding: '12px 16px',
+    borderRadius: '8px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+    border: '1px solid #e2e8f0'
   },
-  chartDataItem: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '8px',
-    position: 'relative'
-  },
-  chartMonth: {
-    fontSize: '0.8rem',
-    color: '#6c757d',
-    fontWeight: '500'
-  },
-  chartValue: {
-    fontSize: '0.85rem',
+  tooltipLabel: {
+    fontSize: '0.9rem',
+    fontWeight: '600',
     color: '#2c2c2c',
-    fontWeight: '600'
+    margin: '0 0 8px 0'
   },
-  chartBar: {
-    width: '30px',
-    backgroundColor: '#667eea',
-    borderRadius: '3px 3px 0 0',
-    minHeight: '20px',
-    transition: 'height 0.3s ease'
+  tooltipValue: {
+    fontSize: '0.85rem',
+    fontWeight: '500',
+    margin: '4px 0'
   },
 
   // No Data Message
@@ -619,7 +699,7 @@ const styles = {
   },
   predictedValue: {
     fontWeight: '600',
-    color: '#007bff'
+    color: '#16a34a'
   },
   pendingValue: {
     color: '#6c757d',
