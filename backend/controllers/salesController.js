@@ -1,146 +1,376 @@
-// @desc    Get sales forecast data (Daily: 7 or 15 days) with complete historical data
+// Optimized Sales Forecasting API Controllers
+// Consolidated and streamlined for better performance and maintainability
+
+const BASE_URL = 'http://localhost:5001';
+const DEFAULT_TIMEOUT = 15000;
+
+// Utility functions
+const fetchWithTimeout = async (url, options = {}) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), options.timeout || DEFAULT_TIMEOUT);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', ...options.headers }
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
+
+const handleServiceError = (error, defaultResponse = null) => {
+  if (error.code === 'ECONNREFUSED' || error.message.includes('fetch') || error.name === 'AbortError') {
+    return { 
+      status: 'service_unavailable', 
+      message: 'Forecasting service not running',
+      ...defaultResponse 
+    };
+  }
+  return { status: 'error', message: error.message, ...defaultResponse };
+};
+
+const validatePeriod = (period) => ['7days', '15days'].includes(period);
+
+const getPerformanceLevel = (r2) => {
+  if (r2 >= 0.8) return 'excellent';
+  if (r2 >= 0.6) return 'good';
+  if (r2 >= 0.4) return 'fair';
+  return 'poor';
+};
+
+const calculateAccuracyScore = (metrics) => {
+  if (!metrics?.r2) return { score: 0, level: 'unknown' };
+  
+  let score = Math.max(0, metrics.r2 * 100);
+  if (metrics.mae > 100) score *= 0.8;
+  if (metrics.mae > 200) score *= 0.6;
+  
+  return {
+    score: Math.round(Math.min(100, score)),
+    level: getPerformanceLevel(metrics.r2),
+    details: {
+      r2: Math.round(metrics.r2 * 10000) / 100,
+      mae: Math.round(metrics.mae * 100) / 100,
+      rmse: Math.round(metrics.rmse * 100) / 100
+    }
+  };
+};
+
+// @desc    Get sales forecast data with complete historical data and metrics
 // @route   GET /api/sales/forecast
 // @access  Private/Admin
 const getSalesForecast = async (req, res) => {
   try {
     const { period = '7days' } = req.query;
     
-    // Validate period parameter
-    if (!['7days', '15days'].includes(period)) {
-      return res.status(400).json({
-        message: 'Invalid period. Must be one of: 7days, 15days'
+    if (!validatePeriod(period)) {
+      return res.status(400).json({ message: 'Invalid period. Must be: 7days, 15days' });
+    }
+    
+    const response = await fetchWithTimeout(`${BASE_URL}/api/sales/forecast?period=${period}`, {
+      timeout: 30000
+    });
+    
+    if (!response.ok) {
+      return res.json({
+        summary: { predictedRevenue: 0, growthRate: 0, confidence: 0, bestCase: 0, worstCase: 0, dailyAverage: 0 },
+        dailyForecast: [], categoryForecast: [], lineGraphData: [], topProducts: [],
+        modelInfo: { type: 'No model available', metrics: null, categoryModels: 0 },
+        serviceStatus: 'unavailable',
+        message: response.status === 500 ? 'Forecasting engine error' : 'Service temporarily unavailable'
       });
     }
     
-    // Call the Python ARIMA forecasting engine
-    const forecastResponse = await fetch(
-      `http://localhost:5001/api/sales/forecast?period=${period}`,
-      {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 30000,
-      }
+    const data = await response.json();
+    res.json({ 
+      ...data, 
+      serviceStatus: 'success', 
+      timestamp: new Date().toISOString(), 
+      period 
+    });
+    
+  } catch (error) {
+    console.error('Forecast error:', error);
+    res.json(handleServiceError(error, {
+      summary: { predictedRevenue: 0, growthRate: 0, confidence: 0, bestCase: 0, worstCase: 0, dailyAverage: 0 },
+      dailyForecast: [], categoryForecast: [], lineGraphData: [], topProducts: [],
+      modelInfo: { type: 'No model available', metrics: null, categoryModels: 0 },
+      serviceStatus: 'error'
+    }));
+  }
+};
+
+// @desc    Get model performance metrics
+// @route   GET /api/sales/metrics
+// @access  Private/Admin
+const getModelMetrics = async (req, res) => {
+  try {
+    const response = await fetchWithTimeout(`${BASE_URL}/api/sales/metrics`);
+    
+    if (!response.ok) {
+      return res.json({
+        status: response.status === 404 ? 'no_models' : 'service_error',
+        message: response.status === 404 ? 'No trained models available' : 'Metrics service error',
+        main_model: null,
+        category_models: {},
+        recommendations: ['Train models using POST /api/sales/refresh']
+      });
+    }
+    
+    const data = await response.json();
+    
+    // Add performance interpretation
+    if (data.main_model?.metrics) {
+      const { r2 } = data.main_model.metrics;
+      data.interpretation = {
+        quality: getPerformanceLevel(r2),
+        message: r2 >= 0.6 ? `Model explains ${Math.round(r2 * 100)}% of variance` : 'Model performance needs improvement'
+      };
+    }
+    
+    res.json({ ...data, timestamp: new Date().toISOString() });
+    
+  } catch (error) {
+    console.error('Metrics error:', error);
+    res.json(handleServiceError(error, {
+      main_model: null,
+      category_models: {}
+    }));
+  }
+};
+
+// @desc    Get category quantity forecasts
+// @route   GET /api/sales/categories
+// @access  Private/Admin
+const getCategoryForecasts = async (req, res) => {
+  try {
+    const { period = '7days' } = req.query;
+    
+    if (!validatePeriod(period)) {
+      return res.status(400).json({ message: 'Invalid period. Must be: 7days, 15days' });
+    }
+    
+    const response = await fetchWithTimeout(`${BASE_URL}/api/sales/categories?period=${period}`, {
+      timeout: 20000
+    });
+    
+    if (!response.ok) {
+      return res.json({
+        status: response.status === 404 ? 'no_category_models' : 'service_error',
+        message: response.status === 404 ? 'No category models available' : 'Categories service error',
+        categories: [],
+        period,
+        recommendations: ['Ensure data contains Product Type column', 'Retrain models using POST /api/sales/refresh']
+      });
+    }
+    
+    const data = await response.json();
+    
+    // Add summary statistics
+    if (data.categories?.length > 0) {
+      data.summary = {
+        total_categories: data.categories.length,
+        total_predicted_quantity: data.categories.reduce((sum, cat) => sum + cat.total_predicted_quantity, 0),
+        avg_accuracy: Math.round(data.categories.reduce((sum, cat) => 
+          sum + (cat.model_metrics?.r2 || 0), 0) / data.categories.length * 100),
+        top_category: data.categories[0]?.category || 'None'
+      };
+    }
+    
+    res.json({ ...data, timestamp: new Date().toISOString() });
+    
+  } catch (error) {
+    console.error('Categories error:', error);
+    res.json(handleServiceError(error, {
+      categories: [],
+      period
+    }));
+  }
+};
+
+// @desc    Get individual category forecast
+// @route   GET /api/sales/category/:categoryName
+// @access  Private/Admin
+const getSingleCategoryForecast = async (req, res) => {
+  try {
+    const { categoryName } = req.params;
+    const { period = '7days' } = req.query;
+    
+    if (!categoryName) {
+      return res.status(400).json({ message: 'Category name is required' });
+    }
+    
+    if (!validatePeriod(period)) {
+      return res.status(400).json({ message: 'Invalid period. Must be: 7days, 15days' });
+    }
+    
+    const response = await fetchWithTimeout(
+      `${BASE_URL}/api/sales/category/${encodeURIComponent(categoryName)}/forecast?period=${period}`
     );
     
-    // Handle service unavailable
-    if (!forecastResponse.ok) {
-      return res.status(200).json(getEmptyForecastResponse(
-        forecastResponse.status === 500 ? 'Forecasting engine error' : 'Service temporarily unavailable'
-      ));
+    if (!response.ok) {
+      if (response.status === 404) {
+        return res.status(404).json({
+          message: `No model available for category: ${categoryName}`,
+          suggestion: 'Use GET /api/sales/categories to see available categories'
+        });
+      }
+      throw new Error(`Category service error: ${response.status}`);
     }
     
-    // Parse and return forecast data
-    const forecastData = await forecastResponse.json();
-    forecastData.serviceStatus = 'success';
-    forecastData.timestamp = new Date().toISOString();
-    forecastData.period = period;
-        
-    res.json(forecastData);
+    const data = await response.json();
+    
+    // Add performance assessment
+    if (data.metrics) {
+      data.performance_assessment = {
+        level: getPerformanceLevel(data.metrics.r2),
+        accuracy_score: calculateAccuracyScore(data.metrics)
+      };
+    }
+    
+    res.json({ ...data, timestamp: new Date().toISOString() });
     
   } catch (error) {
-    console.error('Error in getSalesForecast:', error);
-    
-    // Handle connection errors gracefully
-    if (error.code === 'ECONNREFUSED' || error.message.includes('fetch')) {
-      return res.status(200).json(getEmptyForecastResponse('Forecasting service not running'));
-    }
-    
+    console.error('Single category error:', error);
     res.status(500).json({
-      message: 'Unable to generate sales forecast',
-      error: error.message,
-      serviceStatus: 'error'
+      message: 'Unable to retrieve category forecast',
+      error: error.message
     });
   }
 };
 
-// @desc    Get data status for forecasting engine
-// @route   GET /api/sales/data-status
+// @desc    Get comprehensive model comparison and performance data
+// @route   GET /api/sales/analysis
 // @access  Private/Admin
-const getDataStatus = async (req, res) => {
+const getComprehensiveAnalysis = async (req, res) => {
   try {
-    const statusResponse = await fetch('http://localhost:5001/api/sales/data-status', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 10000,
-    });
+    // Fetch multiple data sources in parallel
+    const [metricsResponse, categoriesResponse, dataStatusResponse] = await Promise.all([
+      fetchWithTimeout(`${BASE_URL}/api/sales/metrics`).catch(() => ({ ok: false })),
+      fetchWithTimeout(`${BASE_URL}/api/sales/categories?period=7days`).catch(() => ({ ok: false })),
+      fetchWithTimeout(`${BASE_URL}/api/sales/data-status`).catch(() => ({ ok: false }))
+    ]);
     
-    if (!statusResponse.ok) {
-      throw new Error(`Data status service error: ${statusResponse.status}`);
+    const analysis = {
+      timestamp: new Date().toISOString(),
+      service_status: 'partial',
+      metrics: null,
+      categories: [],
+      data_status: null,
+      overall_performance: 'unknown',
+      recommendations: []
+    };
+    
+    // Process metrics data
+    if (metricsResponse.ok) {
+      const metricsData = await metricsResponse.json();
+      analysis.metrics = metricsData;
+      analysis.service_status = 'available';
+      
+      if (metricsData.main_model?.metrics) {
+        const mainAccuracy = calculateAccuracyScore(metricsData.main_model.metrics);
+        analysis.overall_performance = mainAccuracy.level;
+        
+        // Category models analysis
+        if (metricsData.category_models) {
+          const categoryAccuracies = Object.entries(metricsData.category_models).map(([cat, data]) => ({
+            category: cat,
+            accuracy: calculateAccuracyScore(data.metrics),
+            model_type: data.model_params
+          }));
+          
+          analysis.category_performance = {
+            total_models: categoryAccuracies.length,
+            avg_accuracy: Math.round(categoryAccuracies.reduce((sum, c) => sum + c.accuracy.score, 0) / categoryAccuracies.length),
+            best_category: categoryAccuracies.sort((a, b) => b.accuracy.score - a.accuracy.score)[0]?.category || 'None'
+          };
+        }
+      }
     }
     
-    const statusData = await statusResponse.json();
-    statusData.timestamp = new Date().toISOString();
+    // Process categories data
+    if (categoriesResponse.ok) {
+      const categoriesData = await categoriesResponse.json();
+      analysis.categories = categoriesData.categories || [];
+    }
     
-    res.json(statusData);
+    // Process data status
+    if (dataStatusResponse.ok) {
+      const statusData = await dataStatusResponse.json();
+      analysis.data_status = {
+        data_points: statusData.daily_data_points || 0,
+        models_trained: statusData.models_trained || false,
+        category_models: statusData.category_models_trained || 0,
+        data_quality: statusData.daily_data_points >= 30 ? 'Good' : 'Limited'
+      };
+      
+      // Generate recommendations
+      if (statusData.daily_data_points < 30) {
+        analysis.recommendations.push('Add more historical data (minimum 30 days)');
+      }
+      if (!statusData.models_trained) {
+        analysis.recommendations.push('Train models using POST /api/sales/refresh');
+      }
+      if (statusData.category_models_trained === 0) {
+        analysis.recommendations.push('Ensure data has Product Type column for category forecasting');
+      }
+    }
+    
+    // Overall health assessment
+    analysis.health_score = calculateHealthScore(analysis);
+    
+    res.json(analysis);
     
   } catch (error) {
-    console.error('Error in getDataStatus:', error);
-    
-    if (error.code === 'ECONNREFUSED' || error.message.includes('fetch')) {
-      return res.status(200).json({
-        status: 'error',
-        message: 'Forecasting service not running',
-        data_available: false,
-        record_count: 0,
-        models_trained: false,
-        daily_data_points: 0,
-        serviceStatus: 'unavailable'
-      });
-    }
-    
-    res.status(500).json({
-      status: 'error',
-      message: error.message
-    });
+    console.error('Analysis error:', error);
+    res.status(500).json(handleServiceError(error));
   }
 };
 
-// @desc    Check forecasting service health
+// @desc    Check forecasting service health and capabilities
 // @route   GET /api/sales/health
 // @access  Private/Admin
 const checkForecastingHealth = async (req, res) => {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const response = await fetchWithTimeout(`${BASE_URL}/health`, { timeout: 5000 });
     
-    const healthResponse = await fetch('http://localhost:5001/health', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!healthResponse.ok) {
-      throw new Error(`Health check failed: ${healthResponse.status}`);
+    if (!response.ok) {
+      throw new Error(`Health check failed: ${response.status}`);
     }
     
-    const healthData = await healthResponse.json();
+    const healthData = await response.json();
     
     res.json({
       status: 'healthy',
       forecasting_service: healthData,
-      capabilities: {
-        daily_forecasting: true,
-        periods_supported: ['7days', '15days'],
-        features: ['ARIMA modeling', 'Complete historical data', 'Weekend adjustments', 'Full data range visualization']
-      },
+      capabilities: [
+        'Daily forecasting (7-15 days)',
+        'Category quantity forecasting', 
+        'Model performance metrics',
+        'Historical data visualization',
+        'Multi-model comparison'
+      ],
+      supported_periods: ['7days', '15days'],
+      metrics: ['MAE', 'MSE', 'RMSE', 'R²'],
       timestamp: new Date().toISOString()
     });
     
   } catch (error) {
     console.error('Health check failed:', error);
-    
-    res.status(200).json({
+    res.json({
       status: 'unhealthy',
       forecasting_service: { status: 'unavailable', error: error.message },
-      timestamp: new Date().toISOString(),
       instructions: [
-        'Ensure data.csv exists in forecasting directory',
-        'Run: python forecastingengine.py',
-        'Verify localhost:5001 accessibility',
-        'Check data contains records from 2023 onwards'
-      ]
+        'Ensure data.csv exists with Product Type column',
+        'Run: python enhanced_forecasting_engine.py',
+        'Verify localhost:5001 accessibility'
+      ],
+      timestamp: new Date().toISOString()
     });
   }
 };
@@ -152,29 +382,32 @@ const refreshForecastModels = async (req, res) => {
   try {
     console.log('Initiating model refresh...');
     
-    const refreshResponse = await fetch('http://localhost:5001/api/sales/retrain', {
+    const response = await fetchWithTimeout(`${BASE_URL}/api/sales/retrain`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 120000, // 2 minutes for retraining
+      timeout: 180000 // 3 minutes for training
     });
     
-    if (!refreshResponse.ok) {
-      const errorData = await refreshResponse.json().catch(() => ({}));
-      throw new Error(`Refresh failed: ${refreshResponse.status}, ${errorData.message || 'Unknown error'}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Refresh failed: ${response.status} - ${errorData.message || 'Unknown error'}`);
     }
     
-    const refreshData = await refreshResponse.json();
-    console.log('Model refresh completed');
+    const data = await response.json();
+    console.log('Model refresh completed successfully');
     
     res.json({
       message: 'Forecast models refreshed successfully',
-      details: refreshData,
-      timestamp: new Date().toISOString(),
-      note: 'All historical data from 2023 onwards will be included'
+      details: {
+        main_model_trained: data.main_model_trained || false,
+        category_models_trained: data.category_models_trained || 0,
+        categories: data.categories || [],
+        training_scope: 'Revenue + Category forecasting'
+      },
+      timestamp: new Date().toISOString()
     });
     
   } catch (error) {
-    console.error('Error refreshing models:', error);
+    console.error('Refresh error:', error);
     
     if (error.code === 'ECONNREFUSED' || error.message.includes('fetch')) {
       return res.status(503).json({
@@ -186,7 +419,7 @@ const refreshForecastModels = async (req, res) => {
     if (error.name === 'AbortError' || error.message.includes('timeout')) {
       return res.status(504).json({
         message: 'Model refresh timeout',
-        error: 'Operation took longer than expected'
+        error: 'Training took longer than expected'
       });
     }
     
@@ -197,159 +430,52 @@ const refreshForecastModels = async (req, res) => {
   }
 };
 
-// @desc    Get historical data summary for visualization
-// @route   GET /api/sales/history-summary
+// @desc    Get data status and validation
+// @route   GET /api/sales/status
 // @access  Private/Admin
-const getHistorySummary = async (req, res) => {
+const getDataStatus = async (req, res) => {
   try {
-    const statusResponse = await fetch('http://localhost:5001/api/sales/data-status', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 10000,
-    });
+    const response = await fetchWithTimeout(`${BASE_URL}/api/sales/data-status`);
     
-    if (!statusResponse.ok) {
-      throw new Error(`History summary service error: ${statusResponse.status}`);
+    if (!response.ok) {
+      throw new Error(`Data status error: ${response.status}`);
     }
     
-    const statusData = await statusResponse.json();
+    const data = await response.json();
     
-    // Get a sample forecast to extract date range information
-    const forecastResponse = await fetch('http://localhost:5001/api/sales/forecast?period=7days', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 15000,
-    });
-    
-    let dateRangeInfo = {};
-    if (forecastResponse.ok) {
-      const forecastData = await forecastResponse.json();
-      dateRangeInfo = {
-        dateRange: forecastData.modelInfo?.dateRange || 'Unknown',
-        totalDays: forecastData.modelInfo?.totalHistoricalDays || 0,
-        lastDataDate: forecastData.modelInfo?.lastDataDate || 'Unknown'
-      };
-    }
-    
-    res.json({
-      status: 'success',
-      ...statusData,
-      ...dateRangeInfo,
-      message: 'Complete historical data available for visualization',
+    // Enhanced status interpretation
+    const status = {
+      ...data,
+      data_quality: data.daily_data_points >= 30 ? 'Good' : 'Limited',
+      model_readiness: data.models_trained ? 'Ready' : 'Not Ready',
+      category_coverage: data.category_models_trained > 0 ? 'Available' : 'Not Available',
+      recommendations: [],
       timestamp: new Date().toISOString()
-    });
+    };
+    
+    // Generate recommendations
+    if (data.daily_data_points < 30) {
+      status.recommendations.push('Add more historical data (minimum 30 days)');
+    }
+    if (!data.models_trained) {
+      status.recommendations.push('Train models using POST /api/sales/refresh');
+    }
+    if (data.category_models_trained === 0) {
+      status.recommendations.push('Ensure data includes Product Type column');
+    }
+    
+    res.json(status);
     
   } catch (error) {
-    console.error('Error in getHistorySummary:', error);
-    
-    res.status(500).json({
-      status: 'error',
-      message: 'Unable to retrieve history summary',
-      error: error.message
-    });
+    console.error('Status error:', error);
+    res.json(handleServiceError(error, {
+      data_available: false,
+      record_count: 0,
+      models_trained: false,
+      daily_data_points: 0,
+      category_models_trained: 0
+    }));
   }
-};
-
-// @desc    Get sample historical data for testing
-// @route   GET /api/sales/sample-data
-// @access  Private/Admin
-const getSampleData = async (req, res) => {
-  try {
-    const { limit = 100 } = req.query;
-    
-    // This would typically fetch from your database
-    // For now, it calls the Python service to get some sample data
-    const forecastResponse = await fetch('http://localhost:5001/api/sales/forecast?period=7days', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 15000,
-    });
-    
-    if (!forecastResponse.ok) {
-      throw new Error('Unable to fetch sample data');
-    }
-    
-    const forecastData = await forecastResponse.json();
-    
-    // Return a sample of the historical data
-    const sampleHistoricalData = forecastData.lineGraphData
-      ? forecastData.lineGraphData.filter(item => item.type === 'historical').slice(-limit)
-      : [];
-    
-    res.json({
-      status: 'success',
-      sampleData: sampleHistoricalData,
-      totalHistoricalPoints: forecastData.modelInfo?.totalHistoricalDays || 0,
-      dateRange: forecastData.modelInfo?.dateRange || 'Unknown',
-      message: `Showing last ${Math.min(limit, sampleHistoricalData.length)} historical data points`,
-      timestamp: new Date().toISOString()
-    });
-    
-  } catch (error) {
-    console.error('Error in getSampleData:', error);
-    
-    res.status(500).json({
-      status: 'error',
-      message: 'Unable to retrieve sample data',
-      error: error.message
-    });
-  }
-};
-
-// Helper function to generate empty forecast response
-const getEmptyForecastResponse = (reason = 'Service unavailable') => ({
-  summary: {
-    predictedRevenue: 0,
-    growthRate: 0,
-    confidence: 0,
-    bestCase: 0,
-    worstCase: 0,
-    dailyAverage: 0
-  },
-  dailyForecast: [],
-  lineGraphData: [],
-  topProducts: [],
-  modelInfo: {
-    type: 'No model available',
-    dataPoints: 0,
-    forecastHorizon: 'N/A',
-    lastDataDate: 'N/A',
-    totalHistoricalDays: 0,
-    dateRange: 'N/A'
-  },
-  serviceStatus: 'unavailable',
-  message: reason,
-  note: 'Please ensure the Python forecasting service is running and data.csv contains historical data from 2023 onwards'
-});
-
-// Helper function to validate forecast response
-const validateForecastResponse = (data) => {
-  const requiredFields = ['summary', 'dailyForecast', 'lineGraphData', 'modelInfo'];
-  const summaryFields = ['predictedRevenue', 'growthRate', 'confidence', 'bestCase', 'worstCase', 'dailyAverage'];
-  
-  // Check main structure
-  for (const field of requiredFields) {
-    if (!data[field]) {
-      console.warn(`Missing field in forecast response: ${field}`);
-      return false;
-    }
-  }
-  
-  // Check summary fields
-  for (const field of summaryFields) {
-    if (data.summary[field] === undefined || data.summary[field] === null) {
-      console.warn(`Missing summary field: ${field}`);
-      return false;
-    }
-  }
-  
-  // Validate data arrays
-  if (!Array.isArray(data.dailyForecast) || !Array.isArray(data.lineGraphData)) {
-    console.warn('Invalid array structure in forecast response');
-    return false;
-  }
-  
-  return true;
 };
 
 // @desc    Validate forecast data integrity
@@ -359,74 +485,120 @@ const validateForecastData = async (req, res) => {
   try {
     const { period = '7days' } = req.query;
     
-    const forecastResponse = await fetch(
-      `http://localhost:5001/api/sales/forecast?period=${period}`,
-      {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 15000,
-      }
-    );
+    if (!validatePeriod(period)) {
+      return res.status(400).json({ message: 'Invalid period' });
+    }
     
-    if (!forecastResponse.ok) {
+    const response = await fetchWithTimeout(`${BASE_URL}/api/sales/forecast?period=${period}`);
+    
+    if (!response.ok) {
       return res.json({
         valid: false,
-        message: 'Forecasting service unavailable',
-        status: 'service_error'
+        status: 'service_error',
+        message: 'Forecasting service unavailable'
       });
     }
     
-    const forecastData = await forecastResponse.json();
-    const isValid = validateForecastResponse(forecastData);
+    const data = await response.json();
     
-    const validation = {
-      valid: isValid,
-      status: isValid ? 'valid' : 'invalid',
-      checks: {
-        hasHistoricalData: forecastData.lineGraphData?.some(item => item.type === 'historical') || false,
-        hasForecastData: forecastData.lineGraphData?.some(item => item.type === 'forecast') || false,
-        historicalDataPoints: forecastData.modelInfo?.totalHistoricalDays || 0,
-        forecastDataPoints: forecastData.dailyForecast?.length || 0,
-        dateRangeCoverage: forecastData.modelInfo?.dateRange || 'Unknown',
-        modelTrained: !!forecastData.modelInfo?.type && forecastData.modelInfo.type !== 'No model available'
-      },
-      recommendations: []
+    // Validation checks
+    const checks = {
+      hasHistoricalData: data.lineGraphData?.some(item => item.actual) || false,
+      hasForecastData: data.dailyForecast?.length > 0 || false,
+      hasMetrics: !!data.modelInfo?.metrics,
+      hasCategoryForecasts: data.categoryForecast?.length > 0 || false,
+      historicalDataPoints: data.modelInfo?.totalHistoricalDays || 0,
+      forecastDataPoints: data.dailyForecast?.length || 0,
+      categoryModels: data.modelInfo?.categoryModels || 0,
+      modelTrained: data.modelInfo?.type !== 'No model available'
     };
     
-    // Add recommendations based on validation
-    if (validation.checks.historicalDataPoints < 30) {
-      validation.recommendations.push('Consider adding more historical data for better predictions');
+    const issues = [];
+    const recommendations = [];
+    
+    // Generate issues and recommendations
+    if (checks.historicalDataPoints < 30) {
+      issues.push('Insufficient historical data');
+      recommendations.push('Add more historical data (minimum 30 days)');
     }
     
-    if (!validation.checks.modelTrained) {
-      validation.recommendations.push('Model needs to be trained with valid data');
+    if (!checks.modelTrained) {
+      issues.push('No trained model available');
+      recommendations.push('Train models using POST /api/sales/refresh');
     }
     
-    if (!validation.checks.hasHistoricalData) {
-      validation.recommendations.push('No historical data available for visualization');
+    if (!checks.hasMetrics) {
+      issues.push('Model metrics not available');
+      recommendations.push('Retrain models for performance evaluation');
     }
     
-    res.json(validation);
+    if (checks.categoryModels === 0) {
+      recommendations.push('Add Product Type column for category forecasting');
+    }
+    
+    res.json({
+      valid: issues.length === 0,
+      status: issues.length === 0 ? 'valid' : 'invalid',
+      issues,
+      checks,
+      recommendations,
+      timestamp: new Date().toISOString()
+    });
     
   } catch (error) {
-    console.error('Error in validateForecastData:', error);
-    
+    console.error('Validation error:', error);
     res.json({
       valid: false,
       status: 'error',
       message: error.message,
-      checks: {},
-      recommendations: ['Check if forecasting service is running', 'Verify data.csv exists and contains valid data']
+      recommendations: [
+        'Check if forecasting service is running',
+        'Verify data.csv exists with valid structure'
+      ]
     });
   }
 };
 
+// Helper function to calculate overall health score
+const calculateHealthScore = (analysis) => {
+  let score = 0;
+  let maxScore = 0;
+  
+  // Service availability (30 points)
+  maxScore += 30;
+  if (analysis.service_status === 'available') score += 30;
+  else if (analysis.service_status === 'partial') score += 15;
+  
+  // Main model performance (25 points)
+  maxScore += 25;
+  if (analysis.overall_performance === 'excellent') score += 25;
+  else if (analysis.overall_performance === 'good') score += 20;
+  else if (analysis.overall_performance === 'fair') score += 15;
+  else if (analysis.overall_performance !== 'unknown') score += 10;
+  
+  // Data quality (25 points)
+  maxScore += 25;
+  if (analysis.data_status?.data_quality === 'Good') score += 25;
+  else if (analysis.data_status?.data_points > 0) score += 15;
+  
+  // Category models (20 points)
+  maxScore += 20;
+  const categoryCount = analysis.data_status?.category_models || 0;
+  if (categoryCount >= 5) score += 20;
+  else if (categoryCount >= 3) score += 15;
+  else if (categoryCount >= 1) score += 10;
+  
+  return Math.round((score / maxScore) * 100);
+};
+
 export { 
   getSalesForecast,
-  getDataStatus,
+  getModelMetrics,
+  getCategoryForecasts,
+  getSingleCategoryForecast,
+  getComprehensiveAnalysis,
   checkForecastingHealth,
   refreshForecastModels,
-  getHistorySummary,
-  getSampleData,
+  getDataStatus,
   validateForecastData
 };

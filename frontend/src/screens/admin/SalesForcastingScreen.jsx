@@ -1,85 +1,44 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Card, Row, Col, Table, Badge, Dropdown } from 'react-bootstrap';
-import { FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown, FaCaretDown } from 'react-icons/fa';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Card, Row, Col, Table, Badge, Dropdown, Tabs, Tab, ProgressBar } from 'react-bootstrap';
+import { FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown, FaCog, FaTrophy, FaExclamationTriangle, FaBoxes, FaPercent, FaChevronDown } from 'react-icons/fa';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 // Constants
-const MOCK_DATA = {
-  summary: {
-    predictedRevenue: 0,
-    growthRate: 0,
-    confidence: 0,
-    bestCase: 0,
-    worstCase: 0,
-    dailyAverage: 0
-  },
-  dailyForecast: [],
-  lineGraphData: [],
-  topProducts: []
-};
-
-const PERIOD_OPTIONS = {
-  '7days': '7 Days',
-  '15days': '15 Days'
-};
-
+const PERIOD_OPTIONS = { '7days': '7 Days', '15days': '15 Days' };
 const REVENUE_SCENARIOS = {
-  'predicted': { label: 'Expected Revenue', key: 'predictedRevenue', description: 'Most likely outcome' },
-  'best': { label: 'Best Case', key: 'bestCase', description: 'Optimistic estimate' },
-  'worst': { label: 'Worst Case', key: 'worstCase', description: 'Conservative estimate' }
+  predicted: { label: 'Expected Revenue', key: 'predictedRevenue', color: '#16a34a' },
+  best: { label: 'Best Case', key: 'bestCase', color: '#2563eb' },
+  worst: { label: 'Worst Case', key: 'worstCase', color: '#dc3545' }
 };
+const CHART_COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'];
 
 // Utility functions
-const formatCurrency = (amount) => {
-  if (!amount) return '₹0';
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0
-  }).format(amount);
-};
+const formatCurrency = (amount) => 
+  amount ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount) : '₹0';
 
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('en-IN', {
-    month: 'short',
-    day: 'numeric'
-  });
-};
+const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
 
-const formatDateWithYear = (dateString) => {
-  return new Date(dateString).toLocaleDateString('en-IN', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
+const getPerformanceBadge = (r2) => {
+  if (r2 >= 0.8) return { variant: 'success', text: 'Excellent' };
+  if (r2 >= 0.6) return { variant: 'primary', text: 'Good' };
+  if (r2 >= 0.4) return { variant: 'warning', text: 'Fair' };
+  return { variant: 'danger', text: 'Poor' };
 };
 
 // Components
-const ForecastingLoader = () => {
+const Loader = () => {
   const [dots, setDots] = useState('');
-
   useEffect(() => {
-    const interval = setInterval(() => {
-      setDots(prev => prev === '...' ? '' : prev + '.');
-    }, 500);
+    const interval = setInterval(() => setDots(prev => prev === '...' ? '' : prev + '.'), 500);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="d-flex flex-column align-items-center justify-content-center" 
-         style={{ height: '60vh', backgroundColor: '#f8f9fa' }}>
-      <div style={{
-        width: '60px',
-        height: '60px',
-        border: '6px solid #e3e3e3',
-        borderTop: '6px solid #667eea',
-        borderRadius: '50%',
-        animation: 'spin 1s linear infinite',
-        marginBottom: '20px'
-      }}></div>
-      <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#667eea' }}>
-        Forecasting{dots}
-      </h3>
+    <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: '60vh' }}>
+      <div className="spinner-border text-primary mb-3" style={{ width: '3rem', height: '3rem' }}>
+        <span className="visually-hidden">Loading...</span>
+      </div>
+      <h3 className="text-primary">Forecasting{dots}</h3>
     </div>
   );
 };
@@ -88,288 +47,279 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   
   return (
-    <div style={{
-      backgroundColor: '#ffffff',
-      padding: '12px 16px',
-      borderRadius: '8px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-      border: '1px solid #e2e8f0',
-      maxWidth: '300px'
-    }}>
-      <p style={{ fontSize: '0.9rem', fontWeight: '600', color: '#2c2c2c', margin: '0 0 8px 0' }}>
-        Date: {formatDateWithYear(label)}
-      </p>
+    <div className="bg-white p-3 rounded shadow border">
+      <p className="fw-bold mb-2 text-dark">Date: {new Date(label).toLocaleDateString('en-IN')}</p>
       {payload.map((entry, index) => (
-        <p key={index} style={{ fontSize: '0.85rem', fontWeight: '500', margin: '4px 0', color: entry.color }}>
+        <p key={index} className="mb-1" style={{ color: entry.color }}>
           {entry.name}: {formatCurrency(entry.value)}
-          {entry.payload.confidence && (
-            <span style={{ fontSize: '0.8rem', marginLeft: '8px' }}>
-              ({entry.payload.confidence}% confidence)
-            </span>
-          )}
         </p>
       ))}
     </div>
   );
 };
 
-const MetricCard = ({ title, value, icon: Icon, color, hasData }) => {
-  const iconColor = color || '#667eea';
-  const valueColor = color || '#2c2c2c';
-  
-  return (
-    <Card className="border-0 shadow-sm h-100">
-      <Card.Body className="p-3">
-        <div className="d-flex justify-content-between align-items-center h-100">
-          <div>
-            <h3 className="mb-1" style={{ fontSize: '1.8rem', fontWeight: '700', color: valueColor }}>
-              {hasData ? value : 'No Data'}
-            </h3>
-            <p className="mb-0 text-muted" style={{ fontSize: '0.9rem', fontWeight: '500' }}>
-              {title}
-            </p>
-            {title === 'Avg Confidence' && hasData && (
-              <div style={{
-                height: '4px',
-                backgroundColor: '#28a745',
-                borderRadius: '2px',
-                marginTop: '10px',
-                width: value,
-                transition: 'width 0.3s ease'
-              }}></div>
-            )}
-          </div>
-          <Icon style={{ fontSize: '2.5rem', color: iconColor, opacity: 0.7 }} />
+const MetricCard = ({ title, value, icon: Icon, color = '#667eea', hasData, progress }) => (
+  <Card className="border-0 shadow-sm h-100">
+    <Card.Body className="p-3">
+      <div className="d-flex justify-content-between align-items-center">
+        <div className="flex-grow-1">
+          <h3 className="mb-1 fw-bold" style={{ color: hasData ? color : '#6c757d' }}>
+            {hasData ? value : 'No Data'}
+          </h3>
+          <p className="mb-0 text-muted small fw-medium">{title}</p>
+          {progress !== undefined && hasData && (
+            <ProgressBar now={progress} className="mt-2" style={{ height: '4px' }} />
+          )}
         </div>
-      </Card.Body>
-    </Card>
-  );
-};
-const RevenueMetricCard = ({ displayData, hasData, selectedScenario, onScenarioChange }) => {
-  const currentScenario = REVENUE_SCENARIOS[selectedScenario];
-  const currentValue = displayData.summary[currentScenario.key];
+        <Icon size={32} color={color} style={{ opacity: 0.7 }} />
+      </div>
+    </Card.Body>
+  </Card>
+);
+
+const DropdownMetricCard = ({ scenarios, currentKey, onSelect, displayData, hasData, icon: Icon }) => {
+  const current = scenarios[currentKey];
+  const currentValue = displayData.summary[current.key];
   
   return (
     <Card className="border-0 shadow-sm h-100">
       <Card.Body className="p-3">
-        <div className="d-flex justify-content-between align-items-center h-100">
+        <div className="d-flex justify-content-between align-items-center">
           <div className="flex-grow-1">
             <Dropdown>
-              <Dropdown.Toggle 
-                as="div"
-                style={{ 
-                  cursor: 'pointer',
-                  border: 'none',
-                  background: 'none',
-                  padding: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  position: 'relative'
-                }}
-              >
-                <h3 className="mb-1" style={{ fontSize: '1.8rem', fontWeight: '700', color: '#2c2c2c' }}>
-                  {hasData ? formatCurrency(currentValue) : 'No Data'}
-                </h3>
-                <FaCaretDown style={{ 
-                  fontSize: '1rem', 
-                  color: '#6c757d',
-                  marginLeft: '4px',
-                  transition: 'color 0.2s ease'
-                }} />
+              <Dropdown.Toggle as="div" className="cursor-pointer">
+                <div className="d-flex align-items-center">
+                  <h3 className="mb-1 fw-bold text-dark me-2">
+                    {hasData ? formatCurrency(currentValue) : 'No Data'}
+                  </h3>
+                  <FaChevronDown size={12} className="text-muted" />
+                </div>
               </Dropdown.Toggle>
               
-              <Dropdown.Menu style={{
-                minWidth: '280px',
-                padding: '8px 0',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                marginTop: '8px'
-              }}>
-                {Object.entries(REVENUE_SCENARIOS).map(([key, scenario]) => (
-                  <Dropdown.Item 
-                    key={key} 
-                    onClick={() => onScenarioChange(key)}
-                    active={selectedScenario === key}
-                    style={{
-                      padding: '12px 20px',
-                      margin: '4px 8px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      backgroundColor: selectedScenario === key ? '#f0f9ff' : 'transparent',
-                      borderLeft: selectedScenario === key ? '3px solid #667eea' : '3px solid transparent',
-                      transition: 'all 0.2s ease',
-                      cursor: 'pointer'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (selectedScenario !== key) {
-                        e.target.style.backgroundColor = '#f8fafc';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (selectedScenario !== key) {
-                        e.target.style.backgroundColor = 'transparent';
-                      }
-                    }}
-                  >
+              <Dropdown.Menu className="shadow border-0 rounded" style={{ minWidth: '280px' }}>
+                {Object.entries(scenarios).map(([key, scenario]) => (
+                  <Dropdown.Item key={key} onClick={() => onSelect(key)} className="py-2">
                     <div>
-                      <div style={{ 
-                        fontWeight: '600', 
-                        fontSize: '0.95rem',
-                        color: key === 'predicted' ? '#16a34a' :
-                               key === 'best' ? '#2563eb' :
-                               key === 'worst' ? '#dc3545' : '#2c2c2c',
-                        marginBottom: '4px'
-                      }}>
+                      <div className="fw-semibold mb-1" style={{ color: scenario.color }}>
                         {scenario.label}
                       </div>
-                      <div style={{ 
-                        fontSize: '0.85rem', 
-                        color: key === 'predicted' ? '#16a34a' :
-                               key === 'best' ? '#2563eb' :
-                               key === 'worst' ? '#dc3545' : '#16a34a',
-                        fontWeight: '600',
-                        marginBottom: '2px'
-                      }}>
+                      <div className="fw-bold mb-1" style={{ color: scenario.color }}>
                         {hasData ? formatCurrency(displayData.summary[scenario.key]) : 'No Data'}
-                      </div>
-                      <div style={{ 
-                        fontSize: '0.75rem', 
-                        color: '#6c757d', 
-                        fontStyle: 'italic',
-                        lineHeight: '1.3'
-                      }}>
-                        {scenario.description}
                       </div>
                     </div>
                   </Dropdown.Item>
                 ))}
               </Dropdown.Menu>
             </Dropdown>
-            
-            <p className="mb-0 text-muted" style={{ 
-              fontSize: '0.9rem', 
-              fontWeight: '500',
-              marginTop: '4px'
-            }}>
-              {currentScenario.label}
-            </p>
-            <small className="text-muted" style={{ 
-              fontSize: '0.8rem', 
-              fontStyle: 'italic',
-              color: '#6c757d'
-            }}>
-              {currentScenario.description}
-            </small>
+            <p className="mb-0 text-muted small fw-medium">{current.label}</p>
           </div>
-          <FaChartLine style={{ 
-            fontSize: '2.5rem', 
-            color: '#667eea', 
-            opacity: 0.7,
-            marginLeft: '16px'
-          }} />
+          <Icon size={32} color="#667eea" style={{ opacity: 0.7 }} />
         </div>
       </Card.Body>
-      
-      <style jsx>{`
-        .dropdown-toggle::after {
-          display: none !important;
-        }
-        
-        .dropdown-item:hover {
-          background-color: transparent !important;
-        }
-        
-        .dropdown-item.active {
-          background-color: transparent !important;
-        }
-      `}</style>
     </Card>
   );
 };
+
+const ModelMetricsCard = ({ metrics, hasData }) => {
+  const [selectedMetric, setSelectedMetric] = useState('mae');
+
+  if (!hasData || !metrics) {
+    return (
+      <Card className="border-0 shadow-sm h-100">
+        <Card.Body className="p-3 text-center">
+          <FaCog size={32} color="#6c757d" className="mb-2" />
+          <p className="text-muted mb-0">Model metrics unavailable</p>
+        </Card.Body>
+      </Card>
+    );
+  }
+
+  const metricOptions = {
+    mae: { label: 'MAE', value: metrics.mae, format: (val) => `₹${val?.toFixed(0) || 0}` },
+    r2: { label: 'R²', value: metrics.r2, format: (val) => `${(val * 100)?.toFixed(1) || 0}%` },
+    rmse: { label: 'RMSE', value: metrics.rmse, format: (val) => `₹${val?.toFixed(0) || 0}` }
+  };
+
+  const current = metricOptions[selectedMetric];
+  const performance = getPerformanceBadge(metrics.r2);
+
+  return (
+    <Card className="border-0 shadow-sm h-100">
+      <Card.Body className="p-3">
+        <div className="d-flex justify-content-between align-items-center">
+          <div className="flex-grow-1">
+            <Dropdown>
+              <Dropdown.Toggle as="div" className="cursor-pointer">
+                <div className="d-flex align-items-center">
+                  <h3 className="mb-1 fw-bold text-dark me-2">{current.format(current.value)}</h3>
+                  <FaChevronDown size={12} className="text-muted" />
+                </div>
+              </Dropdown.Toggle>
+              
+              <Dropdown.Menu className="shadow border-0 rounded">
+                {Object.entries(metricOptions).map(([key, metric]) => (
+                  <Dropdown.Item key={key} onClick={() => setSelectedMetric(key)} className="py-2">
+                    <div className="fw-semibold text-primary">{metric.label}</div>
+                    <div className="fw-bold text-dark">{metric.format(metric.value)}</div>
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+            
+            <p className="mb-0 text-muted small fw-medium">{current.label}</p>
+            <Badge bg={performance.variant} className="mt-1">{performance.text}</Badge>
+          </div>
+          <FaCog size={32} color="#667eea" style={{ opacity: 0.7 }} />
+        </div>
+      </Card.Body>
+    </Card>
+  );
+};
+
+const CategoryChart = ({ categories, hasData }) => {
+  if (!hasData || !categories?.length) {
+    return (
+      <div className="d-flex flex-column align-items-center justify-content-center bg-light rounded" style={{ height: '300px' }}>
+        <FaBoxes size={48} color="#6c757d" className="mb-3" />
+        <p className="text-muted mb-0">No category data available</p>
+      </div>
+    );
+  }
+
+  const chartData = categories.slice(0, 8).map((cat, index) => ({
+    name: cat.category.length > 12 ? cat.category.substring(0, 12) + '...' : cat.category,
+    fullName: cat.category,
+    quantity: cat.total_predicted_quantity,
+    fill: CHART_COLORS[index % CHART_COLORS.length]
+  }));
+
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
+        <YAxis stroke="#64748b" fontSize={12} />
+        <Tooltip formatter={(value, name, props) => [`${value} units`, props.payload.fullName]} />
+        <Bar dataKey="quantity" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+};
+
 const SalesForcastingScreen = () => {
   const [forecastData, setForecastData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('7days');
   const [selectedScenario, setSelectedScenario] = useState('predicted');
+  const [activeTab, setActiveTab] = useState('overview');
 
   // Fetch data
   useEffect(() => {
-    const fetchForecastData = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/sales/forecast?period=${selectedPeriod}`);
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        const [forecastResponse, metricsResponse] = await Promise.all([
+          fetch(`http://localhost:5001/api/sales/forecast?period=${selectedPeriod}`).catch(() => ({ ok: false })),
+          fetch('http://localhost:5001/api/sales/metrics').catch(() => ({ ok: false }))
+        ]);
+        
+        const forecastData = forecastResponse.ok ? await forecastResponse.json().catch(() => null) : null;
+        const metricsData = metricsResponse.ok ? await metricsResponse.json().catch(() => null) : null;
+        
+        // Extract metrics
+        let mainModelMetrics = null;
+        let categoryModelsCount = 0;
+        let dataPoints = 0;
+        let modelType = 'Unknown';
+        
+        if (metricsData?.main_model?.metrics) {
+          mainModelMetrics = metricsData.main_model.metrics;
+          modelType = metricsData.main_model.type || 'Unknown';
+          categoryModelsCount = Object.keys(metricsData.category_models || {}).length;
+          dataPoints = metricsData.data_points || 0;
         }
         
-        const data = await response.json();
-        setForecastData(data && Object.keys(data).length > 0 ? data : null);
+        if (forecastData && Object.keys(forecastData).length > 0) {
+          setForecastData({
+            ...forecastData,
+            modelInfo: {
+              ...forecastData.modelInfo,
+              metrics: mainModelMetrics,
+              categoryModels: categoryModelsCount,
+              dataPoints: dataPoints,
+              modelType: modelType
+            }
+          });
+        } else {
+          setForecastData(null);
+        }
+        
       } catch (err) {
-        console.error('Error fetching forecast data:', err);
+        console.error('Error fetching data:', err);
         setForecastData(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchForecastData();
+    fetchData();
   }, [selectedPeriod]);
 
   // Memoized values
-  const displayData = useMemo(() => forecastData || MOCK_DATA, [forecastData]);
-  const hasData = useMemo(() => forecastData && Object.keys(forecastData).length > 0, [forecastData]);
+  const displayData = useMemo(() => forecastData || {
+    summary: { predictedRevenue: 0, growthRate: 0, confidence: 0, bestCase: 0, worstCase: 0, dailyAverage: 0 },
+    dailyForecast: [], categoryForecast: [], lineGraphData: [], topProducts: [],
+    modelInfo: { metrics: null }
+  }, [forecastData]);
+  
+  const hasData = useMemo(() => Boolean(forecastData), [forecastData]);
+  const hasMetrics = useMemo(() => Boolean(forecastData?.modelInfo?.metrics), [forecastData]);
   
   const chartInterval = useMemo(() => {
     if (!displayData.lineGraphData?.length) return 0;
     return Math.max(1, Math.floor(displayData.lineGraphData.length / 20));
   }, [displayData.lineGraphData]);
 
-  const growthIcon = useMemo(() => {
-    if (!hasData) return FaChartLine;
+  const growthMetrics = useMemo(() => {
+    if (!hasData) return { icon: FaChartLine, color: '#6c757d' };
     const growth = displayData.summary.growthRate;
-    return growth > 0 ? FaArrowUp : growth < 0 ? FaArrowDown : FaChartLine;
-  }, [hasData, displayData.summary.growthRate]);
-
-  const growthColor = useMemo(() => {
-    if (!hasData) return '#6c757d';
-    const growth = displayData.summary.growthRate;
-    return growth > 0 ? '#28a745' : growth < 0 ? '#dc3545' : '#6c757d';
+    return {
+      icon: growth > 0 ? FaArrowUp : growth < 0 ? FaArrowDown : FaChartLine,
+      color: growth > 0 ? '#28a745' : growth < 0 ? '#dc3545' : '#6c757d'
+    };
   }, [hasData, displayData.summary.growthRate]);
 
   // Event handlers
-  const handlePeriodChange = useCallback((period) => {
-    setSelectedPeriod(period);
-  }, []);
+  const handlePeriodChange = useCallback((period) => setSelectedPeriod(period), []);
+  const handleScenarioChange = useCallback((scenario) => setSelectedScenario(scenario), []);
 
-  const handleScenarioChange = useCallback((scenario) => {
-    setSelectedScenario(scenario);
-  }, []);
-
-  if (isLoading) return <ForecastingLoader />;
+  if (isLoading) return <Loader />;
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
+    <div className="container-fluid" style={{ maxWidth: '1400px', padding: '20px' }}>
+      <style>{`
+        .cursor-pointer { cursor: pointer; }
+        .dropdown-toggle::after { display: none !important; }
+        .nav-tabs .nav-link { border: none; color: #6c757d; font-weight: 500; padding: 15px 20px; }
+        .nav-tabs .nav-link:hover { border: none; color: #667eea; }
+        .nav-tabs .nav-link.active { border: none; color: #667eea; background: transparent; border-bottom: 3px solid #667eea; }
+      `}</style>
+
       {/* Header */}
-      <Card className="border-0 mb-4" style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        borderRadius: '15px',
-        boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
-        color: 'white'
-      }}>
+      <Card className="border-0 mb-4 text-white" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '15px' }}>
         <Card.Body>
-          <div className="d-flex align-items-center justify-content-between flex-wrap" style={{ gap: '20px' }}>
-            <div className="d-flex align-items-center flex-grow-1">
-              <FaChartLine style={{ fontSize: '3rem', marginRight: '20px' }} />
+          <div className="d-flex align-items-center justify-content-between">
+            <div className="d-flex align-items-center">
+              <FaChartLine size={48} className="me-3" />
               <div>
-                <h1 className="mb-2" style={{ fontSize: '2.5rem', fontWeight: '700' }}>
-                  Daily Sales Forecasting
-                </h1>
-                <p className="mb-0" style={{ fontSize: '1.1rem', opacity: 0.8 }}>
-                  Complete historical data & predictive analytics for daily sales performance
-                </p>
+                <h1 className="mb-2 fw-bold">Sales Forecasting Dashboard</h1>
+                <p className="mb-0 opacity-75">AI-powered revenue predictions with model performance metrics</p>
+                {hasData && displayData.modelInfo?.categoryModels > 0 && (
+                  <small className="d-block mt-1 opacity-75">
+                    {displayData.modelInfo.categoryModels} Category Models Active
+                  </small>
+                )}
               </div>
             </div>
             <Dropdown>
@@ -392,14 +342,16 @@ const SalesForcastingScreen = () => {
       {/* Key Metrics */}
       <Row className="g-3 mb-4">
         <Col lg={3} md={6}>
-          <RevenueMetricCard
+          <DropdownMetricCard
+            scenarios={REVENUE_SCENARIOS}
+            currentKey={selectedScenario}
+            onSelect={handleScenarioChange}
             displayData={displayData}
             hasData={hasData}
-            selectedScenario={selectedScenario}
-            onScenarioChange={handleScenarioChange}
+            icon={FaChartLine}
           />
         </Col>
-        <Col lg={3} md={6}>
+        <Col lg={2} md={6}>
           <MetricCard
             title="Daily Average"
             value={formatCurrency(displayData.summary.dailyAverage)}
@@ -407,239 +359,205 @@ const SalesForcastingScreen = () => {
             hasData={hasData}
           />
         </Col>
-        <Col lg={3} md={6}>
+        <Col lg={2} md={6}>
           <MetricCard
             title="Growth Rate"
             value={hasData ? `${displayData.summary.growthRate > 0 ? '+' : ''}${displayData.summary.growthRate}%` : 'No Data'}
-            icon={growthIcon}
-            color={growthColor}
+            icon={growthMetrics.icon}
+            color={growthMetrics.color}
             hasData={hasData}
           />
         </Col>
-        <Col lg={3} md={6}>
+        <Col lg={2} md={6}>
           <MetricCard
-            title="Avg Confidence"
+            title="Confidence"
             value={hasData ? `${displayData.summary.confidence}%` : 'No Data'}
-            icon={FaChartLine}
+            icon={FaPercent}
             hasData={hasData}
+            progress={hasData ? displayData.summary.confidence : 0}
           />
         </Col>
-      </Row>
-
-      {/* Main Chart */}
-      <Row className="mb-4">
-        <Col lg={12}>
-          <Card className="border-0 shadow-sm">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap" style={{ gap: '15px' }}>
-                <div>
-                  <h4 className="mb-0" style={{ fontSize: '1.3rem', fontWeight: '600', color: '#2c2c2c' }}>
-                    Complete Sales History & Forecast
-                    {forecastData?.modelInfo?.dateRange && (
-                      <small className="d-block text-muted mt-1" style={{ fontSize: '0.8rem' }}>
-                        {forecastData.modelInfo.dateRange} ({forecastData.modelInfo.totalHistoricalDays} days)
-                      </small>
-                    )}
-                  </h4>
-                </div>
-                <div className="d-flex gap-4 align-items-center">
-                  <div className="d-flex align-items-center gap-2">
-                    <div style={{ width: '12px', height: '12px', backgroundColor: '#2563eb', borderRadius: '2px' }}></div>
-                    <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Historical Sales</span>
-                  </div>
-                  <div className="d-flex align-items-center gap-2">
-                    <div style={{ width: '12px', height: '12px', backgroundColor: '#16a34a', borderRadius: '2px' }}></div>
-                    <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Predicted Sales</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div style={{ width: '100%', minHeight: '600px', position: 'relative' }}>
-                {hasData && displayData.lineGraphData?.length ? (
-                  <ResponsiveContainer width="100%" height={600}>
-                    <LineChart data={displayData.lineGraphData} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="#64748b"
-                        fontSize={10}
-                        tickLine={false}
-                        axisLine={false}
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                        tickFormatter={formatDate}
-                        interval={chartInterval}
-                      />
-                      <YAxis 
-                        stroke="#64748b"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
-                        width={60}
-                      />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Line
-                        type="monotone"
-                        dataKey="actual"
-                        stroke="#2563eb"
-                        strokeWidth={1.5}
-                        dot={false}
-                        activeDot={{ r: 6, stroke: '#2563eb', strokeWidth: 2 }}
-                        connectNulls={false}
-                        name="Historical Sales"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="predicted"
-                        stroke="#16a34a"
-                        strokeWidth={3}
-                        strokeDasharray="5 5"
-                        dot={false}
-                        activeDot={{ r: 7, stroke: '#16a34a', strokeWidth: 2 }}
-                        connectNulls={false}
-                        name="Predicted Sales"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="d-flex flex-column align-items-center justify-content-center bg-light rounded border-2 border-dashed" 
-                       style={{ padding: '60px 20px', minHeight: '600px', borderColor: '#dee2e6' }}>
-                    <FaChartLine style={{ fontSize: '4rem', color: '#6c757d', marginBottom: '20px' }} />
-                    <p className="mb-0 text-muted text-center" style={{ fontSize: '1.1rem', fontWeight: '500' }}>
-                      No forecast data available for the selected period
-                    </p>
-                  </div>
-                )}
-              </div>
-              
-              {/* Data Summary */}
-              {hasData && forecastData?.modelInfo && (
-                <div className="mt-4 p-3 bg-light rounded border-top border-primary border-3">
-                  <div className="d-flex justify-content-around align-items-center flex-wrap" style={{ gap: '15px' }}>
-                    <span style={{ fontSize: '0.9rem', color: '#495057', textAlign: 'center' }}>
-                      <strong>Total Data Points:</strong> {forecastData.modelInfo.totalHistoricalDays || forecastData.modelInfo.dataPoints}
-                    </span>
-                    <span style={{ fontSize: '0.9rem', color: '#495057', textAlign: 'center' }}>
-                      <strong>Model:</strong> {forecastData.modelInfo.type}
-                    </span>
-                    <span style={{ fontSize: '0.9rem', color: '#495057', textAlign: 'center' }}>
-                      <strong>Last Updated:</strong> {forecastData.modelInfo.lastDataDate}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
+        <Col lg={3} md={12}>
+          <ModelMetricsCard metrics={displayData.modelInfo?.metrics} hasData={hasMetrics} />
         </Col>
       </Row>
 
-      {/* Secondary Content - Only Top Products */}
-      <Row className="g-4 mb-4">
-        <Col lg={12}>
-          <Card className="border-0 shadow-sm h-100">
-            <Card.Body>
-              <h4 className="mb-4" style={{ fontSize: '1.3rem', fontWeight: '600', color: '#2c2c2c' }}>
-                Top Products Forecast
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {hasData && displayData.topProducts?.length ? (
-                  displayData.topProducts.map((product, index) => (
-                    <div key={index} className="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-                      <div>
-                        <div style={{ fontSize: '0.95rem', fontWeight: '600', color: '#2c2c2c' }}>
-                          {product.name}
-                        </div>
-                        <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
-                          {formatCurrency(product.predictedSales)}
-                        </div>
-                      </div>
-                      <Badge bg={product.growth > 0 ? 'success' : 'danger'} style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
-                        {product.growth > 0 ? '+' : ''}{product.growth}%
-                      </Badge>
+      {/* Main Content */}
+      <Card className="border-0 shadow-sm">
+        <Card.Body className="p-0">
+          <Tabs activeKey={activeTab} onSelect={setActiveTab} className="nav-fill">
+            
+            <Tab eventKey="overview" title={<><FaChartLine className="me-2" />Revenue Forecast</>}>
+              <div className="p-4">
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <h4 className="mb-0 fw-semibold">Sales Forecast Timeline</h4>
+                  <div className="d-flex gap-4">
+                    <div className="d-flex align-items-center gap-2">
+                      <div style={{ width: '12px', height: '12px', backgroundColor: '#2563eb', borderRadius: '2px' }}></div>
+                      <span className="small text-muted">Historical</span>
                     </div>
-                  ))
+                    <div className="d-flex align-items-center gap-2">
+                      <div style={{ width: '12px', height: '12px', backgroundColor: '#16a34a', borderRadius: '2px' }}></div>
+                      <span className="small text-muted">Predicted</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{ minHeight: '400px' }}>
+                  {hasData && displayData.lineGraphData?.length ? (
+                    <ResponsiveContainer width="100%" height={400}>
+                      <LineChart data={displayData.lineGraphData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis 
+                          dataKey="date" 
+                          stroke="#64748b"
+                          fontSize={10}
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                          tickFormatter={formatDate}
+                          interval={chartInterval}
+                        />
+                        <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Line type="monotone" dataKey="actual" stroke="#2563eb" strokeWidth={2} dot={false} name="Historical Sales" />
+                        <Line type="monotone" dataKey="predicted" stroke="#16a34a" strokeWidth={3} strokeDasharray="5 5" dot={false} name="Predicted Sales" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="d-flex flex-column align-items-center justify-content-center bg-light rounded" style={{ height: '400px' }}>
+                      <FaChartLine size={64} color="#6c757d" className="mb-3" />
+                      <h5 className="text-muted">No forecast data available</h5>
+                    </div>
+                  )}
+                </div>
+
+                {/* Daily Forecast Table */}
+                {hasData && displayData.dailyForecast?.length > 0 && (
+                  <Card className="border-0 shadow-sm mt-4">
+                    <Card.Body>
+                      <h5 className="mb-4 fw-semibold">Daily Forecast Details</h5>
+                      <Table hover responsive>
+                        <thead className="bg-light">
+                          <tr>
+                            <th className="p-3">Date</th>
+                            <th className="p-3">Day</th>
+                            <th className="p-3">Predicted Sales</th>
+                            <th className="p-3">Confidence</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayData.dailyForecast.map((item, index) => (
+                            <tr key={index}>
+                              <td className="p-3">{formatDate(item.date)}</td>
+                              <td className="p-3">
+                                <Badge bg={item.is_weekend ? 'warning' : 'primary'}>{item.day_name}</Badge>
+                              </td>
+                              <td className="p-3">
+                                <span className="fw-semibold text-success">{formatCurrency(item.predicted)}</span>
+                              </td>
+                              <td className="p-3">
+                                <Badge bg={item.confidence > 80 ? 'success' : item.confidence > 70 ? 'warning' : 'danger'}>
+                                  {item.confidence}%
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </Card.Body>
+                  </Card>
+                )}
+              </div>
+            </Tab>
+
+            <Tab eventKey="categories" title={<><FaBoxes className="me-2" />Categories {hasData && displayData.categoryForecast?.length > 0 && <Badge bg="primary" className="ms-2">{displayData.categoryForecast.length}</Badge>}</>}>
+              <div className="p-4">
+                <Row className="g-4">
+                  <Col lg={8}>
+                    <Card className="border-0 shadow-sm h-100">
+                      <Card.Body>
+                        <h5 className="mb-4 fw-semibold">Category Forecast</h5>
+                        <CategoryChart categories={displayData.categoryForecast} hasData={hasData} />
+                      </Card.Body>
+                    </Card>
+                  </Col>
+
+                  <Col lg={4}>
+                    <Card className="border-0 shadow-sm h-100">
+                      <Card.Body>
+                        <h5 className="mb-4 fw-semibold">Top Categories</h5>
+                        <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                          {hasData && displayData.categoryForecast?.length ? (
+                            displayData.categoryForecast.slice(0, 6).map((category, index) => {
+                              const r2Score = category.model_metrics?.r2 || 0;
+                              const performance = getPerformanceBadge(r2Score);
+                              
+                              return (
+                                <div key={index} className="d-flex justify-content-between align-items-center p-3 mb-2 bg-light rounded">
+                                  <div>
+                                    <div className="fw-semibold">{category.category}</div>
+                                    <div className="small text-muted">{category.total_predicted_quantity} units</div>
+                                    <Badge bg={performance.variant} size="sm" className="mt-1">{performance.text}</Badge>
+                                  </div>
+                                  <div 
+                                    className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                                    style={{ width: '30px', height: '30px', backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                                  >
+                                    {index + 1}
+                                  </div>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="text-center text-muted p-4">
+                              <FaBoxes size={32} className="mb-2" />
+                              <p className="mb-0">No category data</p>
+                            </div>
+                          )}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
+              </div>
+            </Tab>
+
+            <Tab eventKey="products" title={<><FaTrophy className="me-2" />Products</>}>
+              <div className="p-4">
+                {hasData && displayData.topProducts?.length ? (
+                  <div className="d-flex flex-column gap-3">
+                    {displayData.topProducts.map((product, index) => (
+                      <div key={index} className="d-flex justify-content-between align-items-center p-4 bg-light rounded">
+                        <div className="d-flex align-items-center">
+                          <div 
+                            className="rounded me-3 d-flex align-items-center justify-content-center text-white fw-bold"
+                            style={{ width: '40px', height: '40px', backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                          >
+                            {index + 1}
+                          </div>
+                          <div>
+                            <div className="fw-semibold h6 mb-1">{product.name}</div>
+                            <div className="small text-muted">Revenue: {formatCurrency(product.predictedSales)}</div>
+                          </div>
+                        </div>
+                        <Badge bg={product.growth > 0 ? 'success' : product.growth < 0 ? 'danger' : 'secondary'} className="fs-6 px-3 py-2">
+                          {product.growth > 0 ? '+' : ''}{product.growth}%
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <div className="text-center text-muted p-4">
-                    <p className="mb-0">No product forecast data available</p>
+                  <div className="text-center text-muted p-5">
+                    <FaTrophy size={48} className="mb-3" />
+                    <h5>No product data available</h5>
                   </div>
                 )}
               </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Forecast Details Table */}
-      <Row>
-        <Col lg={12}>
-          <Card className="border-0 shadow-sm">
-            <Card.Body>
-              <h4 className="mb-4" style={{ fontSize: '1.3rem', fontWeight: '600', color: '#2c2c2c' }}>
-                Daily Forecast Details
-              </h4>
-              <Table hover responsive className="mb-0" style={{ fontSize: '0.9rem' }}>
-                <thead className="bg-light">
-                  <tr>
-                    {['Date', 'Day', 'Predicted Sales', 'Confidence', 'Weekend'].map((header) => (
-                      <th key={header} className="p-3 fw-semibold text-muted border-bottom-2" 
-                          style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {hasData && displayData.dailyForecast?.length ? (
-                    displayData.dailyForecast.map((item, index) => (
-                      <tr key={index}>
-                        <td className="p-3 border-bottom">{formatDate(item.date)}</td>
-                        <td className="p-3 border-bottom">
-                          <Badge bg={item.is_weekend ? 'warning' : 'primary'} style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
-                            {item.day_name}
-                          </Badge>
-                        </td>
-                        <td className="p-3 border-bottom">
-                          <span className="fw-semibold" style={{ color: '#16a34a' }}>
-                            {formatCurrency(item.predicted)}
-                          </span>
-                        </td>
-                        <td className="p-3 border-bottom">
-                          <Badge 
-                            bg={item.confidence > 80 ? 'success' : item.confidence > 70 ? 'warning' : 'danger'}
-                            style={{ fontSize: '0.8rem', padding: '4px 8px' }}
-                          >
-                            {item.confidence}%
-                          </Badge>
-                        </td>
-                        <td className="p-3 border-bottom">
-                          <Badge bg={item.is_weekend ? 'warning' : 'light'} text={item.is_weekend ? 'dark' : 'dark'}>
-                            {item.is_weekend ? 'Weekend' : 'Weekday'}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="5" className="p-3 text-center text-muted border-bottom">
-                        No forecast data available
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
+            </Tab>
+          </Tabs>
+        </Card.Body>
+      </Card>
     </div>
   );
 };
