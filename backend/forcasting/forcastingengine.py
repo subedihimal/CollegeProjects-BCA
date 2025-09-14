@@ -220,7 +220,7 @@ class ARIMAModel:
 class SalesForecastingEngine:
     """Enhanced Sales Forecasting Engine with category forecasting and metrics"""
     
-    def __init__(self, data_file='data.csv'):
+    def __init__(self, data_file='cleaned_customer_data.csv'):
         self.data_file = data_file
         self.df = None
         self.daily_sales = None
@@ -235,6 +235,16 @@ class SalesForecastingEngine:
         try:
             self.df = pd.read_csv(self.data_file)
             print(f"Loaded {len(self.df)} records")
+            
+            # Handle the boolean Loyalty Member column
+            if 'Loyalty Member' in self.df.columns:
+                # Convert string representations to boolean if needed
+                if self.df['Loyalty Member'].dtype == 'object':
+                    self.df['Loyalty Member'] = self.df['Loyalty Member'].map({
+                        'True': True, 'False': False, 'Yes': True, 'No': False,
+                        True: True, False: False
+                    }).fillna(False)
+            
             self._prepare_time_series()
             self._prepare_category_time_series()
             self._fit_models()
@@ -663,8 +673,8 @@ def initialize_engine():
     """Initialize forecasting engine"""
     global forecasting_engine
     try:
-        forecasting_engine = SalesForecastingEngine('data.csv')
-        print("Enhanced forecasting engine initialized successfully")
+        forecasting_engine = SalesForecastingEngine('cleaned_customer_data.csv')
+        print("Enhanced forecasting engine initialized successfully with cleaned data")
     except Exception as e:
         print(f"Error initializing engine: {str(e)}")
         forecasting_engine = SalesForecastingEngine()
@@ -793,7 +803,7 @@ def retrain_models():
     """Retrain forecasting models"""
     try:
         global forecasting_engine
-        forecasting_engine = SalesForecastingEngine('data.csv')
+        forecasting_engine = SalesForecastingEngine('cleaned_customer_data.csv')
         
         # Get training summary
         main_model_trained = forecasting_engine.arima_model is not None
@@ -961,7 +971,7 @@ def health_check():
     
     return jsonify({
         'status': 'healthy',
-        'engine': 'Enhanced ARIMA Forecasting with Metrics',
+        'engine': 'Enhanced ARIMA Forecasting with Metrics - Cleaned Data',
         'timestamp': datetime.now().isoformat(),
         'models': models_status,
         'features': [
@@ -969,12 +979,13 @@ def health_check():
             'Category Quantity Forecasting', 
             'Model Performance Metrics (MAE, MSE, RMSE, R²)',
             'Multi-Model Comparison',
-            'Historical Data Analysis'
+            'Historical Data Analysis',
+            'Cleaned Dataset Integration'
         ]
     })
 
 if __name__ == '__main__':
-    print("Initializing Enhanced ARIMA Forecasting Engine...")
+    print("Initializing Enhanced ARIMA Forecasting Engine with Cleaned Data...")
     initialize_engine()
     
     print("Starting Enhanced Sales Forecasting API...")
@@ -987,7 +998,13 @@ if __name__ == '__main__':
     print("- GET  /api/sales/data-status")
     print("- POST /api/sales/retrain")
     print("- GET  /health")
-    print("\nNew Features:")
+    print("\nDataset Features:")
+    print("✓ Using cleaned_customer_data.csv")
+    print("✓ Enhanced with additional columns (Year, Month, Day, etc.)")
+    print("✓ Boolean Loyalty Member handling")
+    print("✓ Price Discrepancy detection")
+    print("✓ Temporal features (Quarter, WeekOfYear, DayOfWeek)")
+    print("\nModel Features:")
     print("✓ Model Performance Metrics (MAE, MSE, RMSE, R²)")
     print("✓ Category-wise Quantity Forecasting")
     print("✓ Individual Category Model Analysis")
