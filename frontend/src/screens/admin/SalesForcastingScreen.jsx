@@ -135,9 +135,31 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
   }
 
   const metricOptions = {
-    mae: { label: 'MAE', value: metrics.mae, format: (val) => `₹${val?.toFixed(0) || 0}` },
-    r2: { label: 'R²', value: metrics.r2, format: (val) => `${(val * 100)?.toFixed(1) || 0}%` },
-    rmse: { label: 'RMSE', value: metrics.rmse, format: (val) => `₹${val?.toFixed(0) || 0}` }
+    mae: { 
+      label: 'MAE', 
+      value: metrics.mae, 
+      normalizedValue: metrics.mae_normalized,
+      format: (val) => `₹${val?.toFixed(0) || 0}`,
+      formatNormalized: (val) => `${(val * 100)?.toFixed(2) || 0}%`,
+      description: 'Mean Absolute Error',
+      showNormalized: true
+    },
+    rmse: { 
+      label: 'RMSE', 
+      value: metrics.rmse, 
+      normalizedValue: metrics.rmse_normalized,
+      format: (val) => `₹${val?.toFixed(0) || 0}`,
+      formatNormalized: (val) => `${(val * 100)?.toFixed(2) || 0}%`,
+      description: 'Root Mean Squared Error',
+      showNormalized: true
+    },
+    r2: { 
+      label: 'R²', 
+      value: metrics.r2, 
+      format: (val) => `${(val * 100)?.toFixed(1) || 0}%`,
+      description: 'Coefficient of Determination',
+      showNormalized: false
+    }
   };
 
   const current = metricOptions[selectedMetric];
@@ -161,12 +183,23 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
                   <Dropdown.Item key={key} onClick={() => setSelectedMetric(key)} className="py-2">
                     <div className="fw-semibold text-primary">{metric.label}</div>
                     <div className="fw-bold text-dark">{metric.format(metric.value)}</div>
+                    {metric.showNormalized && (
+                      <div className="fw-bold text-success">
+                        Normalized: {metric.formatNormalized(metric.normalizedValue)}
+                      </div>
+                    )}
+                    <div className="small text-muted">{metric.description}</div>
                   </Dropdown.Item>
                 ))}
               </Dropdown.Menu>
             </Dropdown>
             
-            <p className="mb-0 text-muted small fw-medium">{current.label}</p>
+            <p className="mb-0 text-muted small fw-medium">{current.description}</p>
+            {current.showNormalized && (
+              <p className="mb-1 text-success small fw-medium">
+                Normalized: {current.formatNormalized(current.normalizedValue)}
+              </p>
+            )}
             <Badge bg={performance.variant} className="mt-1">{performance.text}</Badge>
           </div>
           <FaCog size={32} color="#667eea" style={{ opacity: 0.7 }} />
@@ -227,16 +260,23 @@ const SalesForcastingScreen = () => {
         const forecastData = forecastResponse.ok ? await forecastResponse.json().catch(() => null) : null;
         const metricsData = metricsResponse.ok ? await metricsResponse.json().catch(() => null) : null;
         
-        // Extract metrics
+        // Extract metrics - simplified structure (removed MSE)
         let mainModelMetrics = null;
         let categoryModelsCount = 0;
         let dataPoints = 0;
         let modelType = 'Unknown';
         
-        if (metricsData?.main_model?.metrics) {
-          mainModelMetrics = metricsData.main_model.metrics;
+        if (metricsData?.main_model) {
+          // Use the metrics directly from main_model (no MSE, with normalized values)
+          mainModelMetrics = {
+            mae: metricsData.main_model.mae,
+            rmse: metricsData.main_model.rmse,
+            r2: metricsData.main_model.r2,
+            mae_normalized: metricsData.main_model.mae_normalized,
+            rmse_normalized: metricsData.main_model.rmse_normalized
+          };
           modelType = metricsData.main_model.type || 'Unknown';
-          categoryModelsCount = Object.keys(metricsData.category_models || {}).length;
+          categoryModelsCount = metricsData.category_models_count || 0;
           dataPoints = metricsData.data_points || 0;
         }
         
@@ -489,26 +529,21 @@ const SalesForcastingScreen = () => {
                         <h5 className="mb-4 fw-semibold">Top Categories</h5>
                         <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                           {hasData && displayData.categoryForecast?.length ? (
-                            displayData.categoryForecast.slice(0, 6).map((category, index) => {
-                              const r2Score = category.model_metrics?.r2 || 0;
-                              const performance = getPerformanceBadge(r2Score);
-                              
-                              return (
-                                <div key={index} className="d-flex justify-content-between align-items-center p-3 mb-2 bg-light rounded">
-                                  <div>
-                                    <div className="fw-semibold">{category.category}</div>
-                                    <div className="small text-muted">{category.total_predicted_quantity} units</div>
-                                    <Badge bg={performance.variant} size="sm" className="mt-1">{performance.text}</Badge>
-                                  </div>
-                                  <div 
-                                    className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                                    style={{ width: '30px', height: '30px', backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                                  >
-                                    {index + 1}
-                                  </div>
+                            displayData.categoryForecast.slice(0, 6).map((category, index) => (
+                              <div key={index} className="d-flex justify-content-between align-items-center p-3 mb-2 bg-light rounded">
+                                <div>
+                                  <div className="fw-semibold">{category.category}</div>
+                                  <div className="small text-muted">{category.total_predicted_quantity} units</div>
+                                  <div className="small text-success">Avg: {category.daily_average} units/day</div>
                                 </div>
-                              );
-                            })
+                                <div 
+                                  className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                                  style={{ width: '30px', height: '30px', backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                                >
+                                  {index + 1}
+                                </div>
+                              </div>
+                            ))
                           ) : (
                             <div className="text-center text-muted p-4">
                               <FaBoxes size={32} className="mb-2" />

@@ -6,9 +6,8 @@ warnings.filterwarnings('ignore')
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from scipy import stats
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, r2_score
 
 class EnhancedARIMAModel:
     def __init__(self, p=1, d=1, q=1):
@@ -25,22 +24,24 @@ class EnhancedARIMAModel:
         if np.all(data > 0):
             data = np.log1p(data)
         
-        # Outlier removal
+        # Outlier removal using IQR
         Q1, Q3 = np.percentile(data, [25, 75])
         IQR = Q3 - Q1
         outliers = (data < Q1 - 1.5 * IQR) | (data > Q3 + 1.5 * IQR)
         data[outliers] = np.median(data[~outliers])
         
-        # Decomposition
+        # Simple decomposition
         n, period = len(data), 7
         if n >= period * 2:
             trend = np.convolve(data, np.ones(period)/period, mode='same')
+            # Fix edges
             for i in range(period//2):
                 trend[i] = np.mean(data[:i+period//2+1])
                 trend[-(i+1)] = np.mean(data[-(i+period//2+1):])
         else:
             trend = np.full(n, np.mean(data))
         
+        # Seasonal component
         detrended = data - trend
         seasonal = np.zeros(n)
         if n >= period:
@@ -70,6 +71,7 @@ class EnhancedARIMAModel:
         return autocorr
     
     def estimate_params(self, data, p, q):
+        params_ar = np.array([])
         if p > 0:
             autocorr = self.autocorrelation(data, p)
             R = np.array([[autocorr[abs(i - j)] for j in range(p)] for i in range(p)])
@@ -79,15 +81,12 @@ class EnhancedARIMAModel:
                 params_ar = np.clip(np.linalg.solve(R, r), -0.95, 0.95)
             except:
                 params_ar = np.array([0.3 * (i + 1) / p for i in range(p)])
-        else:
-            params_ar = np.array([])
         
+        params_ma = np.array([])
         if q > 0:
             residuals = self._calculate_residuals(data - np.mean(data), params_ar)
             autocorr = self.autocorrelation(residuals, q)
             params_ma = np.clip([-autocorr[i + 1] * 0.5 for i in range(q)], -0.95, 0.95)
-        else:
-            params_ma = np.array([])
         
         return params_ar, params_ma
     
@@ -107,22 +106,23 @@ class EnhancedARIMAModel:
         
         self.preprocessed_data = self.preprocess_data(self.original_data)
         
+        # Differencing
+        differenced_data = self.preprocessed_data.copy()
         if self.d > 0 and len(self.preprocessed_data) > self.d:
-            differenced_data = self.preprocessed_data.copy()
             for _ in range(self.d):
                 differenced_data = np.diff(differenced_data)
         else:
-            differenced_data = self.preprocessed_data.copy()
             self.d = 0
         
         self.mean = np.mean(differenced_data)
         centered_data = differenced_data - self.mean
         
+        # Parameter estimation
         self.params_ar, self.params_ma = self.estimate_params(centered_data, self.p, self.q)
         fitted_values = self._calculate_fitted_values(differenced_data)
         self.residuals = differenced_data - fitted_values
         
-        # Convert back to original scale
+        # Transform back to original scale
         if self.d > 0:
             for _ in range(self.d):
                 fitted_values = np.cumsum(np.concatenate([[self.preprocessed_data[-self.d]], fitted_values]))
@@ -181,7 +181,6 @@ class EnhancedARIMAModel:
             for _ in range(self.d):
                 forecasts = np.cumsum(np.concatenate([[self.preprocessed_data[-self.d]], forecasts]))
         
-        # Postprocess
         forecasts = self.scaler.inverse_transform(forecasts.reshape(-1, 1)).flatten()
         
         for i in range(steps):
@@ -193,74 +192,98 @@ class EnhancedARIMAModel:
         return np.maximum(np.expm1(forecasts), 0)
     
     def calculate_metrics(self):
+        """Calculate normalized model performance metrics"""
         if self.fitted_values is None or self.original_data is None:
-            return {'mae': float('inf'), 'mse': float('inf'), 'rmse': float('inf'), 'r2': -float('inf')}
+            return {'mae': 1.0, 'rmse': 1.0, 'r2': 0.0, 'mae_normalized': 1.0, 'rmse_normalized': 1.0}
         
         min_len = min(len(self.fitted_values), len(self.original_data))
         if min_len == 0:
-            return {'mae': float('inf'), 'mse': float('inf'), 'rmse': float('inf'), 'r2': -float('inf')}
+            return {'mae': 1.0, 'rmse': 1.0, 'r2': 0.0, 'mae_normalized': 1.0, 'rmse_normalized': 1.0}
         
-        actual, predicted = self.original_data[-min_len:], self.fitted_values[-min_len:]
+        actual = self.original_data[-min_len:]
+        predicted = self.fitted_values[-min_len:]
+        
+        # Remove any NaN or infinite values
+        mask = np.isfinite(actual) & np.isfinite(predicted)
+        if not np.any(mask) or len(actual[mask]) < 2:
+            return {'mae': 1.0, 'rmse': 1.0, 'r2': 0.0, 'mae_normalized': 1.0, 'rmse_normalized': 1.0}
+        
+        actual = actual[mask]
+        predicted = predicted[mask]
         
         try:
+            mae = mean_absolute_error(actual, predicted)
+            rmse = np.sqrt(np.mean((actual - predicted) ** 2))
+            r2 = max(-1.0, min(1.0, r2_score(actual, predicted)))
+            
+            # Normalize MAE and RMSE by mean of actual values
+            mean_actual = np.mean(actual)
+            mae_normalized = mae / mean_actual if mean_actual > 0 else 1.0
+            rmse_normalized = rmse / mean_actual if mean_actual > 0 else 1.0
+            
             return {
-                'mae': float(mean_absolute_error(actual, predicted)),
-                'mse': float(mean_squared_error(actual, predicted)),
-                'rmse': float(np.sqrt(mean_squared_error(actual, predicted))),
-                'r2': float(r2_score(actual, predicted))
+                'mae': float(mae),
+                'rmse': float(rmse),
+                'r2': float(r2),
+                'mae_normalized': float(min(1.0, mae_normalized)),
+                'rmse_normalized': float(min(1.0, rmse_normalized))
             }
         except:
-            mae = np.mean(np.abs(actual - predicted))
-            mse = np.mean((actual - predicted) ** 2)
-            ss_tot = np.sum((actual - np.mean(actual)) ** 2)
-            r2 = 1 - (np.sum((actual - predicted) ** 2) / ss_tot) if ss_tot != 0 else -float('inf')
-            return {'mae': float(mae), 'mse': float(mse), 'rmse': float(np.sqrt(mse)), 'r2': float(r2)}
+            return {'mae': 1.0, 'rmse': 1.0, 'r2': 0.0, 'mae_normalized': 1.0, 'rmse_normalized': 1.0}
     
     def calculate_aic(self):
-        if self.residuals is None:
+        if self.residuals is None or len(self.residuals) == 0:
             return float('inf')
         n, k = len(self.residuals), self.p + self.q + 1
         if n <= k:
             return float('inf')
-        mse = np.mean(self.residuals ** 2)
-        return n * np.log(mse) + 2 * k if mse > 0 else float('inf')
+        residual_variance = np.var(self.residuals)
+        return n * np.log(residual_variance) + 2 * k if residual_variance > 0 else float('inf')
 
 class SalesForecastingEngine:
     def __init__(self, data_file='cleaned_customer_data.csv'):
         self.data_file = data_file
-        self.df = self.daily_sales = self.category_sales = None
+        self.df = None
+        self.daily_sales = None
+        self.category_sales = {}
         self.arima_model = None
         self.category_models = {}
-        self.load_and_prepare_data()
+        self._load_and_prepare_data()
         
-    def load_and_prepare_data(self):
+    def _load_and_prepare_data(self):
         try:
             self.df = pd.read_csv(self.data_file)
-            
-            if 'Loyalty Member' in self.df.columns and self.df['Loyalty Member'].dtype == 'object':
-                self.df['Loyalty Member'] = self.df['Loyalty Member'].map({
-                    'True': True, 'False': False, 'Yes': True, 'No': False
-                }).fillna(False)
-            
-            # Clean numeric columns
-            for col in ['Total Price', 'Quantity', 'Unit Price']:
-                self.df[col] = pd.to_numeric(self.df[col], errors='coerce').fillna(0 if col != 'Quantity' else 1)
-            
-            self.df = self.df[(self.df['Total Price'] >= 0) & (self.df['Quantity'] > 0)].copy()
-            
+            self._clean_data()
             self._prepare_time_series()
             self._prepare_category_time_series()
             self._fit_models()
-            
-        except Exception as e:
+        except:
             self.df = pd.DataFrame()
+    
+    def _clean_data(self):
+        if self.df.empty:
+            return
+        
+        # Handle loyalty member column
+        if 'Loyalty Member' in self.df.columns and self.df['Loyalty Member'].dtype == 'object':
+            self.df['Loyalty Member'] = self.df['Loyalty Member'].map({
+                'True': True, 'False': False, 'Yes': True, 'No': False
+            }).fillna(False)
+        
+        # Clean numeric columns
+        for col in ['Total Price', 'Quantity', 'Unit Price']:
+            if col in self.df.columns:
+                self.df[col] = pd.to_numeric(self.df[col], errors='coerce').fillna(0 if col != 'Quantity' else 1)
+        
+        # Filter valid records
+        self.df = self.df[(self.df['Total Price'] >= 0) & (self.df['Quantity'] > 0)].copy()
     
     def _prepare_time_series(self):
         if self.df.empty:
             return
         
-        self.df['Purchase Date'] = pd.to_datetime(self.df['Purchase Date'])
-        completed_df = self.df[self.df['Order Status'] == 'Completed'].copy()
+        self.df['Purchase Date'] = pd.to_datetime(self.df['Purchase Date'], errors='coerce')
+        completed_df = self.df[self.df['Order Status'] == 'Completed'].dropna(subset=['Purchase Date'])
         
         if completed_df.empty:
             return
@@ -276,40 +299,42 @@ class SalesForecastingEngine:
         self.daily_sales['Date'] = pd.to_datetime(self.daily_sales['Date'])
         
         self._fill_missing_days()
-        self.daily_sales['Revenue_Smoothed'] = self.daily_sales['Revenue'].rolling(window=3, center=True, min_periods=1).mean()
+        self.daily_sales['Revenue_Smoothed'] = self.daily_sales['Revenue'].rolling(
+            window=3, center=True, min_periods=1
+        ).mean()
         self.daily_sales = self.daily_sales.sort_values('Date').reset_index(drop=True)
-        
+    
     def _prepare_category_time_series(self):
-        if self.df.empty:
+        if self.df.empty or self.daily_sales is None:
             return
         
         completed_df = self.df[self.df['Order Status'] == 'Completed'].copy()
-        if completed_df.empty:
-            return
-        
         completed_df['Date'] = completed_df['Purchase Date'].dt.date
+        
         category_daily = completed_df.groupby(['Date', 'Product Type']).agg({
             'Total Price': 'sum',
             'Quantity': 'sum'
         }).reset_index()
         category_daily['Date'] = pd.to_datetime(category_daily['Date'])
         
-        self.category_sales = {}
+        date_range = pd.date_range(
+            start=self.daily_sales['Date'].min(),
+            end=self.daily_sales['Date'].max(),
+            freq='D'
+        )
+        complete_df = pd.DataFrame({'Date': date_range})
+        
         for category in category_daily['Product Type'].unique():
-            cat_data = category_daily[category_daily['Product Type'] == category].copy()
-            date_range = pd.date_range(
-                start=self.daily_sales['Date'].min(),
-                end=self.daily_sales['Date'].max(),
-                freq='D'
-            )
-            complete_df = pd.DataFrame({'Date': date_range})
+            cat_data = category_daily[category_daily['Product Type'] == category]
             cat_filled = complete_df.merge(cat_data[['Date', 'Total Price', 'Quantity']], on='Date', how='left')
             cat_filled[['Total Price', 'Quantity']] = cat_filled[['Total Price', 'Quantity']].fillna(0)
-            cat_filled['Quantity_Smoothed'] = cat_filled['Quantity'].rolling(window=3, center=True, min_periods=1).mean()
+            cat_filled['Quantity_Smoothed'] = cat_filled['Quantity'].rolling(
+                window=3, center=True, min_periods=1
+            ).mean()
             self.category_sales[category] = cat_filled.sort_values('Date').reset_index(drop=True)
-        
+    
     def _fill_missing_days(self):
-        if self.daily_sales.empty:
+        if self.daily_sales is None or self.daily_sales.empty:
             return
         
         date_range = pd.date_range(self.daily_sales['Date'].min(), self.daily_sales['Date'].max(), freq='D')
@@ -342,24 +367,25 @@ class SalesForecastingEngine:
             return
         
         try:
+            # Fit main model
             revenue_series = self.daily_sales['Revenue_Smoothed'].values
             p, d, q = self._find_best_arima_params(revenue_series)
             self.arima_model = EnhancedARIMAModel(p, d, q)
             self.arima_model.fit(revenue_series)
             
-            if self.category_sales:
-                for category, cat_data in self.category_sales.items():
-                    if len(cat_data) >= 15 and cat_data['Quantity'].sum() > 0:
-                        try:
-                            quantity_series = cat_data['Quantity_Smoothed'].values
-                            p_cat, d_cat, q_cat = self._find_best_arima_params(quantity_series)
-                            cat_model = EnhancedARIMAModel(p_cat, d_cat, q_cat)
-                            cat_model.fit(quantity_series)
-                            
-                            if cat_model.calculate_metrics()['r2'] > -0.5:
-                                self.category_models[category] = cat_model
-                        except:
-                            continue
+            # Fit category models
+            for category, cat_data in self.category_sales.items():
+                if len(cat_data) >= 15 and cat_data['Quantity'].sum() > 0:
+                    try:
+                        quantity_series = cat_data['Quantity_Smoothed'].values
+                        p_cat, d_cat, q_cat = self._find_best_arima_params(quantity_series)
+                        cat_model = EnhancedARIMAModel(p_cat, d_cat, q_cat)
+                        cat_model.fit(quantity_series)
+                        
+                        if cat_model.calculate_metrics()['r2'] > -0.5:
+                            self.category_models[category] = cat_model
+                    except:
+                        continue
         except:
             pass
     
@@ -373,17 +399,20 @@ class SalesForecastingEngine:
             last_date = self.daily_sales['Date'].max()
             model_metrics = self.arima_model.calculate_metrics()
             
+            # Generate daily forecasts
             daily_forecasts = []
             for i in range(forecast_steps):
                 future_date = last_date + timedelta(days=i+1)
                 predicted_revenue = max(0, forecasts[i])
                 
+                # Calculate confidence
                 base_confidence = 90 - (i * 1.5)
                 if model_metrics['r2'] > 0.7:
                     base_confidence += 5
                 elif model_metrics['r2'] < 0.3:
                     base_confidence -= 10
                 
+                # Weekend adjustment
                 is_weekend = future_date.weekday() >= 5
                 if is_weekend:
                     predicted_revenue *= 0.8
@@ -397,14 +426,17 @@ class SalesForecastingEngine:
                     'is_weekend': is_weekend
                 })
             
+            # Generate category forecasts
             category_forecasts = self._generate_category_forecasts(forecast_steps, last_date)
-            total_predicted = sum(f['predicted'] for f in daily_forecasts)
             
+            # Calculate summary metrics
+            total_predicted = sum(f['predicted'] for f in daily_forecasts)
             historical_revenue = self.daily_sales['Revenue'].tail(forecast_steps).sum()
             growth_rate = ((total_predicted - historical_revenue) / historical_revenue * 100) if historical_revenue > 0 else 0
             avg_confidence = np.mean([f['confidence'] for f in daily_forecasts])
             uncertainty_factor = max(0.1, 1 - model_metrics['r2']) if model_metrics['r2'] > 0 else 0.5
             
+            # Prepare line graph data
             line_graph_data = []
             for _, row in self.daily_sales.iterrows():
                 line_graph_data.append({
@@ -441,12 +473,7 @@ class SalesForecastingEngine:
                     'dataPoints': len(self.daily_sales),
                     'forecastHorizon': f'{forecast_steps} days',
                     'lastDataDate': self.daily_sales['Date'].max().strftime('%Y-%m-%d'),
-                    'metrics': {
-                        'mae': round(model_metrics['mae'], 2),
-                        'mse': round(model_metrics['mse'], 2),
-                        'rmse': round(model_metrics['rmse'], 2),
-                        'r2': round(model_metrics['r2'], 4)
-                    },
+                    'accuracy': f"{round(max(0, model_metrics['r2'] * 100), 1)}%",
                     'categoryModels': len(self.category_models)
                 }
             }
@@ -459,14 +486,13 @@ class SalesForecastingEngine:
         for category, model in self.category_models.items():
             try:
                 forecasts = model.forecast(steps=forecast_steps)
-                metrics = model.calculate_metrics()
                 
                 daily_category_forecasts = []
                 for i in range(forecast_steps):
                     future_date = last_date + timedelta(days=i+1)
                     predicted_quantity = max(0, forecasts[i])
                     
-                    if future_date.weekday() >= 5:
+                    if future_date.weekday() >= 5:  # Weekend adjustment
                         predicted_quantity *= 0.75
                     
                     daily_category_forecasts.append({
@@ -475,17 +501,12 @@ class SalesForecastingEngine:
                         'day_name': future_date.strftime('%A')
                     })
                 
+                total_predicted = int(sum(f['predicted_quantity'] for f in daily_category_forecasts))
                 category_forecasts.append({
                     'category': category,
-                    'total_predicted_quantity': int(sum(f['predicted_quantity'] for f in daily_category_forecasts)),
-                    'daily_average': round(sum(f['predicted_quantity'] for f in daily_category_forecasts) / forecast_steps, 1),
-                    'daily_forecasts': daily_category_forecasts,
-                    'model_metrics': {
-                        'mae': round(metrics['mae'], 2),
-                        'rmse': round(metrics['rmse'], 2),
-                        'r2': round(metrics['r2'], 4)
-                    },
-                    'model_type': f"Enhanced ARIMA({model.p},{model.d},{model.q})"
+                    'total_predicted_quantity': total_predicted,
+                    'daily_average': round(total_predicted / forecast_steps, 1),
+                    'daily_forecasts': daily_category_forecasts
                 })
             except:
                 continue
@@ -498,29 +519,34 @@ class SalesForecastingEngine:
         
         top_products = []
         for category, model in self.category_models.items():
+            if category not in self.category_sales:
+                continue
+                
             try:
-                if category in self.category_sales:
-                    cat_data = self.category_sales[category]
-                    recent_revenue = cat_data['Total Price'].tail(14).sum()
-                    recent_quantity = cat_data['Quantity'].tail(14).sum()
-                    
-                    forecasted_quantities = model.forecast(steps=7)
-                    total_forecasted_quantity = sum(max(0, q) for q in forecasted_quantities)
-                    
-                    avg_price = recent_revenue / recent_quantity if recent_quantity > 0 else 0
-                    predicted_sales = total_forecasted_quantity * avg_price
-                    
-                    historical_quantity = cat_data['Quantity'].tail(7).sum()
-                    growth_rate = ((total_forecasted_quantity - historical_quantity) / historical_quantity * 100) if historical_quantity > 0 else 0
-                    
-                    if predicted_sales > 0:
-                        top_products.append({
-                            'name': category,
-                            'predictedSales': round(predicted_sales, 2),
-                            'predictedQuantity': int(total_forecasted_quantity),
-                            'growth': round(growth_rate, 1),
-                            'avgPrice': round(avg_price, 2)
-                        })
+                cat_data = self.category_sales[category]
+                recent_revenue = cat_data['Total Price'].tail(14).sum()
+                recent_quantity = cat_data['Quantity'].tail(14).sum()
+                
+                if recent_quantity == 0:
+                    continue
+                
+                forecasted_quantities = model.forecast(steps=7)
+                total_forecasted_quantity = sum(max(0, q) for q in forecasted_quantities)
+                
+                avg_price = recent_revenue / recent_quantity
+                predicted_sales = total_forecasted_quantity * avg_price
+                
+                historical_quantity = cat_data['Quantity'].tail(7).sum()
+                growth_rate = ((total_forecasted_quantity - historical_quantity) / historical_quantity * 100) if historical_quantity > 0 else 0
+                
+                if predicted_sales > 0:
+                    top_products.append({
+                        'name': category,
+                        'predictedSales': round(predicted_sales, 2),
+                        'predictedQuantity': int(total_forecasted_quantity),
+                        'growth': round(growth_rate, 1),
+                        'avgPrice': round(avg_price, 2)
+                    })
             except:
                 continue
         
@@ -545,18 +571,14 @@ class SalesForecastingEngine:
             
             top_products = []
             for _, row in product_stats.head(5).iterrows():
-                predicted_sales = row['Total Price'] * 1.02
-                predicted_quantity = row['Quantity'] * 1.02
-                growth_rate = np.random.normal(2, 5)
-                avg_price = row['Total Price'] / row['Quantity'] if row['Quantity'] > 0 else 0
-                
-                top_products.append({
-                    'name': row['Product Type'],
-                    'predictedSales': round(predicted_sales, 2),
-                    'predictedQuantity': int(predicted_quantity),
-                    'growth': round(growth_rate, 1),
-                    'avgPrice': round(avg_price, 2)
-                })
+                if row['Quantity'] > 0:
+                    top_products.append({
+                        'name': row['Product Type'],
+                        'predictedSales': round(row['Total Price'] * 1.02, 2),
+                        'predictedQuantity': int(row['Quantity'] * 1.02),
+                        'growth': round(np.random.normal(2, 5), 1),
+                        'avgPrice': round(row['Total Price'] / row['Quantity'], 2)
+                    })
             
             return sorted(top_products, key=lambda x: x['predictedSales'], reverse=True)
         except:
@@ -565,95 +587,76 @@ class SalesForecastingEngine:
     def _get_empty_forecast(self):
         return {
             'summary': {
-                'predictedRevenue': 0,
-                'growthRate': 0,
-                'confidence': 0,
-                'bestCase': 0,
-                'worstCase': 0,
-                'dailyAverage': 0
+                'predictedRevenue': 0, 'growthRate': 0, 'confidence': 0,
+                'bestCase': 0, 'worstCase': 0, 'dailyAverage': 0
             },
-            'dailyForecast': [],
-            'categoryForecast': [],
-            'lineGraphData': [],
-            'topProducts': [],
-            'modelInfo': {
-                'type': 'No model available',
-                'dataPoints': 0,
-                'forecastHorizon': 'N/A',
-                'lastDataDate': 'N/A',
-                'metrics': {'mae': 0, 'mse': 0, 'rmse': 0, 'r2': 0},
-                'categoryModels': 0
+            'dailyForecast': [], 'categoryForecast': [], 'lineGraphData': [],
+            'topProducts': [], 'modelInfo': {
+                'type': 'No model available', 'dataPoints': 0, 'forecastHorizon': 'N/A',
+                'lastDataDate': 'N/A', 'accuracy': '0%', 'categoryModels': 0
             }
         }
 
+# Flask app
 app = Flask(__name__)
 CORS(app)
 forecasting_engine = None
 
-def initialize_engine():
+def get_engine():
     global forecasting_engine
-    try:
-        forecasting_engine = SalesForecastingEngine('cleaned_customer_data.csv')
-    except:
-        forecasting_engine = SalesForecastingEngine()
+    if forecasting_engine is None:
+        try:
+            forecasting_engine = SalesForecastingEngine('cleaned_customer_data.csv')
+        except:
+            forecasting_engine = SalesForecastingEngine()
+    return forecasting_engine
 
 @app.route('/api/sales/forecast', methods=['GET'])
 def get_sales_forecast():
-    global forecasting_engine
-    if forecasting_engine is None:
-        initialize_engine()
-    
     try:
         period = request.args.get('period', '7days')
         period = '7days' if period not in ['7days', '15days'] else period
-        return jsonify(forecasting_engine.generate_forecast(period))
+        return jsonify(get_engine().generate_forecast(period))
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/sales/metrics', methods=['GET'])
 def get_model_metrics():
-    global forecasting_engine
-    if forecasting_engine is None:
-        initialize_engine()
-    
     try:
-        if forecasting_engine.arima_model is None:
+        engine = get_engine()
+        if engine.arima_model is None:
             return jsonify({'error': 'No model trained'}), 404
         
-        main_metrics = forecasting_engine.arima_model.calculate_metrics()
-        category_metrics = {}
-        for category, model in forecasting_engine.category_models.items():
-            category_metrics[category] = {
-                'metrics': model.calculate_metrics(),
-                'model_params': f"Enhanced ARIMA({model.p},{model.d},{model.q})"
-            }
+        metrics = engine.arima_model.calculate_metrics()
         
         return jsonify({
             'main_model': {
-                'type': f"Enhanced ARIMA({forecasting_engine.arima_model.p},{forecasting_engine.arima_model.d},{forecasting_engine.arima_model.q})",
-                'metrics': main_metrics
+                'type': f"Enhanced ARIMA({engine.arima_model.p},{engine.arima_model.d},{engine.arima_model.q})",
+                'mae': round(metrics['mae'], 2),
+                'rmse': round(metrics['rmse'], 2),
+                'r2': round(metrics['r2'], 4),
+                'mae_normalized': round(metrics['mae_normalized'], 4),
+                'rmse_normalized': round(metrics['rmse_normalized'], 4),
+                'accuracy_percentage': f"{round(max(0, metrics['r2'] * 100), 1)}%"
             },
-            'category_models': category_metrics,
-            'data_points': len(forecasting_engine.daily_sales) if forecasting_engine.daily_sales is not None else 0
+            'data_points': len(engine.daily_sales) if engine.daily_sales is not None else 0,
+            'category_models_count': len(engine.category_models)
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/sales/categories', methods=['GET'])
 def get_category_forecast():
-    global forecasting_engine
-    if forecasting_engine is None:
-        initialize_engine()
-    
     try:
+        engine = get_engine()
         period = request.args.get('period', '7days')
         forecast_steps = 7 if period == '7days' else 15
         
-        if not forecasting_engine.category_models:
+        if not engine.category_models:
             return jsonify({'error': 'No category models available'}), 404
         
-        last_date = forecasting_engine.daily_sales['Date'].max()
-        category_forecasts = forecasting_engine._generate_category_forecasts(forecast_steps, last_date)
+        last_date = engine.daily_sales['Date'].max()
+        category_forecasts = engine._generate_category_forecasts(forecast_steps, last_date)
         
         return jsonify({
             'categories': category_forecasts,
@@ -666,32 +669,28 @@ def get_category_forecast():
 
 @app.route('/api/sales/data-status', methods=['GET'])
 def get_data_status():
-    global forecasting_engine
-    if forecasting_engine is None:
-        initialize_engine()
-    
     try:
-        data_available = forecasting_engine.df is not None and not forecasting_engine.df.empty
-        record_count = len(forecasting_engine.df) if data_available else 0
-        daily_points = len(forecasting_engine.daily_sales) if forecasting_engine.daily_sales is not None else 0
+        engine = get_engine()
+        data_available = engine.df is not None and not engine.df.empty
+        record_count = len(engine.df) if data_available else 0
+        daily_points = len(engine.daily_sales) if engine.daily_sales is not None else 0
         
         categories_info = {}
-        if forecasting_engine.category_sales:
-            for category, cat_data in forecasting_engine.category_sales.items():
-                categories_info[category] = {
-                    'data_points': len(cat_data),
-                    'total_quantity': int(cat_data['Quantity'].sum()),
-                    'total_revenue': round(cat_data['Total Price'].sum() if 'Total Price' in cat_data.columns else 0, 2),
-                    'has_model': category in forecasting_engine.category_models
-                }
+        for category, cat_data in engine.category_sales.items():
+            categories_info[category] = {
+                'data_points': len(cat_data),
+                'total_quantity': int(cat_data['Quantity'].sum()),
+                'total_revenue': round(cat_data['Total Price'].sum() if 'Total Price' in cat_data.columns else 0, 2),
+                'has_model': category in engine.category_models
+            }
         
         return jsonify({
             'status': 'success',
             'data_available': data_available,
             'record_count': record_count,
             'daily_data_points': daily_points,
-            'models_trained': bool(forecasting_engine.arima_model),
-            'category_models_trained': len(forecasting_engine.category_models),
+            'models_trained': bool(engine.arima_model),
+            'category_models_trained': len(engine.category_models),
             'categories': categories_info
         })
     except Exception as e:
@@ -715,22 +714,17 @@ def retrain_models():
 
 @app.route('/api/sales/category/<category_name>/forecast', methods=['GET'])
 def get_single_category_forecast(category_name):
-    global forecasting_engine
-    if forecasting_engine is None:
-        initialize_engine()
-    
     try:
-        if category_name not in forecasting_engine.category_models:
+        engine = get_engine()
+        if category_name not in engine.category_models:
             return jsonify({'error': f'No model available for category: {category_name}'}), 404
         
         period = request.args.get('period', '7days')
         forecast_steps = 7 if period == '7days' else 15
         
-        model = forecasting_engine.category_models[category_name]
+        model = engine.category_models[category_name]
         forecasts = model.forecast(steps=forecast_steps)
-        metrics = model.calculate_metrics()
-        
-        last_date = forecasting_engine.daily_sales['Date'].max()
+        last_date = engine.daily_sales['Date'].max()
         
         daily_forecasts = []
         for i in range(forecast_steps):
@@ -748,8 +742,8 @@ def get_single_category_forecast(category_name):
             })
         
         historical_data = []
-        if category_name in forecasting_engine.category_sales:
-            cat_data = forecasting_engine.category_sales[category_name]
+        if category_name in engine.category_sales:
+            cat_data = engine.category_sales[category_name]
             for _, row in cat_data.iterrows():
                 historical_data.append({
                     'date': row['Date'].strftime('%Y-%m-%d'),
@@ -760,12 +754,6 @@ def get_single_category_forecast(category_name):
         return jsonify({
             'category': category_name,
             'model_type': f"Enhanced ARIMA({model.p},{model.d},{model.q})",
-            'metrics': {
-                'mae': round(metrics['mae'], 2),
-                'mse': round(metrics['mse'], 2),
-                'rmse': round(metrics['rmse'], 2),
-                'r2': round(metrics['r2'], 4)
-            },
             'forecast': {
                 'period': period,
                 'total_predicted_quantity': int(sum(f['predicted_quantity'] for f in daily_forecasts)),
@@ -777,85 +765,20 @@ def get_single_category_forecast(category_name):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/sales/model-comparison', methods=['GET'])
-def get_model_comparison():
-    global forecasting_engine
-    if forecasting_engine is None:
-        initialize_engine()
-    
-    try:
-        if forecasting_engine.arima_model is None:
-            return jsonify({'error': 'No models trained'}), 404
-        
-        comparison_data = []
-        
-        main_metrics = forecasting_engine.arima_model.calculate_metrics()
-        comparison_data.append({
-            'model_name': 'Revenue (Main)',
-            'model_type': f"Enhanced ARIMA({forecasting_engine.arima_model.p},{forecasting_engine.arima_model.d},{forecasting_engine.arima_model.q})",
-            'target_variable': 'Revenue',
-            'data_points': len(forecasting_engine.daily_sales),
-            'mae': round(main_metrics['mae'], 2),
-            'mse': round(main_metrics['mse'], 2),
-            'rmse': round(main_metrics['rmse'], 2),
-            'r2': round(main_metrics['r2'], 4),
-            'r2_percentage': round(main_metrics['r2'] * 100, 2) if main_metrics['r2'] > 0 else 0
-        })
-        
-        for category, model in forecasting_engine.category_models.items():
-            metrics = model.calculate_metrics()
-            data_points = len(forecasting_engine.category_sales[category]) if category in forecasting_engine.category_sales else 0
-            
-            comparison_data.append({
-                'model_name': f'{category} (Quantity)',
-                'model_type': f"Enhanced ARIMA({model.p},{model.d},{model.q})",
-                'target_variable': 'Quantity',
-                'data_points': data_points,
-                'mae': round(metrics['mae'], 2),
-                'mse': round(metrics['mse'], 2),
-                'rmse': round(metrics['rmse'], 2),
-                'r2': round(metrics['r2'], 4),
-                'r2_percentage': round(metrics['r2'] * 100, 2) if metrics['r2'] > 0 else 0
-            })
-        
-        comparison_data.sort(key=lambda x: x['r2'], reverse=True)
-        
-        r2_scores = [model['r2'] for model in comparison_data if model['r2'] > -float('inf')]
-        rmse_scores = [model['rmse'] for model in comparison_data if model['rmse'] < float('inf')]
-        
-        summary = {
-            'total_models': len(comparison_data),
-            'avg_r2': round(np.mean(r2_scores), 4) if r2_scores else 0,
-            'avg_rmse': round(np.mean(rmse_scores), 2) if rmse_scores else 0,
-            'best_model': comparison_data[0]['model_name'] if comparison_data else 'None',
-            'best_r2': comparison_data[0]['r2'] if comparison_data else 0
-        }
-        
-        return jsonify({
-            'summary': summary,
-            'models': comparison_data,
-            'generated_at': datetime.now().isoformat()
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/health', methods=['GET'])
 def health_check():
-    global forecasting_engine
-    
-    models_status = {
-        'main_model': forecasting_engine.arima_model is not None if forecasting_engine else False,
-        'category_models': len(forecasting_engine.category_models) if forecasting_engine else 0,
-        'data_loaded': forecasting_engine.df is not None and not forecasting_engine.df.empty if forecasting_engine else False
-    }
+    engine = get_engine()
     
     return jsonify({
         'status': 'healthy',
         'engine': 'Enhanced ARIMA Forecasting Engine',
         'timestamp': datetime.now().isoformat(),
-        'models': models_status
+        'models': {
+            'main_model': engine.arima_model is not None,
+            'category_models': len(engine.category_models),
+            'data_loaded': engine.df is not None and not engine.df.empty
+        }
     })
 
 if __name__ == '__main__':
-    initialize_engine()
     app.run(debug=True, host='0.0.0.0', port=5001)
