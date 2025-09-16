@@ -226,10 +226,11 @@ class EnhancedARIMAModel:
                 'rmse': float(rmse),
                 'r2': float(r2),
                 'mae_normalized': float(min(1.0, mae_normalized)),
-                'rmse_normalized': float(min(1.0, rmse_normalized))
+                'rmse_normalized': float(min(1.0, rmse_normalized)),
+                'mean_actual': float(mean_actual)
             }
         except:
-            return {'mae': 1.0, 'rmse': 1.0, 'r2': 0.0, 'mae_normalized': 1.0, 'rmse_normalized': 1.0}
+            return {'mae': 1.0, 'rmse': 1.0, 'r2': 0.0, 'mae_normalized': 1.0, 'rmse_normalized': 1.0, 'mean_actual': 0.0}
     
     def calculate_aic(self):
         if self.residuals is None or len(self.residuals) == 0:
@@ -637,6 +638,7 @@ def get_model_metrics():
                 'r2': round(metrics['r2'], 4),
                 'mae_normalized': round(metrics['mae_normalized'], 4),
                 'rmse_normalized': round(metrics['rmse_normalized'], 4),
+                'mean_actual': round(metrics['mean_actual'], 2),
                 'accuracy_percentage': f"{round(max(0, metrics['r2'] * 100), 1)}%"
             },
             'data_points': len(engine.daily_sales) if engine.daily_sales is not None else 0,

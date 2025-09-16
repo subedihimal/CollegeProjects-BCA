@@ -127,7 +127,7 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
     return (
       <Card className="border-0 shadow-sm h-100">
         <Card.Body className="p-3 text-center">
-          <FaCog size={32} color="#6c757d" className="mb-2" />
+          <div className="text-muted mb-2" style={{ fontSize: '14px' }}>Mean Actual: ₹0</div>
           <p className="text-muted mb-0">Model metrics unavailable</p>
         </Card.Body>
       </Card>
@@ -202,7 +202,14 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
             )}
             <Badge bg={performance.variant} className="mt-1">{performance.text}</Badge>
           </div>
-          <FaCog size={32} color="#667eea" style={{ opacity: 0.7 }} />
+          <div className="text-center">
+            <div className="text-info mb-1" style={{ fontSize: '14px', fontWeight: 'bold' }}>
+              ₹{metrics.mean_actual?.toFixed(0) || 0}
+            </div>
+            <div className="text-muted" style={{ fontSize: '11px' }}>
+              Mean Actual
+            </div>
+          </div>
         </div>
       </Card.Body>
     </Card>
@@ -273,7 +280,8 @@ const SalesForcastingScreen = () => {
             rmse: metricsData.main_model.rmse,
             r2: metricsData.main_model.r2,
             mae_normalized: metricsData.main_model.mae_normalized,
-            rmse_normalized: metricsData.main_model.rmse_normalized
+            rmse_normalized: metricsData.main_model.rmse_normalized,
+            mean_actual: metricsData.main_model.mean_actual
           };
           modelType = metricsData.main_model.type || 'Unknown';
           categoryModelsCount = metricsData.category_models_count || 0;
