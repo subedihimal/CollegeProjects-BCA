@@ -487,21 +487,37 @@ class SalesForecastingEngine:
         for category, model in self.category_models.items():
             try:
                 forecasts = model.forecast(steps=forecast_steps)
-                
+
                 daily_category_forecasts = []
+
+                # derive an average price for the category from recent historical data
+                cat_hist = self.category_sales.get(category)
+                recent_revenue = 0.0
+                recent_quantity = 0
+                if cat_hist is not None and len(cat_hist) > 0:
+                    # use last 14 days where available
+                    recent = cat_hist.tail(14)
+                    if 'Total Price' in recent.columns and 'Quantity' in recent.columns:
+                        recent_revenue = float(recent['Total Price'].sum())
+                        recent_quantity = int(recent['Quantity'].sum())
+
+                avg_price = (recent_revenue / recent_quantity) if recent_quantity > 0 else 0.0
+
                 for i in range(forecast_steps):
                     future_date = last_date + timedelta(days=i+1)
-                    predicted_quantity = max(0, forecasts[i])
-                    
-                    if future_date.weekday() >= 5:  # Weekend adjustment
-                        predicted_quantity *= 0.75
-                    
+                    predicted_quantity = max(0, float(forecasts[i]))
+
+                    # predicted revenue for the category on that date
+                    predicted_revenue = round(predicted_quantity * avg_price, 2) if avg_price > 0 else 0.0
+
                     daily_category_forecasts.append({
                         'date': future_date.strftime('%Y-%m-%d'),
                         'predicted_quantity': round(predicted_quantity, 0),
-                        'day_name': future_date.strftime('%A')
+                        'predicted_revenue': predicted_revenue,
+                        'day_name': future_date.strftime('%A'),
+                        'is_weekend': future_date.weekday() >= 5
                     })
-                
+
                 total_predicted = int(sum(f['predicted_quantity'] for f in daily_category_forecasts))
                 category_forecasts.append({
                     'category': category,
@@ -509,7 +525,7 @@ class SalesForecastingEngine:
                     'daily_average': round(total_predicted / forecast_steps, 1),
                     'daily_forecasts': daily_category_forecasts
                 })
-            except:
+            except Exception:
                 continue
         
         return sorted(category_forecasts, key=lambda x: x['total_predicted_quantity'], reverse=True)

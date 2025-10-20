@@ -252,6 +252,8 @@ const SalesForcastingScreen = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('7days');
   const [selectedScenario, setSelectedScenario] = useState('predicted');
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [tableAnimate, setTableAnimate] = useState(false);
 
   // Fetch data
   useEffect(() => {
@@ -299,6 +301,10 @@ const SalesForcastingScreen = () => {
               modelType: modelType
             }
           });
+          // set default selected date to first forecast date
+          if (forecastData.dailyForecast && forecastData.dailyForecast.length > 0) {
+            setSelectedDate(forecastData.dailyForecast[0].date);
+          }
         } else {
           setForecastData(null);
         }
@@ -313,6 +319,14 @@ const SalesForcastingScreen = () => {
 
     fetchData();
   }, [selectedPeriod]);
+
+  // Animate table when selectedDate changes
+  useEffect(() => {
+    if (!selectedDate) return;
+    setTableAnimate(true);
+    const t = setTimeout(() => setTableAnimate(false), 700);
+    return () => clearTimeout(t);
+  }, [selectedDate]);
 
   // Memoized values
   const displayData = useMemo(() => forecastData || {
@@ -352,6 +366,8 @@ const SalesForcastingScreen = () => {
         .nav-tabs .nav-link { border: none; color: #6c757d; font-weight: 500; padding: 15px 20px; }
         .nav-tabs .nav-link:hover { border: none; color: #667eea; }
         .nav-tabs .nav-link.active { border: none; color: #667eea; background: transparent; border-bottom: 3px solid #667eea; }
+        .fade-in { animation: fadeIn 0.6s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
       {/* Header */}
@@ -454,7 +470,16 @@ const SalesForcastingScreen = () => {
                 <div style={{ minHeight: '400px' }}>
                   {hasData && displayData.lineGraphData?.length ? (
                     <ResponsiveContainer width="100%" height={400}>
-                      <LineChart data={displayData.lineGraphData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                      <LineChart
+                        data={displayData.lineGraphData}
+                        margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
+                        onClick={(e) => {
+                          try {
+                            const date = e?.activeLabel || e?.payload?.date || null;
+                            if (date) setSelectedDate(date);
+                          } catch (err) {}
+                        }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                         <XAxis 
                           dataKey="date" 
@@ -468,8 +493,16 @@ const SalesForcastingScreen = () => {
                         />
                         <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Line type="monotone" dataKey="actual" stroke="#2563eb" strokeWidth={2} dot={false} name="Historical Sales" />
-                        <Line type="monotone" dataKey="predicted" stroke="#16a34a" strokeWidth={3} strokeDasharray="5 5" dot={false} name="Predicted Sales" />
+                            <Line type="monotone" dataKey="actual" stroke="#2563eb" strokeWidth={2} dot={false} name="Historical Sales" />
+                            <Line
+                              type="monotone"
+                              dataKey="predicted"
+                              stroke="#16a34a"
+                              strokeWidth={3}
+                              strokeDasharray="5 5"
+                              dot={{ r: 4 }}
+                              name="Predicted Sales"
+                            />
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
@@ -480,46 +513,67 @@ const SalesForcastingScreen = () => {
                   )}
                 </div>
 
-                {/* Daily Forecast Table */}
+                {/* Summary + Per-category table (updates when clicking a date on the chart) */}
                 {hasData && displayData.dailyForecast?.length > 0 && (
                   <Card className="border-0 shadow-sm mt-4">
                     <Card.Body>
-                      <h5 className="mb-4 fw-semibold">Daily Forecast Details</h5>
-                      <Table hover responsive>
+                      <h5 className="mb-4 fw-semibold">Forecast Summary for Selected Date</h5>
+                      {/* Select default date when data loads */}
+                      {/* Totals */}
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                          <div className="small text-muted">Selected Date</div>
+                          <div className="fw-bold">{selectedDate ? formatDate(selectedDate) : formatDate(displayData.dailyForecast[0].date)}</div>
+                        </div>
+                        <div>
+                            <div className="small text-muted">Predicted Revenue</div>
+                            <div className="fw-bold text-success">{formatCurrency((displayData.dailyForecast.find(d => d.date === (selectedDate || displayData.dailyForecast[0].date)) || {}).predicted || 0)}</div>
+                          </div>
+                        <div>
+                          <div className="small text-muted">Total Items (predicted)</div>
+                          <div className="fw-bold">{
+                            // Sum predicted_quantity across categories for the selected date
+                            displayData.categoryForecast.reduce((sum, cat) => {
+                              const row = (cat.daily_forecasts || []).find(r => r.date === (selectedDate || displayData.dailyForecast[0].date));
+                              return sum + (row?.predicted_quantity || 0);
+                            }, 0)
+                          }</div>
+                        </div>
+                      </div>
+
+                      {/* Per-category breakdown */}
+                      <Table hover responsive className={tableAnimate ? 'fade-in' : ''}>
                         <thead className="bg-light">
                           <tr>
-                            <th className="p-3">Date</th>
-                            <th className="p-3">Day</th>
-                            <th className="p-3">Predicted Sales</th>
-                            <th className="p-3">Confidence</th>
+                            <th className="p-3">Category</th>
+                            <th className="p-3">Predicted Items</th>
+                            <th className="p-3">Predicted Amount</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {displayData.dailyForecast.map((item, index) => (
-                            <tr key={index}>
-                              <td className="p-3">{formatDate(item.date)}</td>
-                              <td className="p-3">
-                                <Badge bg={item.is_weekend ? 'warning' : 'primary'}>{item.day_name}</Badge>
-                              </td>
-                              <td className="p-3">
-                                <span className="fw-semibold text-success">{formatCurrency(item.predicted)}</span>
-                              </td>
-                              <td className="p-3">
-                                <Badge bg={item.confidence > 80 ? 'success' : item.confidence > 70 ? 'warning' : 'danger'}>
-                                  {item.confidence}%
-                                </Badge>
-                              </td>
-                            </tr>
-                          ))}
+                          {displayData.categoryForecast.map((cat, idx) => {
+                              const selDate = selectedDate || displayData.dailyForecast[0].date;
+                              const row = (cat.daily_forecasts || []).find(r => r.date === selDate);
+                              const qty = row?.predicted_quantity || 0;
+                              const amount = row?.predicted_revenue ?? null;
+                              return (
+                                <tr key={idx}>
+                                  <td className="p-3">{cat.category}</td>
+                                  <td className="p-3">{qty}</td>
+                                  <td className="p-3">{amount !== null ? formatCurrency(amount) : '—'}</td>
+                                </tr>
+                              );
+                            })}
                         </tbody>
                       </Table>
+                      <div className="small text-muted">Tip: click a point on the chart to update this table to that date.</div>
                     </Card.Body>
                   </Card>
                 )}
               </div>
             </Tab>
 
-            <Tab eventKey="categories" title={<><FaBoxes className="me-2" />Categories {hasData && displayData.categoryForecast?.length > 0 && <Badge bg="primary" className="ms-2">{displayData.categoryForecast.length}</Badge>}</>}>
+            <Tab eventKey="categories" title={<><FaBoxes className="me-2" />Rankings {hasData && displayData.categoryForecast?.length > 0 && <Badge bg="primary" className="ms-2">{displayData.categoryForecast.length}</Badge>}</>}>
               <div className="p-4">
                 <Row className="g-4">
                   <Col lg={8}>
@@ -563,39 +617,6 @@ const SalesForcastingScreen = () => {
                     </Card>
                   </Col>
                 </Row>
-              </div>
-            </Tab>
-
-            <Tab eventKey="products" title={<><FaTrophy className="me-2" />Products</>}>
-              <div className="p-4">
-                {hasData && displayData.topProducts?.length ? (
-                  <div className="d-flex flex-column gap-3">
-                    {displayData.topProducts.map((product, index) => (
-                      <div key={index} className="d-flex justify-content-between align-items-center p-4 bg-light rounded">
-                        <div className="d-flex align-items-center">
-                          <div 
-                            className="rounded me-3 d-flex align-items-center justify-content-center text-white fw-bold"
-                            style={{ width: '40px', height: '40px', backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                          >
-                            {index + 1}
-                          </div>
-                          <div>
-                            <div className="fw-semibold h6 mb-1">{product.name}</div>
-                            <div className="small text-muted">Revenue: {formatCurrency(product.predictedSales)}</div>
-                          </div>
-                        </div>
-                        <Badge bg={product.growth > 0 ? 'success' : product.growth < 0 ? 'danger' : 'secondary'} className="fs-6 px-3 py-2">
-                          {product.growth > 0 ? '+' : ''}{product.growth}%
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center text-muted p-5">
-                    <FaTrophy size={48} className="mb-3" />
-                    <h5>No product data available</h5>
-                  </div>
-                )}
               </div>
             </Tab>
           </Tabs>
