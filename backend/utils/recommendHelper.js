@@ -142,8 +142,8 @@ const extractCommonFeatures = (userFeatures) => {
     });
   });
   
-  // Filter features that appear in at least 30% of items
-  const threshold = Math.ceil(userFeatures.length * 0.3);
+  // Filter features that appear in at least 20% of items (or at least once)
+  const threshold = Math.max(1, Math.ceil(userFeatures.length * 0.2));
   const commonFeatures = {};
   
   Object.entries(featureCount).forEach(([feature, count]) => {
@@ -299,13 +299,7 @@ const getProductWeight = (productId, cartIds, purchasedIds, viewedProductIds, pu
   }
 
   // Viewed items (small incremental boost per view, capped)
-  if (viewedProductIds.has(productId)) {
-    const viewedItem = viewedProducts.find(v => v._id.toString() === productId);
-    const viewCount = viewedItem?.viewCount || 1;
-    // Each view gives a small boost; cap total boost to avoid domination
-    const weight = Math.min(1.0 + (viewCount * 0.07), 1.35);
-    return { weight, reason: 'frequently_viewed', viewCount };
-  }
+  // Note: per-product view boosting removed. Views will only be used to build the user profile.
 
   // New recommendations: neutral multiplier
   return { weight: 1.0, reason: 'new_recommendation' };
@@ -397,22 +391,28 @@ const buildExplanation = (product, traditionalSimilarity, descriptionSimilarity,
     });
   }
   
-  // Add description similarity reasons
-  if (descriptionSimilarity > 0.7 && allMatchedDetails.length > 0) {
+  // Add description similarity reasons (ensure details are strings)
+  const stringifiedMatchedDetails = allMatchedDetails.map(d => {
+    if (typeof d === 'string') return d;
+    if (d && d.attribute && d.productValue) return `${d.attribute}: ${d.productValue}`;
+    try { return JSON.stringify(d); } catch (e) { return String(d); }
+  });
+
+  if (descriptionSimilarity > 0.7 && stringifiedMatchedDetails.length > 0) {
     reasons.push({
       type: 'features_match',
       label: 'Has similar features to items you like',
       strength: 'high',
-      details: allMatchedDetails.slice(0, 3),
-      matchCount: allMatchedDetails.length
+      details: stringifiedMatchedDetails.slice(0, 3),
+      matchCount: stringifiedMatchedDetails.length
     });
-  } else if (descriptionSimilarity > 0.4 && allMatchedDetails.length > 0) {
+  } else if (descriptionSimilarity > 0.4 && stringifiedMatchedDetails.length > 0) {
     reasons.push({
       type: 'features_match',
       label: 'Shares some features with your interests',
       strength: 'medium',
-      details: allMatchedDetails.slice(0, 2),
-      matchCount: allMatchedDetails.length
+      details: stringifiedMatchedDetails.slice(0, 2),
+      matchCount: stringifiedMatchedDetails.length
     });
   }
   
@@ -563,7 +563,15 @@ const getRecommendedProducts = async (requestData) => {
     );
     
     // Extract user features for description matching
-    const userFeatures = allUserItems.map(item => extractKeyValuePairs(item.description));
+    // If an item lacks a description (e.g., lightweight viewed item), fall back to the DB product
+    const userFeatures = allUserItems.map(item => {
+      let desc = item.description;
+      if (!desc) {
+        const prod = products.find(p => p._id.toString() === item._id);
+        desc = prod?.description || '';
+      }
+      return extractKeyValuePairs(desc);
+    });
     
     // Build accurate user profile object
     const userProfile = {

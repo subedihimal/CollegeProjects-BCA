@@ -311,8 +311,9 @@ const UserProfileCarousel = ({ show, onClose, userProfile }) => {
               </div>
               <div style={{ display: 'grid', gap: '10px' }}>
                 {Object.entries(userProfile.commonFeatures).map(([key, value]) => {
-                  // Handle both array and single value
-                  const displayValue = Array.isArray(value) ? value.join(', ') : value;
+                  // Handle both array and single value; stringify safely
+                  const values = Array.isArray(value) ? value : [value];
+                  const safe = values.map(v => (typeof v === 'string' ? v : JSON.stringify(v))).join(', ');
                   
                   return (
                     <div
@@ -336,7 +337,7 @@ const UserProfileCarousel = ({ show, onClose, userProfile }) => {
                         textAlign: 'right',
                         flex: 1
                       }}>
-                        {displayValue}
+                        {safe}
                       </span>
                     </div>
                   );
@@ -385,9 +386,9 @@ const UserProfileCarousel = ({ show, onClose, userProfile }) => {
 const ProductCardWithOverlay = ({ product, showInCartFlag, isSearch, productRank }) => {
   const [showOverlay, setShowOverlay] = useState(false);
   // Interpret interaction weight coming from backend (stored as percentage, e.g., 120 for x1.20)
-  const interactionPct = product?.scoringDetails?.interactionWeight ?? 100; // default neutral 100
-  const interactionMultiplier = (interactionPct / 100).toFixed(2);
-  const interactionBoostPercent = Math.round(interactionPct - 100); // 0 means no boost, positive means boost
+  // Views percentage: compute as product.viewCount relative to a small cap (e.g., 10 views -> 100%)
+  const viewCount = product?.viewCount || 0;
+  const viewsPct = Math.min(100, Math.round((viewCount / 10) * 100)); // cap at 10 views = 100%
 
   return (
     <div 
@@ -566,39 +567,7 @@ const ProductCardWithOverlay = ({ product, showInCartFlag, isSearch, productRank
               </div>
             )}
 
-            {/* Confidence Score with progress bar */}
-            <div style={{ 
-              marginBottom: '14px',
-              animation: showOverlay ? 'slideIn 0.6s ease-out 0.3s both' : 'none'
-            }}>
-              <div style={{ 
-                fontSize: '11px', 
-                fontWeight: 'bold',
-                marginBottom: '6px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <span>Confidence Score</span>
-                <span style={{ fontSize: '14px' }}>{product.explanation.confidenceScore}%</span>
-              </div>
-              <div style={{
-                width: '100%',
-                height: '6px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                borderRadius: '3px',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  width: `${product.explanation.confidenceScore}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #90EE90, #00FF7F)',
-                  borderRadius: '3px',
-                  transition: 'width 1s ease-out 0.5s',
-                  boxShadow: '0 0 10px rgba(144, 238, 144, 0.5)'
-                }} />
-              </div>
-            </div>
+            
 
             {/* Similarity Breakdown */}
             {product.scoringDetails && (
@@ -626,11 +595,9 @@ const ProductCardWithOverlay = ({ product, showInCartFlag, isSearch, productRank
                     <span style={{ fontWeight: 'bold', color: '#90EE90' }}>{product.scoringDetails.descriptionSimilarity}%</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span>Interaction Boost:</span>
-                    <span style={{ fontWeight: 'bold', color: '#90EE90' }}>
-                      x{interactionMultiplier} ({interactionBoostPercent >= 0 ? '+' : ''}{interactionBoostPercent}%)
-                    </span>
-                  </div>
+                      <span>Views</span>
+                      <span style={{ fontWeight: 'bold', color: '#90EE90' }}>{viewsPct}%</span>
+                    </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
                     <span style={{ fontWeight: 'bold' }}>Overall Similarity:</span>
                     <span style={{ fontWeight: 'bold', color: '#00FF7F' }}>{(product.similarity * 100).toFixed(1)}%</span>
@@ -740,7 +707,7 @@ const ProductCardWithOverlay = ({ product, showInCartFlag, isSearch, productRank
                 )}
 
                 {/* Interaction Boost Details */}
-                {(product.inCart || product.previouslyPurchased || product.viewCount > 0 || (product.scoringDetails && product.scoringDetails.interactionWeight && product.scoringDetails.interactionWeight !== 100)) && (
+                {(product.inCart || product.previouslyPurchased || product.viewCount > 0) && (
                   <div style={{ 
                     marginBottom: '10px',
                     padding: '10px',
@@ -749,7 +716,7 @@ const ProductCardWithOverlay = ({ product, showInCartFlag, isSearch, productRank
                     fontSize: '11px'
                   }}>
                     <div style={{ fontWeight: 'bold', marginBottom: '6px', color: '#FFD700' }}>
-                      User Interaction (x{interactionMultiplier} / {interactionBoostPercent >= 0 ? '+' : ''}{interactionBoostPercent}%)
+                      User Interaction
                     </div>
                     {product.inCart && (
                       <div style={{ marginBottom: '3px', color: '#90EE90' }}>
@@ -763,7 +730,7 @@ const ProductCardWithOverlay = ({ product, showInCartFlag, isSearch, productRank
                     )}
                     {product.viewCount > 0 && (
                       <div style={{ marginBottom: '3px', color: '#90EE90' }}>
-                        ✓ Viewed {product.viewCount} time{product.viewCount > 1 ? 's' : ''}
+                        ✓ Viewed {product.viewCount} time{product.viewCount > 1 ? 's' : ''} ({viewsPct}%)
                       </div>
                     )}
                   </div>
