@@ -18,12 +18,6 @@ const formatCurrency = (amount) =>
 
 const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
 
-const getPerformanceBadge = (r2) => {
-  if (r2 >= 0.8) return { variant: 'success', text: 'Excellent' };
-  if (r2 >= 0.6) return { variant: 'primary', text: 'Good' };
-  if (r2 >= 0.4) return { variant: 'warning', text: 'Fair' };
-  return { variant: 'danger', text: 'Poor' };
-};
 
 // Components
 const Loader = () => {
@@ -163,7 +157,6 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
   };
 
   const current = metricOptions[selectedMetric];
-  const performance = getPerformanceBadge(metrics.r2);
 
   return (
     <Card className="border-0 shadow-sm h-100">
