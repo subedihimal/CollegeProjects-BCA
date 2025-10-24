@@ -1,232 +1,221 @@
 import pandas as pd
 import numpy as np
-from datetime import datetime
-import re
+from datetime import datetime, timedelta
 import warnings
 warnings.filterwarnings('ignore')
 
-def clean_customer_data(file_path):
+class DataPreprocessor:
     """
-    Clean customer data for time series forecasting
-    
-    Parameters:
-    file_path (str): Path to the CSV file
-    
-    Returns:
-    pd.DataFrame: Cleaned dataset
+    Simplified data preprocessing that creates a single CSV with only forecasting-essential columns
     """
     
-    # Read the data
-    print("Reading data...")
-    df = pd.read_csv(file_path)
-    
-    print(f"Original data shape: {df.shape}")
-    print(f"Original columns: {list(df.columns)}")
-    
-    # Make a copy for cleaning
-    df_clean = df.copy()
-    
-    # 1. Clean column names (remove extra spaces)
-    df_clean.columns = df_clean.columns.str.strip()
-    
-    # 2. Handle date column
-    print("\nCleaning date column...")
-    df_clean['Purchase Date'] = pd.to_datetime(df_clean['Purchase Date'], errors='coerce')
-    
-    # Remove rows with invalid dates
-    invalid_dates = df_clean['Purchase Date'].isna().sum()
-    if invalid_dates > 0:
-        print(f"Removing {invalid_dates} rows with invalid dates")
-        df_clean = df_clean.dropna(subset=['Purchase Date'])
-    
-    # 3. Clean numeric columns
-    print("Cleaning numeric columns...")
-    numeric_columns = ['Age', 'Rating', 'Total Price', 'Unit Price', 'Quantity', 'Add-on Total']
-    
-    for col in numeric_columns:
-        if col in df_clean.columns:
-            # Convert to numeric, coercing errors to NaN
-            df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
-            
-            # Handle negative values (shouldn't exist for these metrics)
-            if col in ['Total Price', 'Unit Price', 'Quantity', 'Add-on Total', 'Age']:
-                df_clean = df_clean[df_clean[col] >= 0]
-            
-            # Handle Rating bounds (should be 1-5)
-            if col == 'Rating':
-                df_clean = df_clean[(df_clean[col] >= 1) & (df_clean[col] <= 5)]
-            
-            # Handle Age bounds (reasonable limits)
-            if col == 'Age':
-                df_clean = df_clean[(df_clean[col] >= 10) & (df_clean[col] <= 100)]
-    
-    # 4. Clean categorical columns
-    print("Cleaning categorical columns...")
-    
-    # Clean Gender
-    if 'Gender' in df_clean.columns:
-        df_clean['Gender'] = df_clean['Gender'].str.strip().str.title()
-        # Keep only Male/Female, mark others as 'Other'
-        valid_genders = ['Male', 'Female']
-        df_clean['Gender'] = df_clean['Gender'].apply(
-            lambda x: x if x in valid_genders else 'Other'
-        )
-    
-    # Clean Loyalty Member
-    if 'Loyalty Member' in df_clean.columns:
-        df_clean['Loyalty Member'] = df_clean['Loyalty Member'].str.strip().str.title()
-        # Convert to boolean
-        df_clean['Loyalty Member'] = df_clean['Loyalty Member'].map({'Yes': True, 'No': False})
-    
-    # Clean Order Status
-    if 'Order Status' in df_clean.columns:
-        df_clean['Order Status'] = df_clean['Order Status'].str.strip().str.title()
-    
-    # Clean Product Type
-    if 'Product Type' in df_clean.columns:
-        df_clean['Product Type'] = df_clean['Product Type'].str.strip().str.title()
-    
-    # Clean Payment Method
-    if 'Payment Method' in df_clean.columns:
-        df_clean['Payment Method'] = df_clean['Payment Method'].str.strip().str.title()
-        # Standardize payment methods
-        payment_mapping = {
-            'Credit Card': 'Credit Card',
-            'Creditcard': 'Credit Card',
-            'Debit Card': 'Debit Card',
-            'Debitcard': 'Debit Card',
-            'Paypal': 'PayPal',
-            'Cash': 'Cash'
-        }
-        df_clean['Payment Method'] = df_clean['Payment Method'].map(payment_mapping).fillna(df_clean['Payment Method'])
-    
-    # Clean Shipping Type
-    if 'Shipping Type' in df_clean.columns:
-        df_clean['Shipping Type'] = df_clean['Shipping Type'].str.strip().str.title()
-    
-    # 5. Handle Add-ons
-    print("Processing add-ons...")
-    if 'Add-ons Purchased' in df_clean.columns:
-        # Fill NaN with empty string
-        df_clean['Add-ons Purchased'] = df_clean['Add-ons Purchased'].fillna('')
+    def __init__(self, input_file='data.csv', output_file='cleaned_customer_data.csv'):
+        self.input_file = input_file
+        self.output_file = output_file
+        self.df = None
         
-        # Count number of add-ons
-        df_clean['Addon_Count'] = df_clean['Add-ons Purchased'].apply(
-            lambda x: len(x.split(',')) if x else 0
-        )
-    
-    # Fill NaN in Add-on Total with 0
-    if 'Add-on Total' in df_clean.columns:
-        df_clean['Add-on Total'] = df_clean['Add-on Total'].fillna(0)
-    
-    # 6. Data validation checks
-    print("Performing data validation...")
-    
-    # Check for logical inconsistencies
-    if 'Total Price' in df_clean.columns and 'Unit Price' in df_clean.columns and 'Quantity' in df_clean.columns:
-        # Calculate expected total (Unit Price * Quantity + Add-on Total)
-        expected_total = (df_clean['Unit Price'] * df_clean['Quantity'] + 
-                         df_clean.get('Add-on Total', 0))
+    def load_data(self):
+        """Load raw data from CSV"""
+        print("Reading data...")
+        self.df = pd.read_csv(self.input_file)
+        print(f"Original data shape: {self.df.shape}")
+        print(f"Original columns: {list(self.df.columns)}")
         
-        # Allow for small rounding differences (within 1% or $1, whichever is larger)
-        tolerance = np.maximum(expected_total * 0.01, 1.0)
-        price_discrepancy = np.abs(df_clean['Total Price'] - expected_total) > tolerance
+        # Print column availability for key columns
+        key_columns = ['Purchase Date', 'Order Status', 'Product Type', 
+                      'Total Price', 'Quantity', 'Customer ID']
+        print("\nKey column availability:")
+        for col in key_columns:
+            status = "✓" if col in self.df.columns else "✗"
+            print(f"  {status} {col}")
         
-        print(f"Found {price_discrepancy.sum()} rows with price discrepancies")
+        return self
+    
+    def validate_required_columns(self):
+        """Ensure required columns exist"""
+        required = ['Purchase Date', 'Order Status', 'Total Price', 'Quantity']
+        missing = [col for col in required if col not in self.df.columns]
         
-        # You can choose to either remove these or flag them
-        df_clean['Price_Discrepancy'] = price_discrepancy
+        if missing:
+            raise ValueError(f"Missing required columns: {missing}")
+        
+        return self
     
-    # 7. Remove duplicates
-    print("Removing duplicates...")
-    initial_rows = len(df_clean)
-    df_clean = df_clean.drop_duplicates()
-    duplicates_removed = initial_rows - len(df_clean)
-    print(f"Removed {duplicates_removed} duplicate rows")
+    def clean_dates(self):
+        """Clean and validate date columns"""
+        print("\nCleaning dates...")
+        self.df['Purchase Date'] = pd.to_datetime(self.df['Purchase Date'], errors='coerce')
+        
+        invalid_dates = self.df['Purchase Date'].isna().sum()
+        if invalid_dates > 0:
+            print(f"  Removing {invalid_dates} rows with invalid dates")
+            self.df = self.df.dropna(subset=['Purchase Date'])
+        
+        self.df = self.df.sort_values('Purchase Date').reset_index(drop=True)
+        return self
     
-    # 8. Create additional time-based features for forecasting
-    print("Creating time-based features...")
-    df_clean['Year'] = df_clean['Purchase Date'].dt.year
-    df_clean['Month'] = df_clean['Purchase Date'].dt.month
-    df_clean['Day'] = df_clean['Purchase Date'].dt.day
-    df_clean['DayOfWeek'] = df_clean['Purchase Date'].dt.dayofweek
-    df_clean['Quarter'] = df_clean['Purchase Date'].dt.quarter
-    df_clean['WeekOfYear'] = df_clean['Purchase Date'].dt.isocalendar().week
+    def clean_numeric_columns(self):
+        """Clean numeric columns"""
+        print("Cleaning numeric columns...")
+        
+        for col in ['Total Price', 'Quantity']:
+            if col in self.df.columns:
+                self.df[col] = pd.to_numeric(self.df[col], errors='coerce')
+                before = len(self.df)
+                self.df = self.df[self.df[col] >= 0]
+                removed = before - len(self.df)
+                if removed > 0:
+                    print(f"  Removed {removed} rows with invalid {col}")
+        
+        # Remove rows where quantity is 0
+        self.df = self.df[self.df['Quantity'] > 0]
+        
+        return self
     
-    # 9. Sort by date for time series analysis
-    df_clean = df_clean.sort_values('Purchase Date').reset_index(drop=True)
+    def clean_categorical_columns(self):
+        """Clean categorical columns"""
+        print("Cleaning categorical columns...")
+        
+        if 'Order Status' in self.df.columns:
+            self.df['Order Status'] = self.df['Order Status'].str.strip().str.title()
+        
+        if 'Product Type' in self.df.columns:
+            self.df['Product Type'] = self.df['Product Type'].str.strip().str.title()
+        
+        return self
     
-    # 10. Final data summary
-    print(f"\nCleaned data shape: {df_clean.shape}")
-    print(f"Date range: {df_clean['Purchase Date'].min()} to {df_clean['Purchase Date'].max()}")
-    print(f"Missing values per column:")
-    missing_values = df_clean.isnull().sum()
-    for col, missing in missing_values.items():
-        if missing > 0:
-            print(f"  {col}: {missing} ({missing/len(df_clean)*100:.2f}%)")
+    def keep_completed_orders_only(self):
+        """Keep only completed orders for forecasting"""
+        print("Filtering completed orders...")
+        before = len(self.df)
+        self.df = self.df[self.df['Order Status'] == 'Completed'].copy()
+        removed = before - len(self.df)
+        print(f"  Kept {len(self.df)} completed orders (removed {removed} non-completed)")
+        return self
     
-    return df_clean
+    def create_forecasting_columns(self):
+        """Create only the columns needed for forecasting"""
+        print("Creating forecasting columns...")
+        
+        # Date (just the date part, no time)
+        self.df['Date'] = self.df['Purchase Date'].dt.date
+        self.df['Date'] = pd.to_datetime(self.df['Date'])
+        
+        # Product category (handle missing)
+        if 'Product Type' not in self.df.columns:
+            self.df['Product_Type'] = 'Unknown'
+        else:
+            self.df['Product_Type'] = self.df['Product Type']
+        
+        # Revenue (same as Total Price)
+        self.df['Revenue'] = self.df['Total Price']
+        
+        # Keep quantity as is
+        self.df['Quantity'] = self.df['Quantity']
+        
+        return self
+    
+    def select_final_columns(self):
+        """Select only the columns needed for forecasting"""
+        print("Selecting final columns...")
+        
+        # Essential columns for forecasting
+        final_columns = ['Date', 'Product_Type', 'Revenue', 'Quantity']
+        
+        self.df = self.df[final_columns].copy()
+        
+        print(f"  Final columns: {list(self.df.columns)}")
+        print(f"  Final shape: {self.df.shape}")
+        
+        return self
+    
+    def save_cleaned_data(self):
+        """Save cleaned data to CSV"""
+        print(f"\nSaving cleaned data to: {self.output_file}")
+        self.df.to_csv(self.output_file, index=False)
+        print("✅ Data saved successfully")
+        return self
+    
+    def generate_summary(self):
+        """Generate summary of cleaned data"""
+        print("\n" + "="*70)
+        print("DATA PREPROCESSING SUMMARY")
+        print("="*70)
+        
+        print(f"\n📊 Dataset Overview:")
+        print(f"   Total rows: {len(self.df):,}")
+        print(f"   Date range: {self.df['Date'].min().strftime('%Y-%m-%d')} to {self.df['Date'].max().strftime('%Y-%m-%d')}")
+        print(f"   Time span: {(self.df['Date'].max() - self.df['Date'].min()).days} days")
+        print(f"   Unique dates: {self.df['Date'].nunique()}")
+        
+        print(f"\n💰 Revenue Stats:")
+        print(f"   Total revenue: ${self.df['Revenue'].sum():,.2f}")
+        print(f"   Average per transaction: ${self.df['Revenue'].mean():.2f}")
+        print(f"   Total units sold: {self.df['Quantity'].sum():,.0f}")
+        
+        if 'Product_Type' in self.df.columns:
+            print(f"\n🛍️  Product Categories:")
+            print(f"   Unique categories: {self.df['Product_Type'].nunique()}")
+            print("\n   Top 5 by revenue:")
+            top_products = self.df.groupby('Product_Type')['Revenue'].sum().sort_values(ascending=False).head(5)
+            for product, revenue in top_products.items():
+                print(f"   • {product}: ${revenue:,.2f}")
+        
+        print(f"\n📈 Daily Aggregates Preview:")
+        daily = self.df.groupby('Date').agg({
+            'Revenue': 'sum',
+            'Quantity': 'sum'
+        })
+        print(f"   Average daily revenue: ${daily['Revenue'].mean():,.2f}")
+        print(f"   Max daily revenue: ${daily['Revenue'].max():,.2f}")
+        print(f"   Average daily units: {daily['Quantity'].mean():.1f}")
+        
+        print("\n" + "="*70)
+        print("✅ Data is ready for forecasting!")
+        print("="*70)
+        
+        return self
+    
+    def process_all(self):
+        """Execute full preprocessing pipeline"""
+        print("="*70)
+        print("STARTING DATA PREPROCESSING")
+        print("="*70)
+        
+        (self
+            .load_data()
+            .validate_required_columns()
+            .clean_dates()
+            .clean_numeric_columns()
+            .clean_categorical_columns()
+            .keep_completed_orders_only()
+            .create_forecasting_columns()
+            .select_final_columns()
+            .save_cleaned_data()
+            .generate_summary())
+        
+        return self
 
-def generate_data_summary(df):
-    """Generate a comprehensive summary of the cleaned data"""
-    
-    print("\n" + "="*60)
-    print("DATA SUMMARY REPORT")
-    print("="*60)
-    
-    # Basic info
-    print(f"\nDataset Shape: {df.shape[0]} rows, {df.shape[1]} columns")
-    
-    # Date range
-    if 'Purchase Date' in df.columns:
-        print(f"Date Range: {df['Purchase Date'].min().strftime('%Y-%m-%d')} to {df['Purchase Date'].max().strftime('%Y-%m-%d')}")
-        print(f"Time Span: {(df['Purchase Date'].max() - df['Purchase Date'].min()).days} days")
-    
-    # Numerical summaries
-    print(f"\nNumerical Columns Summary:")
-    numerical_cols = df.select_dtypes(include=[np.number]).columns
-    print(df[numerical_cols].describe())
-    
-    # Categorical summaries
-    print(f"\nCategorical Columns Summary:")
-    categorical_cols = df.select_dtypes(include=['object']).columns
-    for col in categorical_cols:
-        if col not in ['Add-ons Purchased', 'SKU']:  # Skip detailed columns
-            print(f"\n{col}:")
-            print(df[col].value_counts().head())
-    
-    # Order status breakdown
-    if 'Order Status' in df.columns:
-        print(f"\nOrder Status Distribution:")
-        status_counts = df['Order Status'].value_counts()
-        for status, count in status_counts.items():
-            print(f"  {status}: {count} ({count/len(df)*100:.2f}%)")
-    
-    return True
 
-# Usage example
 if __name__ == "__main__":
-    # Using your data file
-    file_path = 'data.csv'
-    
     try:
-        # Clean the data
-        cleaned_df = clean_customer_data(file_path)
+        # Initialize preprocessor
+        preprocessor = DataPreprocessor(
+            input_file='data.csv',
+            output_file='cleaned_customer_data.csv'
+        )
         
-        # Generate summary
-        generate_data_summary(cleaned_df)
+        # Run full pipeline
+        preprocessor.process_all()
         
-        # Save cleaned data
-        output_path = 'cleaned_customer_data.csv'
-        cleaned_df.to_csv(output_path, index=False)
-        print(f"\nCleaned data saved to: {output_path}")
-        
-        # Show first few rows
-        print(f"\nFirst 5 rows of cleaned data:")
-        print(cleaned_df.head())
+        print("\n" + "="*70)
+        print("Next step: Run forecastingengine.py to train models")
+        print("="*70)
         
     except FileNotFoundError:
-        print(f"Error: File '{file_path}' not found.")
-        print("Please update the file_path variable with your actual CSV file path.")
+        print("❌ Error: 'data.csv' not found in current directory")
+        print("Please ensure your data file is named 'data.csv'")
     except Exception as e:
-        print(f"Error processing data: {str(e)}")
+        print(f"❌ Error during preprocessing: {str(e)}")
+        import traceback
+        traceback.print_exc()

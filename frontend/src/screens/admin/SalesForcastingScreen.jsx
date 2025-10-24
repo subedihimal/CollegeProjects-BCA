@@ -415,7 +415,7 @@ const SalesForcastingScreen = () => {
             icon={FaChartLine}
           />
         </Col>
-        <Col lg={2} md={6}>
+        <Col lg={3} md={6}>
           <MetricCard
             title="Daily Average"
             value={formatCurrency(displayData.summary.dailyAverage)}
@@ -423,7 +423,7 @@ const SalesForcastingScreen = () => {
             hasData={hasData}
           />
         </Col>
-        <Col lg={2} md={6}>
+        <Col lg={3} md={6}>
           <MetricCard
             title="Growth Rate"
             value={hasData ? `${displayData.summary.growthRate > 0 ? '+' : ''}${displayData.summary.growthRate}%` : 'No Data'}
@@ -432,20 +432,10 @@ const SalesForcastingScreen = () => {
             hasData={hasData}
           />
         </Col>
-        <Col lg={2} md={6}>
-          <MetricCard
-            title="Confidence"
-            value={hasData ? `${displayData.summary.confidence}%` : 'No Data'}
-            icon={FaPercent}
-            hasData={hasData}
-            progress={hasData ? displayData.summary.confidence : 0}
-          />
-        </Col>
-        <Col lg={3} md={12}>
+        <Col lg={3} md={6}>
           <ModelMetricsCard metrics={displayData.modelInfo?.metrics} hasData={hasMetrics} />
         </Col>
       </Row>
-
       {/* Main Content */}
       <Card className="border-0 shadow-sm">
         <Card.Body className="p-0">
@@ -518,26 +508,45 @@ const SalesForcastingScreen = () => {
                   <Card className="border-0 shadow-sm mt-4">
                     <Card.Body>
                       <h5 className="mb-4 fw-semibold">Forecast Summary for Selected Date</h5>
-                      {/* Select default date when data loads */}
                       {/* Totals */}
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <div>
                           <div className="small text-muted">Selected Date</div>
-                          <div className="fw-bold">{selectedDate ? formatDate(selectedDate) : formatDate(displayData.dailyForecast[0].date)}</div>
+                          <div className="fw-bold">{(() => {
+                            // Get the effective date (default to first forecast date if selected is before forecast range)
+                            const firstForecastDate = displayData.dailyForecast[0].date;
+                            const effectiveDate = selectedDate || firstForecastDate;
+                            
+                            // Check if selected date is in forecast range
+                            const isForecastDate = displayData.dailyForecast.some(d => d.date === effectiveDate);
+                            
+                            return formatDate(isForecastDate ? effectiveDate : firstForecastDate);
+                          })()}</div>
                         </div>
                         <div>
                             <div className="small text-muted">Predicted Revenue</div>
-                            <div className="fw-bold text-success">{formatCurrency((displayData.dailyForecast.find(d => d.date === (selectedDate || displayData.dailyForecast[0].date)) || {}).predicted || 0)}</div>
+                            <div className="fw-bold text-success">{(() => {
+                              const firstForecastDate = displayData.dailyForecast[0].date;
+                              const effectiveDate = selectedDate || firstForecastDate;
+                              const isForecastDate = displayData.dailyForecast.some(d => d.date === effectiveDate);
+                              const dateToUse = isForecastDate ? effectiveDate : firstForecastDate;
+                              
+                              return formatCurrency((displayData.dailyForecast.find(d => d.date === dateToUse) || {}).predicted || 0);
+                            })()}</div>
                           </div>
                         <div>
                           <div className="small text-muted">Total Items (predicted)</div>
-                          <div className="fw-bold">{
-                            // Sum predicted_quantity across categories for the selected date
-                            displayData.categoryForecast.reduce((sum, cat) => {
-                              const row = (cat.daily_forecasts || []).find(r => r.date === (selectedDate || displayData.dailyForecast[0].date));
+                          <div className="fw-bold">{(() => {
+                            const firstForecastDate = displayData.dailyForecast[0].date;
+                            const effectiveDate = selectedDate || firstForecastDate;
+                            const isForecastDate = displayData.dailyForecast.some(d => d.date === effectiveDate);
+                            const dateToUse = isForecastDate ? effectiveDate : firstForecastDate;
+                            
+                            return displayData.categoryForecast.reduce((sum, cat) => {
+                              const row = (cat.daily_forecasts || []).find(r => r.date === dateToUse);
                               return sum + (row?.predicted_quantity || 0);
-                            }, 0)
-                          }</div>
+                            }, 0);
+                          })()}</div>
                         </div>
                       </div>
 
@@ -552,8 +561,12 @@ const SalesForcastingScreen = () => {
                         </thead>
                         <tbody>
                           {displayData.categoryForecast.map((cat, idx) => {
-                              const selDate = selectedDate || displayData.dailyForecast[0].date;
-                              const row = (cat.daily_forecasts || []).find(r => r.date === selDate);
+                              const firstForecastDate = displayData.dailyForecast[0].date;
+                              const effectiveDate = selectedDate || firstForecastDate;
+                              const isForecastDate = displayData.dailyForecast.some(d => d.date === effectiveDate);
+                              const dateToUse = isForecastDate ? effectiveDate : firstForecastDate;
+                              
+                              const row = (cat.daily_forecasts || []).find(r => r.date === dateToUse);
                               const qty = row?.predicted_quantity || 0;
                               const amount = row?.predicted_revenue ?? null;
                               return (
@@ -566,7 +579,6 @@ const SalesForcastingScreen = () => {
                             })}
                         </tbody>
                       </Table>
-                      <div className="small text-muted">Tip: click a point on the chart to update this table to that date.</div>
                     </Card.Body>
                   </Card>
                 )}
