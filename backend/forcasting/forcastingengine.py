@@ -198,8 +198,8 @@ class EnhancedARIMAModel:
         
         return np.maximum(np.expm1(forecasts), 0)
     
-    def calculate_metrics(self):
-        """Calculate model performance metrics"""
+    def calculate_metrics(self, forecast_period=7):
+        """Calculate model performance metrics based on forecast period"""
         if self.fitted_values is None or self.original_data is None:
             return {'mae': 1.0, 'rmse': 1.0, 'r2': 0.0, 'mae_normalized': 1.0, 'rmse_normalized': 1.0, 'mean_actual': 0.0}
         
@@ -207,8 +207,13 @@ class EnhancedARIMAModel:
         if min_len == 0:
             return {'mae': 1.0, 'rmse': 1.0, 'r2': 0.0, 'mae_normalized': 1.0, 'rmse_normalized': 1.0, 'mean_actual': 0.0}
         
-        actual = self.original_data[-min_len:]
-        predicted = self.fitted_values[-min_len:]
+        # Use different window sizes based on forecast period
+        training_window = forecast_period * 6  # Longer training window
+        validation_window = forecast_period  # Validation window same as forecast period
+        
+        # Get the most recent data for validation
+        actual = self.original_data[-(training_window + validation_window):]
+        predicted = self.fitted_values[-(training_window + validation_window):]
         mask = np.isfinite(actual) & np.isfinite(predicted)
         
         if not np.any(mask) or len(actual[mask]) < 2:
@@ -217,10 +222,18 @@ class EnhancedARIMAModel:
         actual, predicted = actual[mask], predicted[mask]
         
         try:
-            mae = mean_absolute_error(actual, predicted)
-            rmse = np.sqrt(np.mean((actual - predicted) ** 2))
-            r2 = np.clip(r2_score(actual, predicted), -1.0, 1.0)
-            mean_actual = np.mean(actual)
+            # Split into training and validation periods using forecast period
+            split_point = len(actual) - validation_window
+            train_actual = actual[:split_point]
+            train_pred = predicted[:split_point]
+            val_actual = actual[split_point:]
+            val_pred = predicted[split_point:]
+            
+            # Calculate metrics on validation set
+            mae = mean_absolute_error(val_actual, val_pred)
+            rmse = np.sqrt(np.mean((val_actual - val_pred) ** 2))
+            r2 = np.clip(r2_score(train_actual, train_pred), -1.0, 1.0)  # R² on training data
+            mean_actual = np.mean(val_actual)
             
             # Normalized metrics (percentage of mean)
             mae_normalized = (mae / mean_actual) if mean_actual > 0 else 1.0
@@ -375,7 +388,7 @@ class SalesForecastingEngine:
             steps = 7 if period == '7days' else 15
             forecasts = self.arima_model.forecast(steps)
             last_date = self.daily_sales['Date'].max()
-            metrics = self.arima_model.calculate_metrics()
+            metrics = self.arima_model.calculate_metrics(steps)  # Pass the forecast period
             
             # Daily forecasts
             daily = []
@@ -567,7 +580,9 @@ def get_metrics():
     if eng.arima_model is None:
         return jsonify({'error': 'No model'}), 404
     
-    m = eng.arima_model.calculate_metrics()
+    period = request.args.get('period', '7days')
+    forecast_days = 15 if period == '15days' else 7
+    m = eng.arima_model.calculate_metrics(forecast_days)
     return jsonify({
         'main_model': {
             'type': f"ARIMA({eng.arima_model.p},{eng.arima_model.d},{eng.arima_model.q})",
@@ -577,7 +592,8 @@ def get_metrics():
             'mae_normalized': round(m['mae_normalized'], 4),
             'rmse_normalized': round(m['rmse_normalized'], 4),
             'mean_actual': round(m['mean_actual'], 2),
-            'accuracy': f"{round(max(0, m['r2'] * 100), 1)}%"
+            'accuracy': f"{round(max(0, m['r2'] * 100), 1)}%",
+            'forecast_period': f"{forecast_days}days"
         },
         'data_points': len(eng.daily_sales) if eng.daily_sales is not None else 0,
         'category_models': len(eng.category_models)

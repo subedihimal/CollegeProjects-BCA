@@ -263,7 +263,7 @@ const SalesForcastingScreen = () => {
         
         const [forecastResponse, metricsResponse] = await Promise.all([
           fetch(`http://localhost:5001/api/sales/forecast?period=${selectedPeriod}`).catch(() => ({ ok: false })),
-          fetch('http://localhost:5001/api/sales/metrics').catch(() => ({ ok: false }))
+          fetch(`http://localhost:5001/api/sales/metrics?period=${selectedPeriod}`).catch(() => ({ ok: false }))
         ]);
         
         const forecastData = forecastResponse.ok ? await forecastResponse.json().catch(() => null) : null;

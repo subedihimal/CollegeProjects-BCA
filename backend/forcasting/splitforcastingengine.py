@@ -301,13 +301,19 @@ class SalesForecastingEngine:
                             continue
         return best_params
     
-    def _calculate_test_metrics(self, actual, predicted):
-        """Calculate metrics on test set ONLY"""
+    def _calculate_test_metrics(self, actual, predicted, baseline_mean=None):
+        """Calculate metrics on test set ONLY
+
+        Adds a small-sample guard for normalized metrics and optionally
+        computes a naive baseline MAE using `baseline_mean` (e.g. training mean).
+        """
         if len(actual) == 0 or len(predicted) == 0 or len(actual) != len(predicted):
             return {
                 'mae': None, 'mse': None, 'rmse': None, 'r2': None,
                 'mae_normalized': None, 'rmse_normalized': None,
-                'mean_actual': None, 'test_size': 0
+                'mean_actual': None, 'test_size': 0,
+                'naive_mae': None, 'naive_mae_normalized': None,
+                'used_baseline_for_normalization': False
             }
         
         # Remove any NaN or Inf values
@@ -328,14 +334,35 @@ class SalesForecastingEngine:
             rmse = np.sqrt(mse)
             r2 = r2_score(actual_clean, predicted_clean)
             mean_actual = np.mean(actual_clean)
-            
+
             # Normalized metrics (as percentage of mean)
-            if mean_actual > 0:
-                mae_normalized = (mae / mean_actual) * 100
-                rmse_normalized = (rmse / mean_actual) * 100
+            # Use a safe epsilon and allow using a provided baseline_mean
+            epsilon = 1e-6
+            denom = mean_actual
+            used_baseline = False
+            if denom <= epsilon and baseline_mean is not None and baseline_mean > epsilon:
+                denom = baseline_mean
+                used_baseline = True
+
+            if denom > epsilon:
+                mae_normalized = (mae / denom) * 100
+                rmse_normalized = (rmse / denom) * 100
             else:
                 mae_normalized = None
                 rmse_normalized = None
+
+            # Naive baseline (predict constant baseline_mean across the test set)
+            if baseline_mean is not None:
+                try:
+                    baseline_forecast = np.full_like(actual_clean, baseline_mean)
+                    naive_mae = float(mean_absolute_error(actual_clean, baseline_forecast))
+                    naive_mae_normalized = (naive_mae / denom) * 100 if denom > epsilon else None
+                except Exception:
+                    naive_mae = None
+                    naive_mae_normalized = None
+            else:
+                naive_mae = None
+                naive_mae_normalized = None
             
             return {
                 'mae': float(mae),
@@ -345,7 +372,10 @@ class SalesForecastingEngine:
                 'mae_normalized': float(mae_normalized) if mae_normalized is not None else None,
                 'rmse_normalized': float(rmse_normalized) if rmse_normalized is not None else None,
                 'mean_actual': float(mean_actual),
-                'test_size': len(actual_clean)
+                'test_size': len(actual_clean),
+                'naive_mae': float(naive_mae) if naive_mae is not None else None,
+                'naive_mae_normalized': float(naive_mae_normalized) if naive_mae_normalized is not None else None,
+                'used_baseline_for_normalization': bool(used_baseline)
             }
         except Exception as e:
             return {
@@ -376,8 +406,9 @@ class SalesForecastingEngine:
             # Generate forecasts for test set
             if len(test_revenue) > 0:
                 test_forecasts = train_model.forecast(len(test_revenue))
-                # Calculate metrics ONLY on test set
-                self.test_metrics = self._calculate_test_metrics(test_revenue, test_forecasts)
+                # Calculate metrics ONLY on test set; pass training mean as baseline
+                baseline_mean_main = float(np.mean(train_revenue)) if len(train_revenue) > 0 else None
+                self.test_metrics = self._calculate_test_metrics(test_revenue, test_forecasts, baseline_mean=baseline_mean_main)
             else:
                 self.test_metrics = {}
             
@@ -404,9 +435,10 @@ class SalesForecastingEngine:
                         # Generate forecasts for test set
                         if len(test_quantity) > 0:
                             test_forecasts_cat = train_cat_model.forecast(len(test_quantity))
-                            # Calculate metrics ONLY on test set
+                            # Calculate metrics ONLY on test set; pass training mean as baseline
+                            baseline_mean_cat = float(np.mean(train_quantity)) if len(train_quantity) > 0 else None
                             self.category_test_metrics[category] = self._calculate_test_metrics(
-                                test_quantity, test_forecasts_cat
+                                test_quantity, test_forecasts_cat, baseline_mean=baseline_mean_cat
                             )
                         
                         # Refit on full data for production forecasts
@@ -640,9 +672,12 @@ def get_metrics():
             'mse': round(eng.test_metrics['mse'], 2),
             'rmse': round(eng.test_metrics['rmse'], 2),
             'r2': round(eng.test_metrics['r2'], 4),
-            'mae_normalized': round(eng.test_metrics['mae_normalized'], 4),
-            'rmse_normalized': round(eng.test_metrics['rmse_normalized'], 4),
-            'mean_actual': round(eng.test_metrics['mean_actual'], 2),
+            'mae_normalized': round(eng.test_metrics['mae_normalized'], 4) if eng.test_metrics.get('mae_normalized') is not None else None,
+            'rmse_normalized': round(eng.test_metrics['rmse_normalized'], 4) if eng.test_metrics.get('rmse_normalized') is not None else None,
+            'mean_actual': round(eng.test_metrics['mean_actual'], 2) if eng.test_metrics.get('mean_actual') is not None else None,
+            'naive_mae': round(eng.test_metrics['naive_mae'], 2) if eng.test_metrics.get('naive_mae') is not None else None,
+            'naive_mae_normalized': round(eng.test_metrics['naive_mae_normalized'], 4) if eng.test_metrics.get('naive_mae_normalized') is not None else None,
+            'used_baseline_for_normalization': bool(eng.test_metrics.get('used_baseline_for_normalization', False)),
             'accuracy': f"{round(max(0, eng.test_metrics['r2'] * 100), 1)}%",
             'test_size': eng.test_metrics.get('test_size', 0)
         },
