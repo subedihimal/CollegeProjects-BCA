@@ -43,8 +43,7 @@ const getProductById = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Create a product
-// @route   POST /api/products
+
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
   const product = new Product({
@@ -63,8 +62,7 @@ const createProduct = asyncHandler(async (req, res) => {
   res.status(201).json(createdProduct);
 });
 
-// @desc    Update a product
-// @route   PUT /api/products/:id
+
 // @access  Private/Admin
 const updateProduct = asyncHandler(async (req, res) => {
   const { name, price, description, image, brand, category, countInStock } =
@@ -104,8 +102,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Create new review
-// @route   POST /api/products/:id/reviews
+
 // @access  Private
 const createProductReview = asyncHandler(async (req, res) => {
   const { rating, comment } = req.body;

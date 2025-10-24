@@ -110,7 +110,7 @@ const Product = ({ product, showInCartFlag = false }) => {
           }}
         >
           <Badge bg="dark" className="small">
-            Views: {viewCount}
+            Viewed
           </Badge>
         </div>
       )}
