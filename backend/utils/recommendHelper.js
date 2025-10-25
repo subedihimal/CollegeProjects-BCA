@@ -171,40 +171,65 @@ const getRecommendedProducts = async (requestData) => {
     // Get purchase history
     const purchaseHistory = await getUserPurchaseHistory(userId);
     
-    // Extract product IDs from all sources
-    const cartProductIds = cartItems.map(item => item._id || item).filter(Boolean).slice(-10);
-    const viewedProductIds = viewedProducts.map(item => item._id || item).filter(Boolean).slice(-10);
-    const purchasedProductIds = purchaseHistory.map(item => item._id).slice(-10);
+    // Extract product IDs and data from all sources
+    // Handle both formats: string IDs and objects with productData
+    const extractProductInfo = (items) => {
+      return items.map(item => {
+        if (typeof item === 'string') {
+          return { id: item, data: null };
+        } else if (item.productData) {
+          return { 
+            id: item.productData._id || item._id, 
+            data: item.productData 
+          };
+        } else if (item._id) {
+          return { id: item._id, data: item };
+        }
+        return null;
+      }).filter(Boolean);
+    };
     
-    // Fetch full product details for ALL products (including viewed ones)
-    // This ensures we have descriptions for viewed products
-    const allProductIds = [...cartProductIds, ...viewedProductIds, ...purchasedProductIds];
-    const uniqueProductIds = [...new Set(allProductIds.map(id => id.toString()))];
+    const cartProductInfo = extractProductInfo(cartItems).slice(-10);
+    const viewedProductInfo = extractProductInfo(viewedProducts).slice(-10);
+    const purchasedProductInfo = purchaseHistory.map(p => ({ id: p._id, data: p })).slice(-10);
     
-    const fullProducts = await ensureFullProductDetails(uniqueProductIds);
+    const allProductInfo = [...cartProductInfo, ...viewedProductInfo, ...purchasedProductInfo];
+    const uniqueProductIds = [...new Set(allProductInfo.map(info => info.id.toString()))];
     
-    // Create a map of full product details
-    const productMap = new Map();
-    fullProducts.forEach(product => {
-      productMap.set(product._id.toString(), product);
+    // Fetch full product details only for IDs we don't have data for
+    const productDataMap = new Map();
+    
+    // First, add all the product data we already have
+    allProductInfo.forEach(info => {
+      if (info.data && info.data.description) {
+        productDataMap.set(info.id.toString(), info.data);
+      }
     });
     
-    // Combine all user interactions with full details
-    const userItems = new Map();
+    // Then fetch missing ones from database
+    const idsToFetch = uniqueProductIds.filter(id => !productDataMap.has(id));
+    if (idsToFetch.length > 0) {
+      const fetchedProducts = await ensureFullProductDetails(idsToFetch);
+      fetchedProducts.forEach(product => {
+        productDataMap.set(product._id.toString(), product);
+      });
+    }
+    
+    // Build user items array with full details
+    const userItemsArray = [];
     uniqueProductIds.forEach(id => {
-      const product = productMap.get(id.toString());
-      if (product && !userItems.has(id.toString())) {
-        userItems.set(id.toString(), {
+      const product = productDataMap.get(id);
+      if (product) {
+        userItemsArray.push({
+          _id: id,
           category: product.category,
           brand: product.brand,
-          description: product.description, // Now this will be available for all products
+          description: product.description,
           price: product.price,
           rating: product.rating
         });
       }
     });
-    
-    const userItemsArray = Array.from(userItems.values());
     
     // No user activity - return latest products
     if (userItemsArray.length === 0) {
@@ -225,7 +250,7 @@ const getRecommendedProducts = async (requestData) => {
       };
     }
     
-    // Extract features from all user items (including viewed products)
+    // Extract features from all user items
     const userFeaturesList = userItemsArray
       .map(i => extractFeatures(i.description))
       .filter(f => Object.keys(f).length > 0);
@@ -245,12 +270,12 @@ const getRecommendedProducts = async (requestData) => {
     };
     
     // Create lookup sets for cart and purchase history
-    const cartIds = new Set(cartProductIds.map(i => i.toString()));
-    const purchasedIds = new Set(purchasedProductIds.map(p => p.toString()));
+    const cartIds = new Set(cartProductInfo.map(i => i.id.toString()));
+    const purchasedIds = new Set(purchasedProductInfo.map(p => p.id.toString()));
     
     // Get all products and score them
     const allProducts = await Product.find({});
-    const scoredProducts = allProducts.map((product, index) => {
+    const scoredProducts = allProducts.map((product) => {
       const productId = product._id.toString();
       const productFeatures = extractFeatures(product.description);
       
