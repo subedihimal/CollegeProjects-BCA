@@ -147,11 +147,11 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
       description: 'Root Mean Squared Error',
       showNormalized: true
     },
-    r2: { 
-      label: 'R²', 
-      value: metrics.r2, 
-      format: (val) => `${(val * 100)?.toFixed(1) || 0}%`,
-      description: 'Coefficient of Determination',
+    mape: { 
+      label: 'MAPE', 
+      value: metrics.mape, 
+      format: (val) => `${val?.toFixed(1) || 0}%`,
+      description: 'Mean Absolute Percentage Error',
       showNormalized: false
     }
   };
@@ -268,20 +268,19 @@ const SalesForcastingScreen = () => {
         let dataPoints = 0;
         let modelType = 'Unknown';
         
-        if (metricsData?.main_model) {
-          // Use the metrics directly from main_model (no MSE, with normalized values)
-          mainModelMetrics = {
-            mae: metricsData.main_model.mae,
-            rmse: metricsData.main_model.rmse,
-            r2: metricsData.main_model.r2,
-            mae_normalized: metricsData.main_model.mae_normalized,
-            rmse_normalized: metricsData.main_model.rmse_normalized,
-            mean_actual: metricsData.main_model.mean_actual
-          };
-          modelType = metricsData.main_model.type || 'Unknown';
-          categoryModelsCount = metricsData.category_models_count || 0;
-          dataPoints = metricsData.data_points || 0;
-        }
+                  if (metricsData?.main_model) {
+            mainModelMetrics = {
+              mae: metricsData.main_model.mae,
+              rmse: metricsData.main_model.rmse,
+              mape: metricsData.main_model.mape,
+              mae_normalized: metricsData.main_model.mae_normalized,
+              rmse_normalized: metricsData.main_model.rmse_normalized,
+              mean_actual: metricsData.main_model.mean_actual
+            };
+            modelType = metricsData.main_model.type || 'Unknown';
+            categoryModelsCount = metricsData.category_models_count || 0;
+            dataPoints = metricsData.data_points || 0;
+          }
         
         if (forecastData && Object.keys(forecastData).length > 0) {
           setForecastData({
@@ -475,17 +474,39 @@ const SalesForcastingScreen = () => {
                           interval={chartInterval}
                         />
                         <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
+
                         <Tooltip content={<CustomTooltip />} />
-                            <Line type="monotone" dataKey="actual" stroke="#2563eb" strokeWidth={2} dot={false} name="Historical Sales" />
-                            <Line
-                              type="monotone"
-                              dataKey="predicted"
-                              stroke="#16a34a"
-                              strokeWidth={3}
-                              strokeDasharray="5 5"
-                              dot={{ r: 4 }}
-                              name="Predicted Sales"
-                            />
+                        {/* Blue line - Historical/Actual data from dataset */}
+                        <Line 
+                          type="monotone" 
+                          dataKey="actual" 
+                          stroke="#2563eb" 
+                          strokeWidth={2.5} 
+                          dot={false} 
+                          name="Historical Sales"
+                          connectNulls={false}
+                        />
+                        {/* Orange line - Test predictions (validation period) - connects from training */}
+                        <Line
+                          type="monotone"
+                          dataKey="testPredicted"
+                          stroke="#f97316"
+                          strokeWidth={2}
+                          dot={false}
+                          name="Test Predictions"
+                          connectNulls={true}
+                        />
+                        {/* Green line - Future forecasts (beyond dataset) - connects from test */}
+                        <Line
+                          type="monotone"
+                          dataKey="futurePredicted"
+                          stroke="#16a34a"
+                          strokeWidth={2.5}
+                          strokeDasharray="5 5"
+                          dot={{ r: 4, fill: '#16a34a' }}
+                          name="Future Forecast"
+                          connectNulls={true}
+                        />
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
