@@ -91,9 +91,9 @@ const calculateTraditionalSimilarity = (product, userProfile) => {
   let score = 0;
   const breakdown = {};
   
-  // Category match (30%)
+  // Category match (40%)
   if (userProfile.categories.includes(product.category)) {
-    score += 0.3;
+    score += 0.4;
     breakdown.category = { match: true, value: product.category };
   }
   
@@ -115,11 +115,11 @@ const calculateTraditionalSimilarity = (product, userProfile) => {
     };
   }
   
-  // Rating similarity (20%)
+  // Rating similarity (10%)
   if (userProfile.avgRating > 0) {
     const ratingDiff = Math.abs(product.rating - userProfile.avgRating) / 5;
     const ratingScore = Math.max(0, 1 - ratingDiff);
-    score += ratingScore * 0.2;
+    score += ratingScore * 0.1;
     breakdown.rating = {
       similarity: Math.round(ratingScore * 100),
       userAvg: userProfile.avgRating,
