@@ -363,6 +363,7 @@ class SalesForecastingEngine:
             p, d, q = self._find_best_arima_params(revenue)
             self.arima_model = EnhancedARIMAModel(p, d, q)
             self.arima_model.fit(revenue)
+            print(f"Main model: ARIMA({p},{d},{q}), AIC: {self.arima_model.calculate_aic():.4f}")
             
             # Category models
             for category, cat_data in self.category_sales.items():
@@ -375,6 +376,7 @@ class SalesForecastingEngine:
                         
                         if model.calculate_metrics()['mape'] < 200:
                             self.category_models[category] = model
+                            print(f"{category}: ARIMA({p},{d},{q}), AIC: {model.calculate_aic():.4f}")
                     except:
                         continue
             
@@ -814,4 +816,4 @@ def health():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=False, host='0.0.0.0', port=5001)
