@@ -173,7 +173,7 @@ const ProductCardWithOverlay = ({ product, showInCartFlag, productRank }) => {
                   {product.scoringDetails.breakdown.traditional.category?.match && (
                     <div style={{ marginBottom: '4px', paddingLeft: '8px', borderLeft: '2px solid #90EE90' }}>
                       <div style={{ fontWeight: '600', color: '#90EE90' }}>
-                        ✓ Category Match (30% contribution)
+                        ✓ Category Match (40% contribution)
                       </div>
                       <div style={{ fontSize: '10px', opacity: 0.9, marginTop: '2px' }}>
                         Matched: {product.scoringDetails.breakdown.traditional.category.value}
@@ -197,7 +197,7 @@ const ProductCardWithOverlay = ({ product, showInCartFlag, productRank }) => {
                   {product.scoringDetails.breakdown.traditional.price && (
                     <div style={{ marginBottom: '4px', paddingLeft: '8px', borderLeft: '2px solid #90EE90' }}>
                       <div style={{ fontWeight: '600', color: '#90EE90' }}>
-                        ○ Price Similarity (20% contribution)
+                        ○ Price Similarity (10% contribution)
                       </div>
                       <div style={{ fontSize: '10px', opacity: 0.9, marginTop: '2px' }}>
                         Product: ${product.scoringDetails.breakdown.traditional.price.productPrice?.toFixed(2)} | 

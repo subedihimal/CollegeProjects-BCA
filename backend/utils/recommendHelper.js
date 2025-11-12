@@ -293,7 +293,7 @@ const getRecommendedProducts = async (requestData) => {
       return {
         ...product.toObject(),
         rank: 0,
-        similarity: Math.round(finalScore * 100) / 100,
+        similarity: finalScore,
         inCart: inCart,
         previouslyPurchased: previouslyPurchased,
         scoring: {
