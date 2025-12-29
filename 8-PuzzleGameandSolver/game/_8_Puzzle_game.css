@@ -1,0 +1,279 @@
+*{
+    margin: 0px;
+    padding: 0px;
+}
+/* Container for How to Play */
+#how_to_play_container {
+    position: absolute; /* Use absolute positioning */
+    right: 80px; /* Adjust the distance from the right */
+    top: 100px; /* Adjust as needed for alignment with other elements */
+    background-color: #f3f3df; /* Same background as Top Scores */
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 400px; /* Same width for consistency */
+}
+
+#how_to_play_container h2 {
+    font-size: 24px; /* Title size */
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+#how_to_play_container ol {
+    padding-left: 20px; /* Indentation for the ordered list */
+}
+
+#how_to_play_container ul {
+    padding-left: 20px; /* Indentation for the unordered list */
+}
+
+/* Optional: Style the list items for better readability */
+#how_to_play_container li {
+    margin-bottom: 10px; /* Space between list items */
+    font-size: 18px; /* Text size */
+}
+
+#timer {
+    font-size: 80px; /* Large size for the timer */
+    font-weight: bold;
+    text-align: center;
+    color: black; /* Black color for the numbers */
+    margin: 50px auto; /* Increase margin for more space above and below */
+    font-family: 'Orbitron', sans-serif; /* Digital clock style font */
+    display: inline-block;
+    letter-spacing: 5px; /* Adds spacing between digits for a boxy look */
+    width: 100%; /* Make sure the container spans the full width */
+    display: flex;
+    justify-content: center; 
+}
+
+
+
+
+.game_title {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* Top Scores Section */
+#top_scores {
+    position: absolute;
+    left: 100px; /* Aligned to the left */
+    top: 100px;
+    background-color: #f3f3df !important;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 350px; /* Adjusted width */
+}
+
+#top_scores h2 {
+    font-size: 24px; /* Larger title */
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+#top_scores ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#top_scores li {
+    margin: 10px 0;
+    font-size: 20px;
+    display: flex; /* Use flexbox for name and score alignment */
+    justify-content: space-between;
+    align-items: center;
+    background-color: white; /* Background for each score */
+    padding: 10px; /* Padding inside the box */
+    border-radius: 5px; /* Rounded corners */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
+}
+
+#top_scores li .rank {
+    font-weight: bold; /* Make rank bold */
+    color: #000; /* Color for rank */
+    font-size: 20px; /* Smaller font size for rank */
+    margin-right: 10px; /* Gap between rank and player name */
+    width: 40px;
+}
+
+#top_scores li .player_name {
+    font-weight: bold;
+    color: #000;
+    text-align: left;
+    flex: 1; /* Allow player name to take available space */
+    padding-right: 20px; /* Adjust padding for gap */
+}
+
+#top_scores li .score_time {
+    color: #333;
+    text-align: right;
+    min-width: 100px; /* Ensure the score column has a fixed width */
+    font-family: 'Courier New', Courier, monospace; /* Digital clock-style font for score */
+    margin-left: 10px; /* Add margin for space between name and score */
+}
+.medal {
+    width: 40px; /* Adjust the size of the medal icons */
+    height: auto; /* Maintain aspect ratio */
+    margin-right: 5px; /* Space between medal and rank */
+    vertical-align: middle; /* Align with text */
+}
+
+
+
+
+
+
+
+body {
+    font-family: 'Helvetica';
+    width: 100%;
+    height: 100%;
+}
+
+.game_title {
+    text-align: center;
+}
+
+#game_area {
+    height: 306px;
+    width: 306px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border: 2px solid black;
+}
+
+.number-block {
+    height: 100px;
+    width: 100px;
+    border: 1px solid rgb(0, 8, 56);
+    text-align: center;
+    font-size: 78px;
+    cursor: pointer;
+    background-color: #da916a;
+}
+
+.void_class {
+    /* background: black;
+    color: grey; */
+    cursor: not-allowed;
+}
+
+#game_controls {
+    height: auto;
+    width: 300px;
+    margin: 20px auto 0 auto;
+    text-align: center;
+}
+
+.reset_btn {
+    padding: 12px;
+    background-color: #1665cc;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.1rem;
+    cursor: pointer;
+}
+
+.reset_btn.focus,
+.reset_btn:focus {
+    outline: 0;
+    box-shadow: none !important;
+}
+
+.backHome a:hover,
+.backHome:hover {
+    text-decoration: none;
+    background-color: #92d3ff;
+    color: rgb(35, 107, 159);
+}
+
+.backHome,
+.backHome a {
+    text-decoration: none;
+    padding: 12px;
+    background-color: #1665cc;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.1rem;
+    cursor: pointer;
+}
+
+
+.footer-container{
+    border-top: 1px solid #ffb780;
+    width: 100%;
+    background:linear-gradient(#1e2b59 , #0f1d34 );
+    padding: 20px;
+    /* background: url(Image.png); */
+     background-position: center;
+     line-height: 2.5rem;
+}
+.foot-head h2{
+    text-align: center;
+    color: aqua;
+    font-weight: 600;
+}
+.foot-head p{
+    color: #ffb780;
+    text-align: center;
+    font-size: 1.20rem;
+}
+
+html{
+    overflow-x: hidden;
+}
+#head{
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+@media screen and (max-width:525px) {
+    body{
+        width: 100%;
+    }
+    html{
+        overflow-x: hidden;
+    }
+
+    
+    
+}
+@media screen and (max-width:380px) {
+    body{
+        width: 100%;
+    }
+    html{
+        overflow-x: hidden;
+    }
+
+    
+    
+}
+html {
+    scroll-behavior: smooth;
+  }
+  
+  ::-webkit-scrollbar {
+    width: 15px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    border-radius: 5px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.25);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background: linear-gradient(to top, rgba(0, 212, 255, 1), rgba(9, 9, 121, 1));
+  }
