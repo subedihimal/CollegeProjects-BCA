@@ -6,7 +6,7 @@ This repository contains academic projects completed during different years of m
 
 ## 📂 Projects
 
-### 4th Year Project  
+### 4th Semester Project  
 **Assignment Submission System**  
 A web-based system for submitting and managing student assignments.
 
@@ -15,7 +15,7 @@ HTML, CSS, JavaScript, PHP
 
 ---
 
-### 6th Year Project  
+### 6th Semester Project  
 **8 Puzzle Game & Solver (A\* Algorithm)**  
 Implementation of the classic 8-puzzle game with an A* algorithm–based solver.
 
@@ -25,7 +25,7 @@ A* Algorithm implemented in JavaScript
 
 ---
 
-### 8th Year Project  
+### 8th Semester Project  
 **DigiMart – E-Commerce Platform**  
 A MERN stack e-commerce application with recommendation and sales forecasting features.
 
