@@ -172,7 +172,7 @@ const ProductListScreen = () => {
                     letterSpacing: '0.5px',
                     textAlign: 'center'
                   }}>
-                    ₹ Price
+                    $ Price
                   </th>
                   <th style={{ 
                     padding: '20px 16px', 
@@ -246,7 +246,7 @@ const ProductListScreen = () => {
                         borderRadius: '15px',
                         display: 'inline-block'
                       }}>
-                        ₹{product.price}
+                        ${product.price}
                       </span>
                     </td>
                     <td style={{ padding: '16px', verticalAlign: 'middle', textAlign: 'center' }}>

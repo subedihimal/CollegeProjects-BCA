@@ -14,7 +14,7 @@ const CHART_COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#0
 
 // Utility functions
 const formatCurrency = (amount) => 
-  amount ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount) : '₹0';
+  amount ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount) : '$0';
 
 const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
 
@@ -121,7 +121,7 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
     return (
       <Card className="border-0 shadow-sm h-100">
         <Card.Body className="p-3 text-center">
-          <div className="text-muted mb-2" style={{ fontSize: '14px' }}>Mean Actual: ₹0</div>
+          <div className="text-muted mb-2" style={{ fontSize: '14px' }}>Mean Actual: $0</div>
           <p className="text-muted mb-0">Model metrics unavailable</p>
         </Card.Body>
       </Card>
@@ -133,7 +133,7 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
       label: 'MAE', 
       value: metrics.mae, 
       normalizedValue: metrics.mae_normalized,
-      format: (val) => `₹${val?.toFixed(0) || 0}`,
+      format: (val) => `$${val?.toFixed(0) || 0}`,
       formatNormalized: (val) => `${(val * 100)?.toFixed(2) || 0}%`,
       description: 'Mean Absolute Error',
       showNormalized: true
@@ -142,7 +142,7 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
       label: 'RMSE', 
       value: metrics.rmse, 
       normalizedValue: metrics.rmse_normalized,
-      format: (val) => `₹${val?.toFixed(0) || 0}`,
+      format: (val) => `$${val?.toFixed(0) || 0}`,
       formatNormalized: (val) => `${(val * 100)?.toFixed(2) || 0}%`,
       description: 'Root Mean Squared Error',
       showNormalized: true
@@ -197,7 +197,7 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
           </div>
           <div className="text-center">
             <div className="text-info mb-1" style={{ fontSize: '14px', fontWeight: 'bold' }}>
-              ₹{metrics.mean_actual?.toFixed(0) || 0}
+              ${metrics.mean_actual?.toFixed(0) || 0}
             </div>
             <div className="text-muted" style={{ fontSize: '11px' }}>
               Mean Actual
@@ -473,7 +473,7 @@ const SalesForcastingScreen = () => {
                           tickFormatter={formatDate}
                           interval={chartInterval}
                         />
-                        <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
+                        <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
 
                         <Tooltip content={<CustomTooltip />} />
                         {/* Blue line - Historical/Actual data from dataset */}

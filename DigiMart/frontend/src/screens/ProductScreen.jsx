@@ -393,7 +393,7 @@ const ProductScreen = () => {
               {/* Horizontal Purchase Section */}
               <div style={styles.purchaseSection}>
                 <div style={styles.purchaseLeft}>
-                  <div style={styles.finalPrice}> ₹ {product.price}</div>
+                  <div style={styles.finalPrice}>$ {product.price}</div>
                   <div style={styles.stockIndicator}>
                     {product.countInStock > 0 ? `${product.countInStock} units in Stock` : 'Out of Stock'}
                   </div>

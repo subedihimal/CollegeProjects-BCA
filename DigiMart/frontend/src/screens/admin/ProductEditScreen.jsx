@@ -108,7 +108,7 @@ const ProductEditScreen = () => {
 
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label style={styles.label}>Price (₹)</Form.Label>
+                  <Form.Label style={styles.label}>Price ($)</Form.Label>
                   <Form.Control
                     type='number'
                     step='0.01'

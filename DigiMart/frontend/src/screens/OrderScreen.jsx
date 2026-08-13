@@ -106,7 +106,7 @@ const OrderScreen = () => {
                       </div>
                       <div style={styles.itemCalculation}>
                         <span style={styles.calculation}>
-                          {item.qty} ×  ₹ {item.price} = <strong> ₹ {(item.qty * item.price).toFixed(2)}</strong>
+                          {item.qty} × $ {item.price} = <strong>$ {(item.qty * item.price).toFixed(2)}</strong>
                         </span>
                       </div>
                     </div>
@@ -126,19 +126,19 @@ const OrderScreen = () => {
               <div style={styles.summaryItems}>
                 <div style={styles.summaryItem}>
                   <span>Items:</span>
-                  <span> ₹ {order.itemsPrice}</span>
+                  <span>$ {order.itemsPrice}</span>
                 </div>
                 <div style={styles.summaryItem}>
                   <span>Shipping:</span>
-                  <span> ₹ {order.shippingPrice}</span>
+                  <span>$ {order.shippingPrice}</span>
                 </div>
                 <div style={styles.summaryItem}>
                   <span>Tax:</span>
-                  <span> ₹ {order.taxPrice}</span>
+                  <span>$ {order.taxPrice}</span>
                 </div>
                 <div style={styles.summaryTotal}>
                   <span>Total:</span>
-                  <span> ₹ {order.totalPrice}</span>
+                  <span>$ {order.totalPrice}</span>
                 </div>
               </div>
             </Card.Body>

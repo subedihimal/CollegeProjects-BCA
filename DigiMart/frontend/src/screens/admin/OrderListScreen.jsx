@@ -72,7 +72,7 @@ const OrderListScreen = () => {
                 </td>
                 <td style={styles.tableCell}>
                   <span style={styles.totalPrice}>
-                     ₹ {order.totalPrice}
+                     $ {order.totalPrice}
                   </span>
                 </td>
                 <td style={styles.tableCell}>

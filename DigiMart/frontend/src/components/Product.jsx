@@ -94,7 +94,7 @@ const Product = ({ product, showInCartFlag = false }) => {
             </div>
           )}
 
-          <Card.Text as='h3' style={priceStyle}> ₹ {product.price}</Card.Text>
+          <Card.Text as='h3' style={priceStyle}>$ {product.price}</Card.Text>
         </Card.Body>
       </Card>
 

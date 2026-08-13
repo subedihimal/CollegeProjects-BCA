@@ -98,7 +98,7 @@ const ProductCarousel = () => {
                   {product.name}
                 </h2>
                 <div style={priceStyle}>
-                   ₹ {product.price}
+                   $ {product.price}
                 </div>
               </div>
             </div>
