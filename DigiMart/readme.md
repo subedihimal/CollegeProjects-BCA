@@ -88,9 +88,10 @@ Product image uploads remain available on Vercel. Images up to 1 MB are encoded
 as data URIs and saved with the product document, avoiding Vercel's ephemeral
 filesystem. Local development continues to save images in `uploads/`.
 
-The Python forecasting engine is a separate service and is not run inside the
-Node.js Vercel Function. Deploy it to a Python-capable host and set
-`FORECAST_API_URL` to that service's public base URL if forecasting is required.
+The Python forecasting engine is deployed as a third Vercel service. Vercel
+injects its private URL into the Express backend as `FORECAST_API_URL`, so no
+manual forecasting URL or separate hosting account is required. For local
+development, run the Flask service on port 5001 or set `FORECAST_API_URL`.
 
 ## 🔑 Keywords
 DigiMart, Content-Based Filtering, Product Recommendation, ARIMA, Time Series Forecasting, Demand Prediction

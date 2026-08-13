@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
+from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -8,6 +9,9 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
+
+DATA_DIRECTORY = Path(__file__).resolve().parent
+DEFAULT_DATA_FILE = DATA_DIRECTORY / 'cleaned_customer_data.csv'
 
 class EnhancedARIMAModel:
     """Optimized ARIMA implementation for time series forecasting"""
@@ -266,8 +270,8 @@ class EnhancedARIMAModel:
 class SalesForecastingEngine:
     """Sales forecasting engine"""
     
-    def __init__(self, data_file='cleaned_customer_data.csv'):
-        self.data_file = data_file
+    def __init__(self, data_file=None):
+        self.data_file = Path(data_file) if data_file else DEFAULT_DATA_FILE
         self.df = None
         self.daily_sales = None
         self.category_sales = {}

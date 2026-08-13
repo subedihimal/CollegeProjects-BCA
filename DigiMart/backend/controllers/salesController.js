@@ -5,7 +5,9 @@ const BASE_URL = (process.env.FORECAST_API_URL || 'http://localhost:5001').repla
   /\/$/,
   ''
 );
-const DEFAULT_TIMEOUT = 15000;
+// Allow enough time for a cold Python function to load its data and train the
+// in-memory models. Warm requests normally complete much sooner.
+const DEFAULT_TIMEOUT = Number(process.env.FORECAST_TIMEOUT_MS) || 120000;
 
 // Utility functions
 const fetchWithTimeout = async (url, options = {}) => {
@@ -76,7 +78,7 @@ const getSalesForecast = async (req, res) => {
     }
     
     const response = await fetchWithTimeout(`${BASE_URL}/api/sales/forecast?period=${period}`, {
-      timeout: 30000
+      timeout: DEFAULT_TIMEOUT
     });
     
     if (!response.ok) {
@@ -159,7 +161,7 @@ const getCategoryForecasts = async (req, res) => {
     }
     
     const response = await fetchWithTimeout(`${BASE_URL}/api/sales/categories?period=${period}`, {
-      timeout: 20000
+      timeout: DEFAULT_TIMEOUT
     });
     
     if (!response.ok) {
@@ -340,7 +342,9 @@ const getComprehensiveAnalysis = async (req, res) => {
 // @access  Private/Admin
 const checkForecastingHealth = async (req, res) => {
   try {
-    const response = await fetchWithTimeout(`${BASE_URL}/health`, { timeout: 5000 });
+    const response = await fetchWithTimeout(`${BASE_URL}/health`, {
+      timeout: DEFAULT_TIMEOUT,
+    });
     
     if (!response.ok) {
       throw new Error(`Health check failed: ${response.status}`);

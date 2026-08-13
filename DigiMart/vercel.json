@@ -9,7 +9,26 @@
     "backend": {
       "root": "backend",
       "framework": "express",
-      "entrypoint": "app.js"
+      "entrypoint": "app.js",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "forecasting",
+          "format": "url",
+          "env": "FORECAST_API_URL"
+        }
+      ]
+    },
+    "forecasting": {
+      "root": "backend/forcasting",
+      "framework": "flask",
+      "entrypoint": "forcastingengine:app",
+      "functions": {
+        "**/*.py": {
+          "maxDuration": 300,
+          "includeFiles": "cleaned_customer_data.csv"
+        }
+      }
     }
   },
   "rewrites": [
