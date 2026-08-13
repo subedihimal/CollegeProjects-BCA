@@ -34,7 +34,7 @@ let checkGameState = (arr) => {
       
       
       // Make an AJAX request to the PHP script
-      fetch('savegame.php', {
+      fetch('/game/savegame.php', {
           method: 'POST',
           headers: {
               'Content-Type': 'application/x-www-form-urlencoded'
@@ -51,21 +51,6 @@ let checkGameState = (arr) => {
       });
       alert('Congratulations! You Won in ' + timerString);
       reset();
-      
-      // Display the win message locally
-      $.ajax({
-        url: 'savegame.php',
-        method: 'POST',
-        data: {
-            time: timerString
-        },
-        success: function(response) {
-            console.log('Status saved successfully:', response);
-        },
-        error: function(xhr, status, error) {
-            console.error('Error saving status:', error);
-        } 
-      });
      
   }
 };
@@ -268,7 +253,7 @@ function sendTransferArray() {
   // Create a new form element
   var form = document.createElement("form");
   form.method = "POST";
-  form.action = "../solver/_8_puzzle.php";
+  form.action = "/solver/_8_puzzle.php";
 
   // Create a hidden input element for the transferArray (JSON encoded)
   var input = document.createElement("input");

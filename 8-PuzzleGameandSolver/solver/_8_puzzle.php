@@ -1,7 +1,9 @@
 <?php
-session_start();
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+
+app_start_session();
 if (!isset($_SESSION['email'])){
-    header("Location: ../login/login.php");
+    header('Location: /login/login/login.php');
     exit();
 }
 
@@ -21,8 +23,8 @@ if (isset($_POST['transferArray'])) {
 <html>
 <head>
     <title>8-Puzzle Solver</title>
-    <link rel="stylesheet" href="_8_puzzle.css">
-    <link rel="stylesheet" href="../navbar/navbar.css">
+    <link rel="stylesheet" href="/solver/_8_puzzle.css">
+    <link rel="stylesheet" href="/navbar/navbar.css">
     <script>
         // Pass the PHP variable to JavaScript if it exists
         <?php if ($transferArrayValue): ?>
@@ -37,7 +39,7 @@ if (isset($_POST['transferArray'])) {
     </script>
 </head>
 <body>
-<?php include('../navbar/navbar.php'); ?>
+<?php include dirname(__DIR__) . '/navbar/navbar.php'; ?>
     <div class="container">
         <!-- <a href="../index.html"><button id="back">Back Home</button></a> -->
         <br><br>
@@ -51,9 +53,9 @@ if (isset($_POST['transferArray'])) {
         <button onclick="randomize()">Randomize</button>
         <button onclick="reset()">Reset</button>
         <button onclick="solvePuzzle()">Solve Puzzle</button><br>
-        <button class="btn" onclick="location.href='../game/_8_puzzle_game.php'">GO BACK</button>
+        <button class="btn" onclick="location.href='/game/_8_Puzzle_game.php'">GO BACK</button>
     </div>
     <div id="solution-tables"></div>
-    <script src="_8_puzzle.js"></script>
+    <script src="/solver/_8_puzzle.js"></script>
 </body>
 </html>

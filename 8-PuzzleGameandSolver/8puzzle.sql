@@ -33,16 +33,6 @@ CREATE TABLE `login` (
   `password` varchar(225) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `login`
---
-
-INSERT INTO `login` (`email`, `name`, `password`) VALUES
-('gamingmains@gmail.com', 'Shyam', '202cb962ac59075b964b07152d234b70'),
-('himal.radiant@gmail.com', 'Nripesh', '202cb962ac59075b964b07152d234b70'),
-('itissubedi@gmail.com', 'Himal', '202cb962ac59075b964b07152d234b70'),
-('yatriwears@gmail.com', 'Sagar', '202cb962ac59075b964b07152d234b70');
-
 -- --------------------------------------------------------
 
 --
@@ -54,24 +44,17 @@ CREATE TABLE `timescore` (
   `times` time DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `timescore`
+-- Table structure for serverless PHP sessions
 --
 
-INSERT INTO `timescore` (`name`, `times`) VALUES
-('Himal', '00:33:00'),
-('Shyam', '00:39:00'),
-('Sagar', '02:22:00'),
-('Nripesh', '00:23:00'),
-('Himal', '00:30:00'),
-('Shyam', '00:52:00'),
-('Sagar', '00:50:00'),
-('Shyam', '00:43:00'),
-('Nripesh', '00:40:00'),
-('Nripesh', '01:57:00'),
-('Nripesh', '01:30:00'),
-('Nripesh', '00:49:00'),
-('Nripesh', '00:39:00');
+CREATE TABLE `app_sessions` (
+  `id` varchar(128) NOT NULL,
+  `data` longblob NOT NULL,
+  `last_activity` int unsigned NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Indexes for dumped tables
@@ -89,6 +72,13 @@ ALTER TABLE `login`
 --
 ALTER TABLE `timescore`
   ADD KEY `name` (`name`);
+
+--
+-- Indexes for table `app_sessions`
+--
+ALTER TABLE `app_sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `last_activity` (`last_activity`);
 
 --
 -- Constraints for dumped tables

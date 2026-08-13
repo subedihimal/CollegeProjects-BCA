@@ -1,32 +1,35 @@
 <?php
-session_start();
-if (!isset($_SESSION['email'])){
-    header("Location: ../login/login.php");
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+
+app_start_session();
+header('Content-Type: application/json; charset=UTF-8');
+
+if (!isset($_SESSION['email'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Authentication required.']);
     exit();
 }
 
-if (isset($_POST['logout'])) {
-    session_destroy();
-    header("Location: ../login/login.php");
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
+    echo json_encode(['error' => 'Method not allowed.']);
     exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $elapsedTime = $_POST['elapsedTime'];
-  $username = $_SESSION['username'];
+$elapsedTime = trim((string) ($_POST['elapsedTime'] ?? ''));
+$username = (string) ($_SESSION['username'] ?? '');
 
-  $conn = mysqli_connect("localhost", "root", "", "8puzzle");
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-}
-$sql = "INSERT INTO timescore VALUES ('$username','$elapsedTime')";
-$result = mysqli_query($conn, $sql);
-
+if ($username === '' || preg_match('/^\d{2}:[0-5]\d$/', $elapsedTime) !== 1) {
+    http_response_code(422);
+    echo json_encode(['error' => 'Invalid score data.']);
+    exit();
 }
 
-?>
-<html>
-    <body>
-    <script src="jquery.js"></script>
-    </body>
-</html>
+$conn = app_database();
+$statement = $conn->prepare('INSERT INTO timescore (name, times) VALUES (?, ?)');
+$statement->bind_param('ss', $username, $elapsedTime);
+$statement->execute();
+$statement->close();
+
+echo json_encode(['saved' => true]);

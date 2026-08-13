@@ -39,3 +39,58 @@ f(n) = g(n) + h(n)
 - **Visual Studio Code** — development environment
 - **HTML / CSS / JavaScript** — frontend and game logic
 - **PHP / MySQL** — backend, user accounts, and leaderboard storage
+
+## Deploying to Vercel
+
+The project is configured as one PHP serverless function using the community
+`vercel-php` runtime. Static CSS, JavaScript, fonts, and images continue to be
+served directly by Vercel.
+
+### 1. Create the database
+
+Create a publicly reachable MySQL-compatible database and import `8puzzle.sql`.
+The database must contain the `app_sessions` table because Vercel functions do
+not have persistent local session storage.
+
+If you already imported an older version of the schema, run:
+
+```sql
+CREATE TABLE app_sessions (
+  id varchar(128) NOT NULL PRIMARY KEY,
+  data longblob NOT NULL,
+  last_activity int unsigned NOT NULL,
+  KEY last_activity (last_activity)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+### 2. Configure environment variables
+
+Copy `.env.example` to `.env` for local development and fill in the values.
+Never commit `.env`. In Vercel, add the same variables under **Project
+Settings → Environment Variables** for Production, Preview, and Development as
+needed.
+
+Set `APP_ENV=production`, `APP_DEBUG=false`, and normally `DB_SSL=true` in
+Vercel. `DB_SSL_CA` is optional unless the database provider gives you a CA
+certificate path.
+
+### 3. Install and run locally
+
+PHP 8.2+, Composer, and MySQL are required.
+
+```bash
+composer install
+cp .env.example .env
+php -S localhost:8000 api/index.php
+```
+
+The local PHP command above uses the same front controller as Vercel. Open
+`http://localhost:8000`.
+
+### 4. Deploy
+
+Push the repository to GitHub, import it into Vercel, add the environment
+variables, and deploy. No framework preset or build command is required;
+`vercel.json` selects the PHP runtime and defines the routes.
+
+The SQL dump and local environment files are excluded from Vercel deployments.

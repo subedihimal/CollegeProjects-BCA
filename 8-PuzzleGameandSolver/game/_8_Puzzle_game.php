@@ -1,20 +1,17 @@
 <?php
-session_start();
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+
+app_start_session();
 if (!isset($_SESSION['email'])) {
-    header("Location: ../login/login/login.php");
+    header('Location: /login/login/login.php');
     exit();
 }
 
-
-// Database connection
-$conn = mysqli_connect("localhost", "root", "", "8puzzle");
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-}
+$conn = app_database();
 
 // Fetch top 5 least timescores
 $sql = "SELECT name, times FROM timescore ORDER BY times ASC LIMIT 8";
-$result = mysqli_query($conn, $sql);
+$result = $conn->query($sql);
 
 // Store top 5 timescores in an array
 $topScores = [];
@@ -29,9 +26,9 @@ if ($result) {
 
 <head>
   <title>8-Puzzle Game</title>
-  <link rel="stylesheet" href="_8_Puzzle_game.css">
-  <link rel="stylesheet" href="model.css">
-  <link rel="stylesheet" href="../navbar/navbar.css">
+  <link rel="stylesheet" href="/game/_8_Puzzle_game.css">
+  <link rel="stylesheet" href="/game/model.css">
+  <link rel="stylesheet" href="/navbar/navbar.css">
   <style>
     /* Additional CSS for the top scores section */
     #top_scores {
@@ -61,7 +58,7 @@ if ($result) {
 </head>
 
 <body style="background-color: grey;">
-<?php include('../navbar/navbar.php'); ?>
+<?php include dirname(__DIR__) . '/navbar/navbar.php'; ?>
   <div id="how_to_play_container">
     <h2>How to Play the 8-Puzzle Game</h2>
     <ol>
@@ -90,11 +87,11 @@ if ($result) {
                         <span class='rank'>";
                 // Display medal for top 3 and omit rank number
                 if ($rank == 1) {
-                    echo "<img src='icon/gold.png' class='medal' alt='Gold Medal' />";
+                    echo "<img src='/game/icon/gold.png' class='medal' alt='Gold Medal' />";
                 } elseif ($rank == 2) {
-                    echo "<img src='icon/silver.png' class='medal' alt='Silver Medal' />";
+                    echo "<img src='/game/icon/silver.png' class='medal' alt='Silver Medal' />";
                 } elseif ($rank == 3) {
-                    echo "<img src='icon/bronze.png' class='medal' alt='Bronze Medal' />";
+                    echo "<img src='/game/icon/bronze.png' class='medal' alt='Bronze Medal' />";
                 } else {
                     echo "#" . $rank; // Show rank for others
                 }
@@ -115,10 +112,10 @@ if ($result) {
   <div id="game_area">
   </div>
   <div id="game_controls">
-    <button class="btn backHome solver_btn" onclick="location.href='../solver/_8_puzzle.php'">Solver</button>
+    <button class="btn backHome solver_btn" onclick="location.href='/solver/_8_puzzle.php'">Solver</button>
   </div>
   
-  <script src="_8_Puzzle_game.js"></script>
+  <script src="/game/_8_Puzzle_game.js"></script>
 </body>
 
 </html>

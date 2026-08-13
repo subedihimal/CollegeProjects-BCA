@@ -1,61 +1,57 @@
-<?php 
-session_start();
+<?php
 
-// Database Connection
-$conn = mysqli_connect("localhost", "root", "", "8puzzle");
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-}
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+
+app_start_session();
+$conn = app_database();
+$message = '';
 
 // Handle Registration and OTP Sending
 if (isset($_POST["register"])) {
-    $email = $_POST["email"];
-    $username = $_POST["username"];
-    $password = $_POST["password"];
+    $email = trim((string) ($_POST['email'] ?? ''));
+    $username = trim((string) ($_POST['username'] ?? ''));
+    $password = (string) ($_POST['password'] ?? '');
 
     // Check if email already exists
-    $check_query = mysqli_query($conn, "SELECT * FROM login WHERE email ='$email'");
-    $rowCount = mysqli_num_rows($check_query);
+    $checkStatement = $conn->prepare('SELECT email FROM login WHERE email = ? LIMIT 1');
+    $checkStatement->bind_param('s', $email);
+    $checkStatement->execute();
+    $rowCount = $checkStatement->get_result()->num_rows;
+    $checkStatement->close();
 
-    if (!empty($email) && !empty($password)) {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = 'Enter a valid email address.';
+    } elseif ($username === '') {
+        $message = 'Username is required.';
+    } elseif (strlen($password) < 8) {
+        $message = 'Password must contain at least 8 characters.';
+    } else {
         if ($rowCount > 0) {
-            echo "<script>alert('User with email already exists!');</script>";
+            $message = 'An account with this email already exists.';
         } else {
             // Generate OTP
-            $otp = rand(100000, 999999);
+            $otp = random_int(100000, 999999);
             $_SESSION['otp'] = $otp;
             $_SESSION['mail'] = $email;
             $_SESSION['username'] = $username;
-            $_SESSION['password'] = md5($password); // Store password hash for later use
+            $_SESSION['password'] = password_hash($password, PASSWORD_DEFAULT);
             $_SESSION['otp_expiration'] = time() + 240; // OTP valid for 240 seconds (4 minutes)
 
-            // Include PHPMailer
-            require "phpmailer/PHPMailerAutoload.php";
-            $mail = new PHPMailer;
+            try {
+                $mail = app_mailer();
+                $mail->addAddress($email);
+                $mail->Subject = 'Your Verification Code';
+                $safeUsername = htmlspecialchars($username, ENT_QUOTES, 'UTF-8');
+                $mail->Body = "<p>Dear {$safeUsername},</p><h3>Your verification OTP code is: {$otp}</h3><br><p>Regards,<br><b>8-Puzzle Solver</b></p>";
+                $mail->send();
 
-            // Mail server configuration
-            $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com';
-            $mail->Port = 587;
-            $mail->SMTPAuth = true;
-            $mail->SMTPSecure = 'tls';
-
-            $mail->Username = 'gamingmains@gmail.com';
-            $mail->Password = 'ryotxxxlyhtgxubv';
-
-            $mail->setFrom('gamingmains@gmail.com', 'OTP Verification');
-            $mail->addAddress($email);
-
-            $mail->isHTML(true);
-            $mail->Subject = "Your Verification Code";
-            $mail->Body = "<p>Dear $username,</p><h3>Your verification OTP code is: $otp</h3><br><p>Regards,<br><b>8puzzle Solver</b></p>";
-
-            if (!$mail->send()) {
-                echo "<script>alert('Registration failed, invalid email.');</script>";
-            } else {
                 // Redirect to OTP verification section
-                header("Location: register.php?otp=1");
+                header('Location: /login/register.php?otp=1');
                 exit();
+            } catch (Throwable $exception) {
+                error_log((string) $exception);
+                unset($_SESSION['otp'], $_SESSION['mail'], $_SESSION['username'], $_SESSION['password'], $_SESSION['otp_expiration']);
+                $message = 'Registration email could not be sent. Check the mail configuration.';
             }
         }
     }
@@ -64,32 +60,36 @@ if (isset($_POST["register"])) {
 // Handle OTP Verification
 if (isset($_POST['verify_otp'])) {
     // Check if OTP is correct and still valid
-    if (time() > $_SESSION['otp_expiration']) {
-        echo "<script>alert('OTP has expired. Please request a new one.'); window.location.replace('register.php');</script>";
-    } elseif ($_POST['otp'] == $_SESSION['otp']) {
+    $expiresAt = (int) ($_SESSION['otp_expiration'] ?? 0);
+    $submittedOtp = (string) ($_POST['otp'] ?? '');
+    $storedOtp = (string) ($_SESSION['otp'] ?? '');
+
+    if ($expiresAt === 0 || time() > $expiresAt) {
+        header('Location: /login/register.php?error=expired_otp');
+        exit();
+    } elseif ($storedOtp !== '' && hash_equals($storedOtp, $submittedOtp)) {
         // Proceed with registration by inserting into the database
-        $email = $_SESSION['mail'];
-        $username = $_SESSION['username'];
-        $password_hash = $_SESSION['password'];
+        $email = (string) ($_SESSION['mail'] ?? '');
+        $username = (string) ($_SESSION['username'] ?? '');
+        $password_hash = (string) ($_SESSION['password'] ?? '');
 
         // Use prepared statements to prevent SQL injection
         $stmt = $conn->prepare("INSERT INTO login (email, name, password) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $email, $username, $password_hash);
         
-        if ($stmt->execute()) {
-            echo "<script>alert('Registration successful!'); window.location.replace('login/login.php');</script>";
-        } else {
-            echo "<script>alert('Registration failed, please try again.'); window.location.replace('register.php');</script>";
+        try {
+            $stmt->execute();
+            $stmt->close();
+            unset($_SESSION['otp'], $_SESSION['mail'], $_SESSION['username'], $_SESSION['password'], $_SESSION['otp_expiration']);
+            header('Location: /login/login/login.php?registered=1');
+            exit();
+        } catch (mysqli_sql_exception $exception) {
+            error_log((string) $exception);
+            $stmt->close();
+            $message = 'Registration failed. The username may already be in use.';
         }
-
-        // Clear session variables
-        unset($_SESSION['otp']);
-        unset($_SESSION['mail']);
-        unset($_SESSION['username']);
-        unset($_SESSION['password']);
     } else {
-        // Show alert for invalid OTP and redirect to register.php
-        echo "<script>alert('Invalid OTP. Please try again.'); window.location.replace('register.php');</script>";
+        header('Location: /login/register.php?otp=1&error=invalid_otp');
         exit();
     }
 }
@@ -103,8 +103,7 @@ if (isset($_POST['verify_otp'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="css/style.css"> <!-- Include your style.css here -->
-    <link rel="icon" href="Favicon.png">
+    <link rel="stylesheet" href="/login/css/style.css">
     <title>Register</title>
 </head>
 <script>
@@ -121,7 +120,7 @@ if (isset($_POST['verify_otp'])) {
             if (timer-- <= 0) {
                 clearInterval(interval);
                 alert("OTP has expired. Please request a new one.");
-                window.location.replace('register.php');
+                window.location.replace('/login/register.php');
             }
         }, 1000);
     }
@@ -144,7 +143,13 @@ if (isset($_POST['verify_otp'])) {
                 <div class="row justify-content-center">
                     <div class="col-md-7 col-lg-5">
                         <div class="login-wrap p-4 p-md-5">
-                            <form action="register.php" method="POST">
+                            <?php if ($message !== ''): ?>
+                                <p class="text-center" style="color: red;"><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></p>
+                            <?php endif; ?>
+                            <?php if (($_GET['error'] ?? '') === 'expired_otp'): ?>
+                                <p class="text-center" style="color: red;">The OTP expired. Please request a new one.</p>
+                            <?php endif; ?>
+                            <form action="/login/register.php" method="POST">
                                 <div class="form-group">
                                     <label class="label" for="email">Email:</label>
                                     <input type="email" name="email" class="form-control" required>
@@ -155,7 +160,7 @@ if (isset($_POST['verify_otp'])) {
                                 </div>
                                 <div class="form-group">
                                     <label class="label" for="password">Password:</label>
-                                    <input type="password" name="password" class="form-control" required>
+                                    <input type="password" name="password" class="form-control" minlength="8" required>
                                 </div>
                                 <div class="form-group d-flex justify-content-end mt-5">
                                     <button type="submit" name="register" class="btn btn-primary submit">
@@ -163,7 +168,7 @@ if (isset($_POST['verify_otp'])) {
                                     </button>
                                 </div>
                             </form>
-                            <p class="text-center">Already have an account? <a href="login/login.php">Sign In</a></p>
+                            <p class="text-center">Already have an account? <a href="/login/login/login.php">Sign In</a></p>
                         </div>
                     </div>
                 </div>
@@ -177,7 +182,10 @@ if (isset($_POST['verify_otp'])) {
                 <div class="row justify-content-center">
                     <div class="col-md-7 col-lg-5">
                         <div class="login-wrap p-4 p-md-5">
-                            <form action="register.php" method="POST">
+                            <?php if (($_GET['error'] ?? '') === 'invalid_otp'): ?>
+                                <p style="color:red;">Invalid OTP. Please try again.</p>
+                            <?php endif; ?>
+                            <form action="/login/register.php" method="POST">
                                 <div class="form-group" id="otp-section">
                                     <label class="label" for="otp">Enter OTP:</label>
                                     <input type="number" name="otp" class="form-control" required />
@@ -187,7 +195,6 @@ if (isset($_POST['verify_otp'])) {
                                         <span class="fa fa-paper-plane"></span> <!-- Arrow icon -->
                                     </button>
                                 </div>
-                                <?php if (isset($_GET['error']) && $_GET['error'] == 'invalid_otp') echo "<p style='color:red;'>Invalid OTP. Please try again.</p>"; ?>
                             </form>
                         </div>
                     </div>

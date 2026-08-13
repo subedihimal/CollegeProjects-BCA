@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.6.2"
+    }
+  },
+  "routes": [
+    { "src": "/", "dest": "/api/index.php" },
+    { "src": "/index\\.php", "dest": "/api/index.php" },
+    { "src": "/login/login\\.php", "dest": "/api/index.php" },
+    { "src": "/login/login/login\\.php", "dest": "/api/index.php" },
+    { "src": "/login/register\\.php", "dest": "/api/index.php" },
+    { "src": "/login/forgotPassword\\.php", "dest": "/api/index.php" },
+    { "src": "/login/forgotpassword\\.php", "dest": "/api/index.php" },
+    { "src": "/game/_8_Puzzle_game\\.php", "dest": "/api/index.php" },
+    { "src": "/game/_8_puzzle_game\\.php", "dest": "/api/index.php" },
+    { "src": "/game/savegame\\.php", "dest": "/api/index.php" },
+    { "src": "/solver/_8_puzzle\\.php", "dest": "/api/index.php" },
+    { "src": "/config/(.*)", "status": 404 },
+    { "src": "/login/phpmailer/(.*)", "status": 404 },
+    { "src": "/8puzzle\\.sql", "status": 404 },
+    { "src": "/\\.env(.*)", "status": 404 },
+    { "src": "/navbar/navbar\\.php", "status": 404 },
+    { "handle": "filesystem" },
+    { "src": "/.*", "status": 404 }
+  ]
+}
