@@ -1,5 +1,5 @@
 import { Table, Button, Card, Badge } from 'react-bootstrap';
-import { FaTimes, FaCheck, FaShoppingCart, FaEye } from 'react-icons/fa';
+import { FaShoppingCart, FaEye } from 'react-icons/fa';
 import Message from '../../components/Message';
 import Loader from '../../components/Loader';
 import { useGetOrdersQuery } from '../../slices/ordersApiSlice';

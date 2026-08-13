@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Form, Button, Row, Col, Card, Badge } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Card } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaUser, FaEnvelope, FaLock, FaShoppingBag, FaEye } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -69,19 +69,6 @@ const ProfileScreen = () => {
       day: 'numeric'
     });
   };
-
-  const getOrderStats = () => {
-    if (!orders) return { total: 0, paid: 0, delivered: 0, totalSpent: 0 };
-    
-    return {
-      total: orders.length,
-      paid: orders.filter(order => order.isPaid).length,
-      delivered: orders.filter(order => order.isDelivered).length,
-      totalSpent: orders.reduce((sum, order) => sum + (order.isPaid ? parseFloat(order.totalPrice) : 0), 0)
-    };
-  };
-
-  const stats = getOrderStats();
 
   return (
     <div style={styles.container}>

@@ -65,5 +65,32 @@ Predicts future revenue and product demand from historical sales data using a va
 - Custom ARIMA implementation with automated parameter selection and category-level modeling
 - Modular, maintainable architecture built for scalability and future enhancement
 
+## ▲ Deploying to Vercel
+
+The repository includes a Vercel Services configuration that builds the React
+frontend and Express backend independently, routes `/api/*` to the backend, and
+falls back to `index.html` for React Router pages.
+
+1. Import this repository into Vercel and keep the project root as the Root
+   Directory.
+2. Add `MONGODB_URI`, `JWT_SECRET`, and `PAYPAL_CLIENT_ID` in **Project Settings
+   → Environment Variables**. The MongoDB Atlas integration creates
+   `MONGODB_URI` automatically. `PAGINATION_LIMIT` is optional.
+3. In MongoDB Atlas, allow connections from Vercel. For a simple setup this is
+   commonly `0.0.0.0/0`; use stronger network controls when your Atlas plan and
+   Vercel setup support them.
+4. Select **Services** as the Framework Preset. Vercel reads the frontend and
+   backend build settings from `vercel.json`, so leave the project-level build
+   and output-directory overrides disabled.
+5. Deploy.
+
+Product image uploads remain available on Vercel. Images up to 1 MB are encoded
+as data URIs and saved with the product document, avoiding Vercel's ephemeral
+filesystem. Local development continues to save images in `uploads/`.
+
+The Python forecasting engine is a separate service and is not run inside the
+Node.js Vercel Function. Deploy it to a Python-capable host and set
+`FORECAST_API_URL` to that service's public base URL if forecasting is required.
+
 ## 🔑 Keywords
 DigiMart, Content-Based Filtering, Product Recommendation, ARIMA, Time Series Forecasting, Demand Prediction

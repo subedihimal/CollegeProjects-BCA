@@ -1,5 +1,5 @@
 import { Table, Button, Row, Col, Card, Badge } from 'react-bootstrap';
-import { FaEdit, FaPlus, FaTrash, FaBox, FaDollarSign } from 'react-icons/fa';
+import { FaEdit, FaPlus, FaTrash, FaBox } from 'react-icons/fa';
 import { Link, useParams } from 'react-router-dom';
 import Message from '../../components/Message';
 import Loader from '../../components/Loader';

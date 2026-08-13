@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, Row, Col, Table, Badge, Dropdown, Tabs, Tab, ProgressBar } from 'react-bootstrap';
-import { FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown, FaCog, FaTrophy, FaExclamationTriangle, FaBoxes, FaPercent, FaChevronDown } from 'react-icons/fa';
+import { FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown, FaBoxes, FaChevronDown } from 'react-icons/fa';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 // Constants

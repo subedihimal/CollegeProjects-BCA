@@ -3,16 +3,17 @@ import express from 'express';
 import multer from 'multer';
 
 const router = express.Router();
+const isVercel = Boolean(process.env.VERCEL);
 
-const storage = multer.diskStorage({
+const getFilename = (file) =>
+  `${file.fieldname}-${Date.now()}${path.extname(file.originalname).toLowerCase()}`;
+
+const diskStorage = multer.diskStorage({
   destination(req, file, cb) {
     cb(null, 'uploads/');
   },
   filename(req, file, cb) {
-    cb(
-      null,
-      `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`
-    );
+    cb(null, getFilename(file));
   },
 });
 
@@ -30,19 +31,41 @@ function fileFilter(req, file, cb) {
   }
 }
 
-const upload = multer({ storage, fileFilter });
+const upload = multer({
+  storage: isVercel ? multer.memoryStorage() : diskStorage,
+  fileFilter,
+  // Vercel has request/response size limits. A smaller cap also keeps the data
+  // URI written to MongoDB from making product documents excessively large.
+  limits: { fileSize: (isVercel ? 1 : 4) * 1024 * 1024 },
+});
+
 const uploadSingleImage = upload.single('image');
 
-router.post('/', (req, res) => {
-  uploadSingleImage(req, res, function (err) {
-    if (err) {
-      return res.status(400).send({ message: err.message });
+router.post('/', (req, res, next) => {
+  uploadSingleImage(req, res, async (error) => {
+    if (error) {
+      return res.status(400).send({ message: error.message });
     }
 
-    res.status(200).send({
-      message: 'Image uploaded successfully',
-      image: `/${req.file.path}`,
-    });
+    if (!req.file) {
+      return res.status(400).send({ message: 'Please select an image' });
+    }
+
+    try {
+      if (isVercel) {
+        return res.status(200).send({
+          message: 'Image uploaded successfully',
+          image: `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+        });
+      }
+
+      return res.status(200).send({
+        message: 'Image uploaded successfully',
+        image: `/${req.file.path.replaceAll('\\', '/')}`,
+      });
+    } catch (uploadError) {
+      return next(uploadError);
+    }
   });
 });
 

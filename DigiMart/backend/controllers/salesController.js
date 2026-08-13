@@ -1,7 +1,10 @@
 // Optimized Sales Forecasting API Controllers
 // Consolidated and streamlined for better performance and maintainability
 
-const BASE_URL = 'http://localhost:5001';
+const BASE_URL = (process.env.FORECAST_API_URL || 'http://localhost:5001').replace(
+  /\/$/,
+  ''
+);
 const DEFAULT_TIMEOUT = 15000;
 
 // Utility functions
@@ -368,7 +371,7 @@ const checkForecastingHealth = async (req, res) => {
       instructions: [
         'Ensure data.csv exists with Product Type column',
         'Run: python enhanced_forecasting_engine.py',
-        'Verify localhost:5001 accessibility'
+        `Verify ${BASE_URL} accessibility`
       ],
       timestamp: new Date().toISOString()
     });

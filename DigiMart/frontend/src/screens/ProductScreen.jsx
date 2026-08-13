@@ -16,8 +16,6 @@ import Meta from '../components/Meta';
 import Product from '../components/Product';
 import { addToCart } from '../slices/cartSlice';
 import { trackProductView } from '../slices/productViewsSlice';
-import { selectCurrentUserId } from '../slices/authSlice';
-import { selectViewedProducts } from '../slices/productViewsSlice';
 import { FaInfoCircle } from 'react-icons/fa';
 
 // Shared animations CSS
@@ -282,11 +280,6 @@ const ProductScreen = () => {
   const { data: product, isLoading, refetch, error } = useGetProductDetailsQuery(productId);
   const { userInfo } = useSelector((state) => state.auth);
   const [createReview, { isLoading: loadingProductReview }] = useCreateReviewMutation();
-  
-  // Get data for recommendations
-  const { cartItems } = useSelector((state) => state.cart);
-  const userId = useSelector(selectCurrentUserId);
-  const viewedProducts = useSelector(selectViewedProducts);
   
   // Fetch recommendations based only on current product
   const { data: recommendationsData, isLoading: loadingRecommendations } = useGetProductRecommendationQuery({
@@ -833,4 +826,4 @@ const styles = {
   }
 };
 
-export default ProductScreen; 
+export default ProductScreen;
