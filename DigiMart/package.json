@@ -14,8 +14,8 @@
     "vercel-build": "npm install --prefix frontend && npm run build --prefix frontend",
     "generate-toc": "markdown-toc -i readme.md"
   },
-  "author": "Brad Traversy",
-  "license": "MIT",
+  "author": "Himal Subedi",
+  "license": "",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "colors": "^1.4.0",
