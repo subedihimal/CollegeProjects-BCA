@@ -2,8 +2,10 @@
 
 require_once dirname(__DIR__) . '/config/bootstrap.php';
 
-app_start_session();
-$conn = app_database();
+if (isset($_POST['verify_otp'])) {
+    app_start_session();
+}
+
 $message = '';
 
 $clearPendingRegistration = static function (): void {
@@ -26,18 +28,9 @@ $redirectAfterRegistration = static function () use ($clearPendingRegistration):
 
 // Handle Registration and OTP Sending
 if (isset($_POST["register"])) {
-    unset($_SESSION['registration_completed_at']);
-
     $email = trim((string) ($_POST['email'] ?? ''));
     $username = trim((string) ($_POST['username'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
-
-    // Check if email already exists
-    $checkStatement = $conn->prepare('SELECT email FROM login WHERE email = ? LIMIT 1');
-    $checkStatement->bind_param('s', $email);
-    $checkStatement->execute();
-    $rowCount = $checkStatement->get_result()->num_rows;
-    $checkStatement->close();
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = 'Enter a valid email address.';
@@ -46,9 +39,19 @@ if (isset($_POST["register"])) {
     } elseif (strlen($password) < 8) {
         $message = 'Password must contain at least 8 characters.';
     } else {
+        $conn = app_database();
+        $checkStatement = $conn->prepare('SELECT email FROM login WHERE email = ? LIMIT 1');
+        $checkStatement->bind_param('s', $email);
+        $checkStatement->execute();
+        $rowCount = $checkStatement->get_result()->num_rows;
+        $checkStatement->close();
+
         if ($rowCount > 0) {
             $message = 'An account with this email already exists.';
         } else {
+            app_start_session();
+            unset($_SESSION['registration_completed_at']);
+
             // Generate OTP
             $otp = random_int(100000, 999999);
             $_SESSION['otp'] = $otp;
@@ -102,6 +105,7 @@ if (isset($_POST['verify_otp'])) {
         $password_hash = (string) ($_SESSION['password'] ?? '');
 
         // Use prepared statements to prevent SQL injection
+        $conn = app_database();
         $stmt = $conn->prepare("INSERT INTO login (email, name, password) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $email, $username, $password_hash);
 

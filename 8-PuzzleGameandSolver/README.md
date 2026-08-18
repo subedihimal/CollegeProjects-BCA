@@ -49,8 +49,9 @@ served directly by Vercel.
 ### 1. Create the database
 
 Create a publicly reachable MySQL-compatible database and import `8puzzle.sql`.
-The database must contain the `app_sessions` table because Vercel functions do
-not have persistent local session storage.
+The database must contain the `app_sessions` table for short-lived OTP and
+password-reset state. Normal authentication uses a signed HttpOnly cookie and
+does not query the session table on each page.
 
 If you already imported an older version of the schema, run:
 
@@ -73,6 +74,13 @@ needed.
 Set `APP_ENV=production`, `APP_DEBUG=false`, and normally `DB_SSL=true` in
 Vercel. `DB_SSL_CA` is optional unless the database provider gives you a CA
 certificate path.
+
+Set `AUTH_COOKIE_SECRET` to a random value containing at least 32 characters.
+For example, generate one locally with `openssl rand -hex 32` and add the output
+only to `.env` and Vercel. Existing deployments temporarily fall back to a key
+derived from `DB_PASSWORD`, but a separate secret is recommended. The default
+authentication lifetime is 12 hours and can be changed with
+`AUTH_COOKIE_TTL`.
 
 ### 3. Install and run locally
 

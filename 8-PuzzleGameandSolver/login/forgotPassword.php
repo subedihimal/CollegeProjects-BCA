@@ -2,25 +2,33 @@
 
 require_once dirname(__DIR__) . '/config/bootstrap.php';
 
-app_start_session();
-$conn = app_database();
+if (isset($_POST['verify_otp'])
+    || isset($_POST['reset_password'])
+) {
+    app_start_session();
+} elseif (isset($_GET['reset'])) {
+    app_start_session(true);
+}
+
 $message = '';
 
 // Handle Forgot Password and OTP Sending
 if (isset($_POST["forgot_password"])) {
     $email = trim((string) ($_POST['email'] ?? ''));
 
-    // Check if email exists
-    $checkStatement = $conn->prepare('SELECT email FROM login WHERE email = ? LIMIT 1');
-    $checkStatement->bind_param('s', $email);
-    $checkStatement->execute();
-    $rowCount = $checkStatement->get_result()->num_rows;
-    $checkStatement->close();
-
     if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $conn = app_database();
+        $checkStatement = $conn->prepare('SELECT email FROM login WHERE email = ? LIMIT 1');
+        $checkStatement->bind_param('s', $email);
+        $checkStatement->execute();
+        $rowCount = $checkStatement->get_result()->num_rows;
+        $checkStatement->close();
+
         if ($rowCount == 0) {
             $message = 'No account was found with this email.';
         } else {
+            app_start_session();
+
             // Generate OTP
             $otp = random_int(100000, 999999);
             $_SESSION['otp'] = $otp;
@@ -35,7 +43,8 @@ if (isset($_POST["forgot_password"])) {
                 $mail->send();
 
                 // Redirect to OTP verification section
-                header('Location: /login/forgotPassword.php?otp=1');
+                session_write_close();
+                header('Location: /login/forgotPassword.php?otp=1', true, 303);
                 exit();
             } catch (Throwable $exception) {
                 error_log((string) $exception);
@@ -56,15 +65,18 @@ if (isset($_POST['verify_otp'])) {
     $storedOtp = (string) ($_SESSION['otp'] ?? '');
 
     if ($expiresAt === 0 || time() > $expiresAt) {
-        header('Location: /login/forgotPassword.php?error=expired_otp');
+        session_write_close();
+        header('Location: /login/forgotPassword.php?error=expired_otp', true, 303);
         exit();
     } elseif ($storedOtp !== '' && hash_equals($storedOtp, $submittedOtp)) {
         // Allow the user to change password
         $_SESSION['otp_verified'] = true;
-        header('Location: /login/forgotPassword.php?reset=1');
+        session_write_close();
+        header('Location: /login/forgotPassword.php?reset=1', true, 303);
         exit();
     } else {
-        header('Location: /login/forgotPassword.php?otp=1&error=invalid_otp');
+        session_write_close();
+        header('Location: /login/forgotPassword.php?otp=1&error=invalid_otp', true, 303);
         exit();
     }
 }
@@ -85,13 +97,15 @@ if (isset($_POST['reset_password']) && !empty($_SESSION['otp_verified'])) {
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
 
         // Update the password in the database
+        $conn = app_database();
         $stmt = $conn->prepare('UPDATE login SET password = ? WHERE email = ?');
         $stmt->bind_param('ss', $password_hash, $email);
 
         if ($stmt->execute()) {
             $stmt->close();
             unset($_SESSION['otp'], $_SESSION['mail'], $_SESSION['otp_verified'], $_SESSION['otp_expiration']);
-            header('Location: /login/login/login.php?reset=1');
+            session_write_close();
+            header('Location: /login/login/login.php?reset=1', true, 303);
             exit();
         }
 

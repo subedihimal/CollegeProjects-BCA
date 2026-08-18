@@ -1,10 +1,10 @@
 <?php
 require_once dirname(__DIR__) . '/config/bootstrap.php';
 
-app_start_session();
 header('Content-Type: application/json; charset=UTF-8');
 
-if (!isset($_SESSION['email'])) {
+$user = app_auth_user();
+if ($user === null) {
     http_response_code(401);
     echo json_encode(['error' => 'Authentication required.']);
     exit();
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $elapsedTime = trim((string) ($_POST['elapsedTime'] ?? ''));
-$username = (string) ($_SESSION['username'] ?? '');
+$username = $user['username'];
 
 if ($username === '' || preg_match('/^\d{2}:[0-5]\d$/', $elapsedTime) !== 1) {
     http_response_code(422);

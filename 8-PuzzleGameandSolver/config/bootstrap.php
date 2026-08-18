@@ -99,6 +99,148 @@ function app_is_https(): bool
     return strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
 }
 
+function app_base64url_encode(string $value): string
+{
+    return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
+}
+
+function app_base64url_decode(string $value): string|false
+{
+    if ($value === '' || preg_match('/^[A-Za-z0-9_-]+$/', $value) !== 1) {
+        return false;
+    }
+
+    $padding = (4 - (strlen($value) % 4)) % 4;
+    return base64_decode(strtr($value, '-_', '+/') . str_repeat('=', $padding), true);
+}
+
+function app_auth_cookie_name(): string
+{
+    return (string) app_env('AUTH_COOKIE_NAME', 'puzzle_auth');
+}
+
+function app_auth_cookie_secret(): string
+{
+    $configuredSecret = (string) app_env('AUTH_COOKIE_SECRET', '');
+    if ($configuredSecret !== '') {
+        if (strlen($configuredSecret) < 32) {
+            throw new RuntimeException('AUTH_COOKIE_SECRET must contain at least 32 characters.');
+        }
+
+        return $configuredSecret;
+    }
+
+    // Existing deployments can transition without a new environment variable.
+    // HMAC key separation prevents using the database password directly.
+    $databasePassword = (string) app_env('DB_PASSWORD', '');
+    if ($databasePassword === '') {
+        throw new RuntimeException('Set AUTH_COOKIE_SECRET to a random value of at least 32 characters.');
+    }
+
+    return hash_hmac('sha256', '8-puzzle-auth-cookie-v1', $databasePassword);
+}
+
+/**
+ * Return the authenticated user without opening a database connection.
+ *
+ * @return array{email: string, username: string}|null
+ */
+function app_auth_user(): ?array
+{
+    $token = (string) ($_COOKIE[app_auth_cookie_name()] ?? '');
+    $parts = explode('.', $token);
+    if (count($parts) !== 2) {
+        return null;
+    }
+
+    [$encodedPayload, $encodedSignature] = $parts;
+    $providedSignature = app_base64url_decode($encodedSignature);
+    if ($providedSignature === false) {
+        return null;
+    }
+
+    $expectedSignature = hash_hmac(
+        'sha256',
+        $encodedPayload,
+        app_auth_cookie_secret(),
+        true
+    );
+    if (!hash_equals($expectedSignature, $providedSignature)) {
+        return null;
+    }
+
+    $decodedPayload = app_base64url_decode($encodedPayload);
+    if ($decodedPayload === false) {
+        return null;
+    }
+
+    try {
+        $payload = json_decode($decodedPayload, true, 8, JSON_THROW_ON_ERROR);
+    } catch (JsonException) {
+        return null;
+    }
+
+    if (!is_array($payload)
+        || ($payload['v'] ?? null) !== 1
+        || !is_int($payload['exp'] ?? null)
+        || $payload['exp'] < time()
+        || !is_string($payload['email'] ?? null)
+        || filter_var($payload['email'], FILTER_VALIDATE_EMAIL) === false
+        || !is_string($payload['username'] ?? null)
+        || $payload['username'] === ''
+        || strlen($payload['username']) > 225
+    ) {
+        return null;
+    }
+
+    return [
+        'email' => $payload['email'],
+        'username' => $payload['username'],
+    ];
+}
+
+function app_login_user(string $email, string $username): void
+{
+    $ttl = (int) app_env('AUTH_COOKIE_TTL', '43200');
+    $expiresAt = time() + max(300, min($ttl, 2592000));
+    $payload = app_base64url_encode(json_encode([
+        'v' => 1,
+        'email' => $email,
+        'username' => $username,
+        'exp' => $expiresAt,
+    ], JSON_THROW_ON_ERROR));
+    $signature = app_base64url_encode(hash_hmac(
+        'sha256',
+        $payload,
+        app_auth_cookie_secret(),
+        true
+    ));
+    $token = $payload . '.' . $signature;
+    $cookieName = app_auth_cookie_name();
+
+    setcookie($cookieName, $token, [
+        'expires' => $expiresAt,
+        'path' => '/',
+        'secure' => app_is_https(),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    $_COOKIE[$cookieName] = $token;
+}
+
+function app_logout_user(): void
+{
+    $cookieName = app_auth_cookie_name();
+    setcookie($cookieName, '', [
+        'expires' => time() - 42000,
+        'path' => '/',
+        'secure' => app_is_https(),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    unset($_COOKIE[$cookieName]);
+}
+
 function app_database(): mysqli
 {
     static $connection = null;
@@ -201,7 +343,7 @@ final class DatabaseSessionHandler implements SessionHandlerInterface
     }
 }
 
-function app_start_session(): void
+function app_start_session(bool $readOnly = false): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
@@ -216,7 +358,7 @@ function app_start_session(): void
         'samesite' => 'Lax',
     ]);
     session_set_save_handler(new DatabaseSessionHandler(app_database()), true);
-    session_start();
+    session_start($readOnly ? ['read_and_close' => true] : []);
 }
 
 function app_mailer(): \PHPMailer\PHPMailer\PHPMailer

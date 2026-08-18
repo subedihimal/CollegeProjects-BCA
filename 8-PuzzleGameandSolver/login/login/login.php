@@ -2,18 +2,34 @@
 
 require_once dirname(__DIR__, 2) . '/config/bootstrap.php';
 
-app_start_session();
-$conn = app_database();
 $message = '';
 $successMessage = (($_GET['registered'] ?? '') === '1')
     ? 'Registration successful. You can now sign in.'
     : '';
-$formEmail = (string) ($_POST['email'] ?? 'johndoe@gmail.com');
-$formPassword = (string) ($_POST['password'] ?? 'testuser12345');
+$demoEmail = 'johndoe@gmail.com';
+$demoPassword = 'testuser12345';
+$autoLoginSuppressionCookie = 'puzzle_skip_demo_login';
+$formEmail = (string) ($_POST['email'] ?? $demoEmail);
+$formPassword = (string) ($_POST['password'] ?? $demoPassword);
 
-if (isset($_POST['login'])) {
-    $inputEmail = trim((string) ($_POST['email'] ?? ''));
-    $inputPassword = (string) ($_POST['password'] ?? '');
+if (app_auth_user() !== null) {
+    header('Location: /game/_8_Puzzle_game.php');
+    exit();
+}
+
+$manualLoginRequested = isset($_POST['login']);
+$automaticLoginRequested = !$manualLoginRequested
+    && (($_COOKIE[$autoLoginSuppressionCookie] ?? '') !== '1');
+
+if ($manualLoginRequested || $automaticLoginRequested) {
+    $inputEmail = $manualLoginRequested
+        ? trim((string) ($_POST['email'] ?? ''))
+        : $demoEmail;
+    $inputPassword = $manualLoginRequested
+        ? (string) ($_POST['password'] ?? '')
+        : $demoPassword;
+
+    $conn = app_database();
 
     $statement = $conn->prepare('SELECT name, password FROM login WHERE email = ? LIMIT 1');
     $statement->bind_param('s', $inputEmail);
@@ -30,13 +46,22 @@ if (isset($_POST['login'])) {
             $upgrade->close();
         }
 
-        session_regenerate_id(true);
-        $_SESSION['email'] = $inputEmail;
-        $_SESSION['username'] = $row['name'];
+        app_login_user($inputEmail, (string) $row['name']);
+
+        setcookie($autoLoginSuppressionCookie, '', [
+            'expires' => time() - 42000,
+            'path' => '/',
+            'secure' => app_is_https(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+
         header('Location: /game/_8_Puzzle_game.php');
         exit();
     } else {
-        $message = 'Invalid email or password.';
+        $message = $manualLoginRequested
+            ? 'Invalid email or password.'
+            : 'Automatic demo login is unavailable. Use the form below to sign in.';
     }
 }
 ?>

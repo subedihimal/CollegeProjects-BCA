@@ -1,8 +1,7 @@
 <?php
 require_once dirname(__DIR__) . '/config/bootstrap.php';
 
-app_start_session();
-if (!isset($_SESSION['email'])){
+if (app_auth_user() === null) {
     header('Location: /login/login/login.php');
     exit();
 }
