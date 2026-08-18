@@ -6,12 +6,6 @@ require_once dirname(__DIR__) . '/config/bootstrap.php';
 
 app_start_session();
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Allow: POST');
-    http_response_code(405);
-    exit('Method not allowed');
-}
-
 $_SESSION = [];
 
 if (ini_get('session.use_cookies')) {
@@ -27,5 +21,5 @@ if (ini_get('session.use_cookies')) {
 }
 
 session_destroy();
-header('Location: /login/login/login.php', true, 303);
+header('Location: /', true, 303);
 exit();

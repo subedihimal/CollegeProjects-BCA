@@ -62,10 +62,10 @@ if (isset($_POST['login'])) {
                     <span class="login100-form-title p-b-26">
                         8 Puzzle Game Login
                     </span>
-                    
+
 
                     <div class="wrap-input100 validate-input" data-validate="Valid email is: a@b.c">
-                        <input class="input100" type="email" name="email" required>
+                        <input class="input100" type="email" name="email" placeholder=" " autocomplete="email" required>
                         <span class="focus-input100" data-placeholder="Email"></span>
                     </div>
 
@@ -73,7 +73,7 @@ if (isset($_POST['login'])) {
                         <span class="btn-show-pass">
                             <i class="zmdi zmdi-eye"></i>
                         </span>
-                        <input class="input100" type="password" name="password" required>
+                        <input class="input100" type="password" name="password" placeholder=" " autocomplete="current-password" required>
                         <span class="focus-input100" data-placeholder="Password"></span>
                     </div>
 

@@ -310,6 +310,18 @@ iframe {
   width: 100%;
 }
 
+/* Keep floating labels above typed and browser-autofilled values even when
+   the original template JavaScript is not loaded. */
+.input100:not(:placeholder-shown) + .focus-input100::after,
+.input100:-webkit-autofill + .focus-input100::after {
+  top: -15px;
+}
+
+.input100:not(:placeholder-shown) + .focus-input100::before,
+.input100:-webkit-autofill + .focus-input100::before {
+  width: 100%;
+}
+
 /*---------------------------------------------*/
 .btn-show-pass {
   font-size: 15px;

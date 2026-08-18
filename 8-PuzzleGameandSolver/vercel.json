@@ -10,6 +10,7 @@
     { "src": "/index\\.php", "dest": "/api/index.php" },
     { "src": "/login/login\\.php", "dest": "/api/index.php" },
     { "src": "/login/login/login\\.php", "dest": "/api/index.php" },
+    { "src": "/login/logout\\.php", "dest": "/api/index.php" },
     { "src": "/login/register\\.php", "dest": "/api/index.php" },
     { "src": "/login/forgotPassword\\.php", "dest": "/api/index.php" },
     { "src": "/login/forgotpassword\\.php", "dest": "/api/index.php" },
