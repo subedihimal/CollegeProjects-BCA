@@ -6,3 +6,18 @@ export const RECOMMEND_URL = '/api/recommend';
 export const USERS_URL = '/api/users';
 export const ORDERS_URL = '/api/orders';
 export const PAYPAL_URL = '/api/config/paypal';
+
+export const DEMO_ADMIN = {
+  email: 'mockAdmin@gmail.com',
+  password: 'admin',
+};
+
+export const DEMO_ADMIN_MESSAGE =
+  'This is a demo admin. If you want full administrative privileges, contact the owner, Himal.';
+
+export const isDemoAdmin = (user) =>
+  Boolean(
+    user &&
+      (user.isDemoAdmin ||
+        user.email?.toLowerCase() === DEMO_ADMIN.email.toLowerCase())
+  );

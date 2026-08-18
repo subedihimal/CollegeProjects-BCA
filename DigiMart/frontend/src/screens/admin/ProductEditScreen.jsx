@@ -9,10 +9,15 @@ import {
   useUpdateProductMutation,
   useUploadProductImageMutation,
 } from '../../slices/productsApiSlice';
+import { useSelector } from 'react-redux';
+import { DEMO_ADMIN_MESSAGE, isDemoAdmin } from '../../constants';
 
 const ProductEditScreen = () => {
   const { id: productId } = useParams();
   const navigate = useNavigate();
+  const { userInfo } = useSelector((state) => state.auth);
+  const demoAdmin = isDemoAdmin(userInfo);
+  const showDemoRestriction = () => toast.warning(DEMO_ADMIN_MESSAGE);
 
   const [name, setName] = useState('');
   const [price, setPrice] = useState(0);
@@ -40,6 +45,11 @@ const ProductEditScreen = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    if (demoAdmin) {
+      showDemoRestriction();
+      return;
+    }
+
     try {
       await updateProduct({
         productId,
@@ -59,6 +69,12 @@ const ProductEditScreen = () => {
   };
 
   const uploadFileHandler = async (e) => {
+    if (demoAdmin) {
+      e.target.value = '';
+      showDemoRestriction();
+      return;
+    }
+
     const formData = new FormData();
     formData.append('image', e.target.files[0]);
     try {

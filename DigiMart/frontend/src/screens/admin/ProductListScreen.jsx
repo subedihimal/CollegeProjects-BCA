@@ -10,8 +10,13 @@ import {
   useCreateProductMutation,
 } from '../../slices/productsApiSlice';
 import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
+import { DEMO_ADMIN_MESSAGE, isDemoAdmin } from '../../constants';
 
 const ProductListScreen = () => {
+  const { userInfo } = useSelector((state) => state.auth);
+  const demoAdmin = isDemoAdmin(userInfo);
+  const showDemoRestriction = () => toast.warning(DEMO_ADMIN_MESSAGE);
   const { pageNumber } = useParams()
   const currentPage = Number(pageNumber) || 1;
   const { data, isLoading, error, refetch } = useGetProductsQuery({
@@ -22,9 +27,14 @@ const ProductListScreen = () => {
     useDeleteProductMutation();
 
   const deleteHandler = async (id) => {
+    if (demoAdmin) {
+      showDemoRestriction();
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        await deleteProduct(id);
+        await deleteProduct(id).unwrap();
         refetch();
         toast.success('Product deleted successfully');
       } catch (err) {
@@ -37,9 +47,14 @@ const ProductListScreen = () => {
     useCreateProductMutation();
 
   const createProductHandler = async () => {
+    if (demoAdmin) {
+      showDemoRestriction();
+      return;
+    }
+
     if (window.confirm('Are you sure you want to create a new product?')) {
       try {
-        await createProduct();
+        await createProduct().unwrap();
         refetch();
         toast.success('Product created successfully');
       } catch (err) {
@@ -275,10 +290,14 @@ const ProductListScreen = () => {
                     <td style={{ padding: '16px', verticalAlign: 'middle', textAlign: 'center' }}>
                       <div className="d-flex justify-content-center gap-2">
                         <Button
-                          as={Link}
-                          to={`/admin/product/${product._id}/edit`}
                           size="sm"
                           style={editButtonStyle}
+                          {...(demoAdmin
+                            ? { onClick: showDemoRestriction }
+                            : {
+                                as: Link,
+                                to: `/admin/product/${product._id}/edit`,
+                              })}
                         >
                           <FaEdit />
                         </Button>

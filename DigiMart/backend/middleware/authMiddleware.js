@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import asyncHandler from './asyncHandler.js';
 import User from '../models/userModel.js';
+import { DEMO_ADMIN_MESSAGE, isDemoAdminEmail } from '../config/demoAdmin.js';
 
 // User must be authenticated
 const protect = asyncHandler(async (req, res, next) => {
@@ -37,4 +38,15 @@ const admin = (req, res, next) => {
   }
 };
 
-export { protect, admin };
+// Demo administrators can inspect admin screens, forecasts, and orders, but
+// cannot mutate products, users, or their own account.
+const blockDemoAdmin = (req, res, next) => {
+  if (req.user && isDemoAdminEmail(req.user.email)) {
+    res.status(403);
+    throw new Error(DEMO_ADMIN_MESSAGE);
+  }
+
+  next();
+};
+
+export { protect, admin, blockDemoAdmin };

@@ -9,6 +9,7 @@ import { useProfileMutation } from '../slices/usersApiSlice';
 import { useGetMyOrdersQuery } from '../slices/ordersApiSlice';
 import { setCredentials } from '../slices/authSlice';
 import { Link } from 'react-router-dom';
+import { DEMO_ADMIN_MESSAGE, isDemoAdmin } from '../constants';
 
 const ProfileScreen = () => {
   const [name, setName] = useState('');
@@ -17,6 +18,8 @@ const ProfileScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const { userInfo } = useSelector((state) => state.auth);
+  const demoAdmin = isDemoAdmin(userInfo);
+  const showDemoRestriction = () => toast.warning(DEMO_ADMIN_MESSAGE);
   const { data: orders, isLoading, error } = useGetMyOrdersQuery();
   const [updateProfile, { isLoading: loadingUpdateProfile }] = useProfileMutation();
   const dispatch = useDispatch();
@@ -28,6 +31,11 @@ const ProfileScreen = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
+    if (demoAdmin) {
+      showDemoRestriction();
+      return;
+    }
     
     // Validation
     if (!name.trim()) {

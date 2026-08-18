@@ -1,6 +1,63 @@
 import asyncHandler from '../middleware/asyncHandler.js';
 import generateToken from '../utils/generateToken.js';
 import User from '../models/userModel.js';
+import {
+  DEMO_ADMIN_EMAIL,
+  DEMO_ADMIN_MESSAGE,
+  DEMO_ADMIN_NAME,
+  DEMO_ADMIN_PASSWORD,
+  isDemoAdminEmail,
+} from '../config/demoAdmin.js';
+
+const findUserByEmail = (email) =>
+  isDemoAdminEmail(email)
+    ? User.findOne({ email: { $regex: /^mockAdmin@gmail\.com$/i } })
+    : User.findOne({ email });
+
+const ensureDemoAdmin = async (email, password) => {
+  if (!isDemoAdminEmail(email) || password !== DEMO_ADMIN_PASSWORD) {
+    return findUserByEmail(email);
+  }
+
+  let user = await findUserByEmail(DEMO_ADMIN_EMAIL);
+
+  if (!user) {
+    return User.create({
+      name: DEMO_ADMIN_NAME,
+      email: DEMO_ADMIN_EMAIL,
+      password: DEMO_ADMIN_PASSWORD,
+      isAdmin: true,
+    });
+  }
+
+  let shouldSave = false;
+  if (user.name !== DEMO_ADMIN_NAME) {
+    user.name = DEMO_ADMIN_NAME;
+    shouldSave = true;
+  }
+  if (!user.isAdmin) {
+    user.isAdmin = true;
+    shouldSave = true;
+  }
+  if (!(await user.matchPassword(DEMO_ADMIN_PASSWORD))) {
+    user.password = DEMO_ADMIN_PASSWORD;
+    shouldSave = true;
+  }
+
+  if (shouldSave) {
+    await user.save();
+  }
+
+  return user;
+};
+
+const userResponse = (user) => ({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  isAdmin: user.isAdmin,
+  isDemoAdmin: isDemoAdminEmail(user.email),
+});
 
 // @desc    Auth user & get token
 // @route   POST /api/users/auth
@@ -8,17 +65,12 @@ import User from '../models/userModel.js';
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await ensureDemoAdmin(email, password);
 
   if (user && (await user.matchPassword(password))) {
     generateToken(res, user._id);
 
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin,
-    });
+    res.json(userResponse(user));
   } else {
     res.status(401);
     throw new Error('Invalid email or password');
@@ -29,34 +81,8 @@ const authUser = asyncHandler(async (req, res) => {
 // @route   POST /api/users
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
-
-  const userExists = await User.findOne({ email });
-
-  if (userExists) {
-    res.status(400);
-    throw new Error('User already exists');
-  }
-
-  const user = await User.create({
-    name,
-    email,
-    password,
-  });
-
-  if (user) {
-    generateToken(res, user._id);
-
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin,
-    });
-  } else {
-    res.status(400);
-    throw new Error('Invalid user data');
-  }
+  res.status(403);
+  throw new Error(DEMO_ADMIN_MESSAGE);
 });
 
 // @desc    Logout user / clear cookie
@@ -74,12 +100,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
   if (user) {
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin,
-    });
+    res.json(userResponse(user));
   } else {
     res.status(404);
     throw new Error('User not found');
@@ -102,12 +123,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
     const updatedUser = await user.save();
 
-    res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      isAdmin: updatedUser.isAdmin,
-    });
+    res.json(userResponse(updatedUser));
   } else {
     res.status(404);
     throw new Error('User not found');
@@ -118,7 +134,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 // @route   GET /api/users
 // @access  Private/Admin
 const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({});
+  const users = await User.find({}).select('-password');
   res.json(users);
 });
 
@@ -167,12 +183,7 @@ const updateUser = asyncHandler(async (req, res) => {
 
     const updatedUser = await user.save();
 
-    res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      isAdmin: updatedUser.isAdmin,
-    });
+    res.json(userResponse(updatedUser));
   } else {
     res.status(404);
     throw new Error('User not found');

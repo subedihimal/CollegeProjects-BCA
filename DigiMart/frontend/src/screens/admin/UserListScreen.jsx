@@ -9,15 +9,25 @@ import {
 } from '../../slices/usersApiSlice';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { DEMO_ADMIN_MESSAGE, isDemoAdmin } from '../../constants';
 
 const UserListScreen = () => {
+  const { userInfo } = useSelector((state) => state.auth);
+  const demoAdmin = isDemoAdmin(userInfo);
+  const showDemoRestriction = () => toast.warning(DEMO_ADMIN_MESSAGE);
   const { data: users, refetch, isLoading, error } = useGetUsersQuery();
   const [deleteUser] = useDeleteUserMutation();
 
   const deleteHandler = async (id) => {
+    if (demoAdmin) {
+      showDemoRestriction();
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await deleteUser(id);
+        await deleteUser(id).unwrap();
         refetch();
         toast.success('User deleted successfully');
       } catch (err) {
@@ -111,10 +121,14 @@ const UserListScreen = () => {
                     {!user.isAdmin ? (
                       <>
                         <Button
-                          as={Link}
-                          to={`/admin/user/${user._id}/edit`}
                           size="sm"
                           style={styles.editButton}
+                          {...(demoAdmin
+                            ? { onClick: showDemoRestriction }
+                            : {
+                                as: Link,
+                                to: `/admin/user/${user._id}/edit`,
+                              })}
                         >
                           <FaEdit style={styles.buttonIcon} />
                         </Button>

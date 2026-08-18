@@ -10,10 +10,15 @@ import {
   useGetUserDetailsQuery,
   useUpdateUserMutation,
 } from '../../slices/usersApiSlice';
+import { useSelector } from 'react-redux';
+import { DEMO_ADMIN_MESSAGE, isDemoAdmin } from '../../constants';
 
 const UserEditScreen = () => {
   const { id: userId } = useParams();
   const navigate = useNavigate();
+  const { userInfo } = useSelector((state) => state.auth);
+  const demoAdmin = isDemoAdmin(userInfo);
+  const showDemoRestriction = () => toast.warning(DEMO_ADMIN_MESSAGE);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -32,6 +37,11 @@ const UserEditScreen = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
+    if (demoAdmin) {
+      showDemoRestriction();
+      return;
+    }
     
     // Validation
     if (!name.trim()) {
@@ -48,7 +58,7 @@ const UserEditScreen = () => {
     }
 
     try {
-      await updateUser({ userId, name: name.trim(), email: email.trim(), isAdmin });
+      await updateUser({ userId, name: name.trim(), email: email.trim(), isAdmin }).unwrap();
       toast.success('User updated successfully');
       refetch();
       navigate('/admin/userlist');

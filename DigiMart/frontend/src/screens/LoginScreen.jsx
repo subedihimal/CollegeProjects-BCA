@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Form, Button, Row, Col } from 'react-bootstrap';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Form, Button, Alert } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 import Loader from '../components/Loader';
 import FormContainer from '../components/FormContainer';
@@ -8,10 +8,11 @@ import FormContainer from '../components/FormContainer';
 import { useLoginMutation } from '../slices/usersApiSlice';
 import { setCredentials } from '../slices/authSlice';
 import { toast } from 'react-toastify';
+import { DEMO_ADMIN } from '../constants';
 
 const LoginScreen = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(DEMO_ADMIN.email);
+  const [password, setPassword] = useState(DEMO_ADMIN.password);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -45,6 +46,12 @@ const LoginScreen = () => {
     <FormContainer>
       <h1>Sign In</h1>
 
+      <Alert variant='info'>
+        Demo administrator credentials are prefilled. This account can explore
+        admin dashboards, forecasting, and ordering without changing catalog or
+        user data.
+      </Alert>
+
       <Form onSubmit={submitHandler}>
         <Form.Group className='my-2' controlId='email'>
           <Form.Label>Email Address</Form.Label>
@@ -72,15 +79,6 @@ const LoginScreen = () => {
 
         {isLoading && <Loader />}
       </Form>
-
-      <Row className='py-3'>
-        <Col>
-          New Customer?{' '}
-          <Link to={redirect ? `/register?redirect=${redirect}` : '/register'}>
-            Register
-          </Link>
-        </Col>
-      </Row>
     </FormContainer>
   );
 };
