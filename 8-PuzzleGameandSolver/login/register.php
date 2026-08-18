@@ -6,8 +6,28 @@ app_start_session();
 $conn = app_database();
 $message = '';
 
+$clearPendingRegistration = static function (): void {
+    unset(
+        $_SESSION['otp'],
+        $_SESSION['mail'],
+        $_SESSION['username'],
+        $_SESSION['password'],
+        $_SESSION['otp_expiration']
+    );
+};
+
+$redirectAfterRegistration = static function () use ($clearPendingRegistration): never {
+    $clearPendingRegistration();
+    $_SESSION['registration_completed_at'] = time();
+    session_write_close();
+    header('Location: /login/login/login.php?registered=1', true, 303);
+    exit();
+};
+
 // Handle Registration and OTP Sending
 if (isset($_POST["register"])) {
+    unset($_SESSION['registration_completed_at']);
+
     $email = trim((string) ($_POST['email'] ?? ''));
     $username = trim((string) ($_POST['username'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
@@ -46,11 +66,12 @@ if (isset($_POST["register"])) {
                 $mail->send();
 
                 // Redirect to OTP verification section
-                header('Location: /login/register.php?otp=1');
+                session_write_close();
+                header('Location: /login/register.php?otp=1', true, 303);
                 exit();
             } catch (Throwable $exception) {
                 error_log((string) $exception);
-                unset($_SESSION['otp'], $_SESSION['mail'], $_SESSION['username'], $_SESSION['password'], $_SESSION['otp_expiration']);
+                $clearPendingRegistration();
                 $message = 'Registration email could not be sent. Check the mail configuration.';
             }
         }
@@ -59,13 +80,20 @@ if (isset($_POST["register"])) {
 
 // Handle OTP Verification
 if (isset($_POST['verify_otp'])) {
+    $completedAt = (int) ($_SESSION['registration_completed_at'] ?? 0);
+    if ($completedAt >= time() - 600) {
+        $redirectAfterRegistration();
+    }
+
     // Check if OTP is correct and still valid
     $expiresAt = (int) ($_SESSION['otp_expiration'] ?? 0);
     $submittedOtp = (string) ($_POST['otp'] ?? '');
     $storedOtp = (string) ($_SESSION['otp'] ?? '');
 
     if ($expiresAt === 0 || time() > $expiresAt) {
-        header('Location: /login/register.php?error=expired_otp');
+        $clearPendingRegistration();
+        session_write_close();
+        header('Location: /login/register.php?error=expired_otp', true, 303);
         exit();
     } elseif ($storedOtp !== '' && hash_equals($storedOtp, $submittedOtp)) {
         // Proceed with registration by inserting into the database
@@ -76,20 +104,38 @@ if (isset($_POST['verify_otp'])) {
         // Use prepared statements to prevent SQL injection
         $stmt = $conn->prepare("INSERT INTO login (email, name, password) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $email, $username, $password_hash);
-        
+
         try {
             $stmt->execute();
-            $stmt->close();
-            unset($_SESSION['otp'], $_SESSION['mail'], $_SESSION['username'], $_SESSION['password'], $_SESSION['otp_expiration']);
-            header('Location: /login/login/login.php?registered=1');
-            exit();
         } catch (mysqli_sql_exception $exception) {
             error_log((string) $exception);
             $stmt->close();
-            $message = 'Registration failed. The username may already be in use.';
+
+            // A double click or retried serverless request may arrive after the
+            // first request has already created this exact account. Treat that
+            // case as the same successful registration instead of an OTP error.
+            $existingStatement = $conn->prepare(
+                'SELECT email FROM login WHERE email = ? AND name = ? AND password = ? LIMIT 1'
+            );
+            $existingStatement->bind_param('sss', $email, $username, $password_hash);
+            $existingStatement->execute();
+            $accountExists = $existingStatement->get_result()->fetch_assoc() !== null;
+            $existingStatement->close();
+
+            if ($accountExists) {
+                $redirectAfterRegistration();
+            }
+
+            $message = 'Registration failed. The email or username may already be in use.';
+        }
+
+        if ($message === '') {
+            $stmt->close();
+            $redirectAfterRegistration();
         }
     } else {
-        header('Location: /login/register.php?otp=1&error=invalid_otp');
+        session_write_close();
+        header('Location: /login/register.php?otp=1&error=invalid_otp', true, 303);
         exit();
     }
 }
@@ -128,6 +174,13 @@ if (isset($_POST['verify_otp'])) {
     window.onload = function() {
         if (document.getElementById("otp-section")) {
             startOtpTimer();
+        }
+
+        var otpForm = document.getElementById("otp-form");
+        if (otpForm) {
+            otpForm.addEventListener("submit", function() {
+                document.getElementById("verify-otp-btn").disabled = true;
+            });
         }
     };
 </script>
@@ -185,13 +238,14 @@ if (isset($_POST['verify_otp'])) {
                             <?php if (($_GET['error'] ?? '') === 'invalid_otp'): ?>
                                 <p style="color:red;">Invalid OTP. Please try again.</p>
                             <?php endif; ?>
-                            <form action="/login/register.php" method="POST">
+                            <form action="/login/register.php" method="POST" id="otp-form">
+                                <input type="hidden" name="verify_otp" value="1">
                                 <div class="form-group" id="otp-section">
                                     <label class="label" for="otp">Enter OTP:</label>
                                     <input type="number" name="otp" class="form-control" required />
                                 </div>
                                 <div class="form-group">
-                                    <button type="submit" name="verify_otp" class="btn btn-primary submit">
+                                    <button type="submit" id="verify-otp-btn" class="btn btn-primary submit">
                                         <span class="fa fa-paper-plane"></span> <!-- Arrow icon -->
                                     </button>
                                 </div>

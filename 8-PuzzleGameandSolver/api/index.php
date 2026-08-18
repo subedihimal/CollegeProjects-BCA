@@ -18,6 +18,7 @@ $routes = [
     '/index.php' => 'login/login/login.php',
     '/login/login.php' => 'login/login/login.php',
     '/login/login/login.php' => 'login/login/login.php',
+    '/login/logout.php' => 'login/logout.php',
     '/login/register.php' => 'login/register.php',
     '/login/forgotPassword.php' => 'login/forgotPassword.php',
     '/login/forgotpassword.php' => 'login/forgotPassword.php',

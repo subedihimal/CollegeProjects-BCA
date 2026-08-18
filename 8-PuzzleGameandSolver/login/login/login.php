@@ -5,6 +5,9 @@ require_once dirname(__DIR__, 2) . '/config/bootstrap.php';
 app_start_session();
 $conn = app_database();
 $message = '';
+$successMessage = (($_GET['registered'] ?? '') === '1')
+    ? 'Registration successful. You can now sign in.'
+    : '';
 
 if (isset($_POST['login'])) {
     $inputEmail = trim((string) ($_POST['email'] ?? ''));
@@ -75,6 +78,13 @@ if (isset($_POST['login'])) {
                     </div>
 
                     <!-- Display message if login fails -->
+                    <?php if ($successMessage): ?>
+                        <div class="text-center p-t-12">
+                            <span class="txt1" style="color:green;">
+                                <?php echo htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8'); ?>
+                            </span>
+                        </div>
+                    <?php endif; ?>
                     <?php if ($message): ?>
                         <div class="text-center p-t-12">
                             <span class="txt1" style="color:red;">
