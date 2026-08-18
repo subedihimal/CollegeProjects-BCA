@@ -8,6 +8,8 @@ $message = '';
 $successMessage = (($_GET['registered'] ?? '') === '1')
     ? 'Registration successful. You can now sign in.'
     : '';
+$formEmail = (string) ($_POST['email'] ?? 'johndoe@gmail.com');
+$formPassword = (string) ($_POST['password'] ?? 'testuser12345');
 
 if (isset($_POST['login'])) {
     $inputEmail = trim((string) ($_POST['email'] ?? ''));
@@ -65,7 +67,7 @@ if (isset($_POST['login'])) {
 
 
                     <div class="wrap-input100 validate-input" data-validate="Valid email is: a@b.c">
-                        <input class="input100" type="email" name="email" placeholder=" " autocomplete="email" required>
+                        <input class="input100" type="email" name="email" value="<?php echo htmlspecialchars($formEmail, ENT_QUOTES, 'UTF-8'); ?>" placeholder=" " autocomplete="email" required>
                         <span class="focus-input100" data-placeholder="Email"></span>
                     </div>
 
@@ -73,7 +75,7 @@ if (isset($_POST['login'])) {
                         <span class="btn-show-pass">
                             <i class="zmdi zmdi-eye"></i>
                         </span>
-                        <input class="input100" type="password" name="password" placeholder=" " autocomplete="current-password" required>
+                        <input class="input100" type="password" name="password" value="<?php echo htmlspecialchars($formPassword, ENT_QUOTES, 'UTF-8'); ?>" placeholder=" " autocomplete="current-password" required>
                         <span class="focus-input100" data-placeholder="Password"></span>
                     </div>
 
