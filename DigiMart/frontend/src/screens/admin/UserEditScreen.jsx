@@ -79,7 +79,7 @@ const UserEditScreen = () => {
   if (error) return <Message variant='danger'>{error?.data?.message || error.error}</Message>;
 
   return (
-    <div style={styles.container}>
+    <div className="responsive-screen-container" style={styles.container}>
       {/* Header */}
       <Card style={styles.headerCard}>
         <Card.Body>

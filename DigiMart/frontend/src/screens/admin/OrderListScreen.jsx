@@ -20,11 +20,11 @@ const OrderListScreen = () => {
   if (error) return <Message variant='danger'>{error?.data?.message || error.error}</Message>;
 
   return (
-    <div style={styles.container}>
+    <div className="admin-list-screen" style={styles.container}>
       {/* Header */}
       <Card style={styles.headerCard}>
         <Card.Body>
-          <div style={styles.headerContent}>
+          <div className="admin-list-header" style={styles.headerContent}>
             <FaShoppingCart style={styles.headerIcon} />
             <div>
               <h1 style={styles.title}>Orders Management</h1>

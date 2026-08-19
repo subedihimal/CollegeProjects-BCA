@@ -55,7 +55,7 @@ const Product = ({ product, showInCartFlag = false }) => {
         }}
       >
         <Link to={`/product/${product._id}`}>
-          <div style={imageContainerStyle}>
+          <div className="product-card-image" style={imageContainerStyle}>
             <Card.Img 
               src={product.image} 
               alt={product.name}

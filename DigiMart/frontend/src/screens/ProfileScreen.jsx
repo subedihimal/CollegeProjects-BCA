@@ -79,11 +79,11 @@ const ProfileScreen = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <div className="responsive-screen-container" style={styles.container}>
       {/* Header */}
       <Card style={styles.headerCard}>
         <Card.Body>
-          <div style={styles.headerContent}>
+          <div className="responsive-screen-header" style={styles.headerContent}>
             <FaUser style={styles.headerIcon} />
             <div>
               <h1 style={styles.title}>My Profile</h1>

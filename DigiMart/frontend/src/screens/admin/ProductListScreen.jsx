@@ -113,9 +113,9 @@ const ProductListScreen = () => {
   return (
     <>
       {/* Header Section */}
-      <Card style={headerCardStyle} className="mb-4">
+      <Card style={headerCardStyle} className="admin-products-header mb-4">
         <Card.Body>
-          <Row className='align-items-center py-2'>
+          <Row className='admin-products-header-row align-items-center py-2 g-3'>
             <Col>
               <div className="d-flex align-items-center">
                 <FaBox className="me-3" style={{ fontSize: '2rem', color: 'white' }} />

@@ -26,7 +26,7 @@ const OrderScreen = () => {
   if (error) return <Message variant='danger'>{error?.data?.message || error.error}</Message>;
 
   return (
-    <div style={styles.container}>
+    <div className="responsive-screen-container" style={styles.container}>
       {/* Header */}
       <Card style={styles.headerCard}>
         <Card.Body>
@@ -95,7 +95,7 @@ const OrderScreen = () => {
               ) : (
                 <div style={styles.orderItems}>
                   {order.orderItems.map((item, index) => (
-                    <div key={index} style={styles.orderItem}>
+                    <div key={index} className="order-detail-item" style={styles.orderItem}>
                       <div style={styles.itemImage}>
                         <Image src={item.image} alt={item.name} style={styles.productImage} />
                       </div>

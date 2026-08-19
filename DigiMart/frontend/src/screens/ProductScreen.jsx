@@ -354,10 +354,10 @@ const ProductScreen = () => {
         ← Go Back
       </Link>
       
-      <Row className="mt-4">
+      <Row className="product-detail-layout mt-4 g-3">
         {/* Product Image */}
         <Col md={5}>
-          <div style={styles.imageContainer}>
+          <div className="product-detail-image" style={styles.imageContainer}>
             <Image src={product.image} alt={product.name} style={styles.image} />
           </div>
         </Col>
@@ -366,11 +366,11 @@ const ProductScreen = () => {
         <Col md={7}>
           <Card style={styles.card}>
             <Card.Body>
-              <h1 style={styles.title}>{product.name}</h1>
+              <h1 className="product-detail-title" style={styles.title}>{product.name}</h1>
               
               <div style={styles.ratingSection}>
                 <Rating value={product.rating} text={`${product.numReviews} reviews`} />
-                  <div style={{ ...styles.inforColumn, marginTop: '16px', display: 'flex', gap: '40px' }}>
+                  <div className="product-detail-meta" style={{ ...styles.inforColumn, marginTop: '16px', display: 'flex', gap: '40px' }}>
                     <div>
                       <span style={styles.infoLabel}>Brand: </span>
                       <span style={{ ...styles.infoValue, fontWeight: 'bold' }}>{product.brand}</span>
@@ -391,7 +391,7 @@ const ProductScreen = () => {
               </div>
 
               {/* Horizontal Purchase Section */}
-              <div style={styles.purchaseSection}>
+              <div className="product-purchase-section" style={styles.purchaseSection}>
                 <div style={styles.purchaseLeft}>
                   <div style={styles.finalPrice}>$ {product.price}</div>
                   <div style={styles.stockIndicator}>
@@ -487,7 +487,7 @@ const ProductScreen = () => {
                       borderBottom: index < product.reviews.length - 1 ? '1px solid #e9ecef' : 'none',
                       marginBottom: index < product.reviews.length - 1 ? '20px' : '0'
                     }}>
-                      <div style={styles.reviewHeader}>
+                      <div className="product-review-header" style={styles.reviewHeader}>
                         <div>
                           <strong style={styles.reviewerName}>{review.name}</strong>
                           <div style={styles.reviewRating}>

@@ -34,17 +34,17 @@ const Header = () => {
         variant='dark' 
         expand='lg' 
         collapseOnSelect
-        className="shadow-sm"
+        className="digimart-navbar shadow-sm"
         style={{ 
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important',
           borderBottom: '3px solid #f8f9fa'
         }}
       >
-        <Container>
+        <Container className="digimart-navbar-container">
           <Navbar.Brand 
             as={Link} 
             to='/' 
-            className="fw-bold d-flex align-items-center"
+            className="digimart-brand fw-bold d-flex align-items-center"
             style={{ 
               fontSize: '1.5rem',
               textDecoration: 'none',
@@ -76,15 +76,15 @@ const Header = () => {
           />
           
           <Navbar.Collapse id='basic-navbar-nav'>
-            <Nav className='ms-auto align-items-center'>
-              <div className="me-3">
+            <Nav className='digimart-nav ms-auto align-items-center'>
+              <div className="digimart-search me-3">
                 <SearchBox />
               </div>
               
               <Nav.Link 
                 as={Link} 
                 to='/cart'
-                className="position-relative me-3"
+                className="digimart-cart-link position-relative me-3"
                 style={{ 
                   color: '#ffffff !important',
                   textDecoration: 'none',

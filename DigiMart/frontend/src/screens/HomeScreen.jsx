@@ -59,6 +59,7 @@ const UserProfileCarousel = ({ show, onClose, userProfile }) => {
       >
         {/* Profile Card */}
         <div
+          className="shopping-profile-card"
           onClick={(e) => e.stopPropagation()}
           style={{
             background: 'linear-gradient(135deg, rgba(0, 123, 255, 0.97) 0%, rgba(0, 86, 179, 0.97) 100%)',
@@ -203,7 +204,7 @@ const UserProfileCarousel = ({ show, onClose, userProfile }) => {
               }}>
                 💰 Price and Rating
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-around', gap: '20px' }}>
+              <div className="shopping-profile-stats" style={{ display: 'flex', justifyContent: 'space-around', gap: '20px' }}>
                 {userProfile.avgPrice != null && (
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '11px', opacity: 0.9, marginBottom: '4px' }}>
@@ -561,7 +562,7 @@ const HomeScreen = () => {
           <Meta />
           
           {/* Header with Profile Button */}
-          <div className="d-flex align-items-center justify-content-between mb-3">
+          <div className="home-products-heading d-flex align-items-center justify-content-between mb-3">
             <div className="d-flex align-items-center gap-2">
               <h1 className="mb-0">
                 {isSearch ? 'Search Results' : 'Recommended Products'}

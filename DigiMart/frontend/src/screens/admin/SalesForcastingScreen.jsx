@@ -18,6 +18,22 @@ const formatCurrency = (amount) =>
 
 const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
 
+const useMediaQuery = (query) => {
+  const getMatches = () => typeof window !== 'undefined' && window.matchMedia(query).matches;
+  const [matches, setMatches] = useState(getMatches);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(query);
+    const handleChange = (event) => setMatches(event.matches);
+
+    setMatches(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [query]);
+
+  return matches;
+};
+
 
 // Components
 const Loader = () => {
@@ -41,7 +57,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   
   return (
-    <div className="bg-white p-3 rounded shadow border">
+    <div className="forecast-tooltip bg-white p-3 rounded shadow border">
       <p className="fw-bold mb-2 text-dark">Date: {new Date(label).toLocaleDateString('en-IN')}</p>
       {payload.map((entry, index) => (
         <p key={index} className="mb-1" style={{ color: entry.color }}>
@@ -157,6 +173,14 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
   };
 
   const current = metricOptions[selectedMetric];
+  const normalizedError = current.showNormalized
+    ? (current.normalizedValue || 0)
+    : (current.value || 0) / 100;
+  const metricPerformance = normalizedError <= 0.1
+    ? { variant: 'success', text: 'Excellent' }
+    : normalizedError <= 0.2
+      ? { variant: 'warning', text: 'Good' }
+      : { variant: 'danger', text: 'Needs Improvement' };
 
   return (
     <Card className="border-0 shadow-sm h-100">
@@ -193,7 +217,7 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
                 Normalized: {current.formatNormalized(current.normalizedValue)}
               </p>
             )}
-            <Badge bg={performance.variant} className="mt-1">{performance.text}</Badge>
+            <Badge bg={metricPerformance.variant} className="mt-1">{metricPerformance.text}</Badge>
           </div>
           <div className="text-center">
             <div className="text-info mb-1" style={{ fontSize: '14px', fontWeight: 'bold' }}>
@@ -209,7 +233,7 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
   );
 };
 
-const CategoryChart = ({ categories, hasData }) => {
+const CategoryChart = ({ categories, hasData, isMobile }) => {
   if (!hasData || !categories?.length) {
     return (
       <div className="d-flex flex-column align-items-center justify-content-center bg-light rounded" style={{ height: '300px' }}>
@@ -226,12 +250,47 @@ const CategoryChart = ({ categories, hasData }) => {
     fill: CHART_COLORS[index % CHART_COLORS.length]
   }));
 
+  if (isMobile) {
+    return (
+      <ResponsiveContainer width="100%" height={360}>
+        <BarChart
+          data={chartData}
+          layout="vertical"
+          margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+          <XAxis type="number" stroke="#64748b" fontSize={9} allowDecimals={false} />
+          <YAxis
+            type="category"
+            dataKey="name"
+            stroke="#64748b"
+            fontSize={9}
+            width={82}
+            tickLine={false}
+          />
+          <Tooltip formatter={(value, name, props) => [`${value} units`, props.payload.fullName]} />
+          <Bar dataKey="quantity" radius={[0, 4, 4, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+      <BarChart
+        data={chartData}
+        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
-        <YAxis stroke="#64748b" fontSize={12} />
+        <XAxis
+          dataKey="name"
+          stroke="#64748b"
+          fontSize={12}
+          textAnchor="middle"
+          height={30}
+          interval={0}
+        />
+        <YAxis stroke="#64748b" fontSize={12} allowDecimals={false} />
         <Tooltip formatter={(value, name, props) => [`${value} units`, props.payload.fullName]} />
         <Bar dataKey="quantity" radius={[4, 4, 0, 0]} />
       </BarChart>
@@ -247,6 +306,7 @@ const SalesForcastingScreen = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedDate, setSelectedDate] = useState(null);
   const [tableAnimate, setTableAnimate] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 575.98px)');
 
   // Fetch data
   useEffect(() => {
@@ -332,8 +392,9 @@ const SalesForcastingScreen = () => {
   
   const chartInterval = useMemo(() => {
     if (!displayData.lineGraphData?.length) return 0;
-    return Math.max(1, Math.floor(displayData.lineGraphData.length / 20));
-  }, [displayData.lineGraphData]);
+    const targetTicks = isMobile ? 5 : 20;
+    return Math.max(1, Math.floor(displayData.lineGraphData.length / targetTicks));
+  }, [displayData.lineGraphData, isMobile]);
 
   const growthMetrics = useMemo(() => {
     if (!hasData) return { icon: FaChartLine, color: '#6c757d' };
@@ -351,7 +412,7 @@ const SalesForcastingScreen = () => {
   if (isLoading) return <Loader />;
 
   return (
-    <div className="container-fluid" style={{ maxWidth: '1400px', padding: '20px' }}>
+    <div className="forecast-dashboard container-fluid">
       <style>{`
         .cursor-pointer { cursor: pointer; }
         .dropdown-toggle::after { display: none !important; }
@@ -360,14 +421,43 @@ const SalesForcastingScreen = () => {
         .nav-tabs .nav-link.active { border: none; color: #667eea; background: transparent; border-bottom: 3px solid #667eea; }
         .fade-in { animation: fadeIn 0.6s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .forecast-dashboard { max-width: 1400px; padding: 20px; }
+        .forecast-chart { width: 100%; height: 400px; min-width: 0; }
+        .forecast-legend { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .forecast-summary-item { min-width: 0; }
+        .forecast-summary-item .fw-bold { overflow-wrap: anywhere; }
+        @media (max-width: 575.98px) {
+          .forecast-dashboard { padding: 0; }
+          .forecast-dashboard .card-body { padding: 0.9rem; }
+          .forecast-dashboard-header { align-items: flex-start !important; gap: 1rem; }
+          .forecast-dashboard-header h1 { font-size: 1.5rem; line-height: 1.2; }
+          .forecast-dashboard-header p { font-size: 0.85rem; }
+          .forecast-header-icon { font-size: 2rem; flex: 0 0 auto; margin-right: 0.65rem !important; }
+          .forecast-period-dropdown, .forecast-period-dropdown .dropdown-toggle { width: 100%; }
+          .forecast-dashboard .nav-tabs .nav-link { padding: 0.75rem 0.35rem; font-size: 0.78rem; }
+          .forecast-dashboard .nav-tabs svg { margin-right: 0.25rem !important; }
+          .forecast-panel { padding: 0.75rem !important; }
+          .forecast-panel-heading { align-items: flex-start !important; gap: 0.65rem; }
+          .forecast-panel-heading h4 { font-size: 1rem; }
+          .forecast-legend { gap: 0.75rem; }
+          .forecast-chart { height: 300px; }
+          .forecast-tooltip { max-width: 205px; padding: 0.55rem !important; font-size: 0.72rem; }
+          .forecast-tooltip p { white-space: normal; }
+          .forecast-summary-card .card-body { padding: 0.85rem; }
+          .forecast-summary-card h5 { font-size: 1rem; margin-bottom: 1rem !important; }
+          .forecast-summary-item { padding: 0.55rem; border-radius: 0.5rem; background: #f8f9fa; height: 100%; }
+          .forecast-category-table { font-size: 0.78rem; }
+          .forecast-category-table th, .forecast-category-table td { padding: 0.65rem !important; white-space: nowrap; }
+          .forecast-rankings-panel { padding: 0.75rem !important; }
+        }
       `}</style>
 
       {/* Header */}
       <Card className="border-0 mb-4 text-white" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '15px' }}>
         <Card.Body>
-          <div className="d-flex align-items-center justify-content-between">
+          <div className="forecast-dashboard-header d-flex flex-column flex-md-row align-items-md-center justify-content-between">
             <div className="d-flex align-items-center">
-              <FaChartLine size={48} className="me-3" />
+              <FaChartLine size={48} className="forecast-header-icon me-3" />
               <div>
                 <h1 className="mb-2 fw-bold">Sales Forecasting Dashboard</h1>
                 <p className="mb-0 opacity-75">AI-powered revenue predictions with model performance metrics</p>
@@ -378,7 +468,7 @@ const SalesForcastingScreen = () => {
                 )}
               </div>
             </div>
-            <Dropdown>
+            <Dropdown className="forecast-period-dropdown">
               <Dropdown.Toggle variant="outline-light">
                 <FaCalendarAlt className="me-2" />
                 {PERIOD_OPTIONS[selectedPeriod]}
@@ -434,10 +524,10 @@ const SalesForcastingScreen = () => {
           <Tabs activeKey={activeTab} onSelect={setActiveTab} className="nav-fill">
             
             <Tab eventKey="overview" title={<><FaChartLine className="me-2" />Revenue Forecast</>}>
-              <div className="p-4">
-                <div className="d-flex justify-content-between align-items-center mb-4">
+              <div className="forecast-panel p-4">
+                <div className="forecast-panel-heading d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4">
                   <h4 className="mb-0 fw-semibold">Sales Forecast Timeline</h4>
-                  <div className="d-flex gap-4">
+                  <div className="forecast-legend">
                     <div className="d-flex align-items-center gap-2">
                       <div style={{ width: '12px', height: '12px', backgroundColor: '#2563eb', borderRadius: '2px' }}></div>
                       <span className="small text-muted">Historical</span>
@@ -449,12 +539,14 @@ const SalesForcastingScreen = () => {
                   </div>
                 </div>
                 
-                <div style={{ minHeight: '400px' }}>
+                <div className="forecast-chart">
                   {hasData && displayData.lineGraphData?.length ? (
-                    <ResponsiveContainer width="100%" height={400}>
+                    <ResponsiveContainer width="100%" height="100%">
                       <LineChart
                         data={displayData.lineGraphData}
-                        margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
+                        margin={isMobile
+                          ? { top: 10, right: 4, left: -18, bottom: 42 }
+                          : { top: 20, right: 30, left: 30, bottom: 60 }}
                         onClick={(e) => {
                           try {
                             const date = e?.activeLabel || e?.payload?.date || null;
@@ -466,14 +558,19 @@ const SalesForcastingScreen = () => {
                         <XAxis 
                           dataKey="date" 
                           stroke="#64748b"
-                          fontSize={10}
-                          angle={-45}
+                          fontSize={isMobile ? 9 : 10}
+                          angle={isMobile ? -35 : -45}
                           textAnchor="end"
-                          height={60}
+                          height={isMobile ? 50 : 60}
                           tickFormatter={formatDate}
                           interval={chartInterval}
                         />
-                        <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                        <YAxis
+                          stroke="#64748b"
+                          fontSize={isMobile ? 9 : 12}
+                          width={isMobile ? 48 : 60}
+                          tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                        />
 
                         <Tooltip content={<CustomTooltip />} />
                         {/* Blue line - Historical/Actual data from dataset */}
@@ -503,14 +600,14 @@ const SalesForcastingScreen = () => {
                           stroke="#16a34a"
                           strokeWidth={2.5}
                           strokeDasharray="5 5"
-                          dot={{ r: 4, fill: '#16a34a' }}
+                          dot={false}
                           name="Future Forecast"
                           connectNulls={true}
                         />
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="d-flex flex-column align-items-center justify-content-center bg-light rounded" style={{ height: '400px' }}>
+                    <div className="d-flex flex-column align-items-center justify-content-center bg-light rounded h-100">
                       <FaChartLine size={64} color="#6c757d" className="mb-3" />
                       <h5 className="text-muted">No forecast data available</h5>
                     </div>
@@ -519,12 +616,13 @@ const SalesForcastingScreen = () => {
 
                 {/* Summary + Per-category table (updates when clicking a date on the chart) */}
                 {hasData && displayData.dailyForecast?.length > 0 && (
-                  <Card className="border-0 shadow-sm mt-4">
+                  <Card className="forecast-summary-card border-0 shadow-sm mt-4">
                     <Card.Body>
                       <h5 className="mb-4 fw-semibold">Forecast Summary for Selected Date</h5>
                       {/* Totals */}
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <div>
+                      <Row className="g-2 mb-3">
+                        <Col xs={12} sm={4}>
+                          <div className="forecast-summary-item">
                           <div className="small text-muted">Selected Date</div>
                           <div className="fw-bold">{(() => {
                             // Get the effective date (default to first forecast date if selected is before forecast range)
@@ -536,8 +634,10 @@ const SalesForcastingScreen = () => {
                             
                             return formatDate(isForecastDate ? effectiveDate : firstForecastDate);
                           })()}</div>
-                        </div>
-                        <div>
+                          </div>
+                        </Col>
+                        <Col xs={12} sm={4}>
+                          <div className="forecast-summary-item">
                             <div className="small text-muted">Predicted Revenue</div>
                             <div className="fw-bold text-success">{(() => {
                               const firstForecastDate = displayData.dailyForecast[0].date;
@@ -548,7 +648,9 @@ const SalesForcastingScreen = () => {
                               return formatCurrency((displayData.dailyForecast.find(d => d.date === dateToUse) || {}).predicted || 0);
                             })()}</div>
                           </div>
-                        <div>
+                        </Col>
+                        <Col xs={12} sm={4}>
+                          <div className="forecast-summary-item">
                           <div className="small text-muted">Total Items (predicted)</div>
                           <div className="fw-bold">{(() => {
                             const firstForecastDate = displayData.dailyForecast[0].date;
@@ -561,11 +663,12 @@ const SalesForcastingScreen = () => {
                               return sum + (row?.predicted_quantity || 0);
                             }, 0);
                           })()}</div>
-                        </div>
-                      </div>
+                          </div>
+                        </Col>
+                      </Row>
 
                       {/* Per-category breakdown */}
-                      <Table hover responsive className={tableAnimate ? 'fade-in' : ''}>
+                      <Table hover responsive className={`forecast-category-table ${tableAnimate ? 'fade-in' : ''}`}>
                         <thead className="bg-light">
                           <tr>
                             <th className="p-3">Category</th>
@@ -600,13 +703,13 @@ const SalesForcastingScreen = () => {
             </Tab>
 
             <Tab eventKey="categories" title={<><FaBoxes className="me-2" />Rankings {hasData && displayData.categoryForecast?.length > 0 && <Badge bg="primary" className="ms-2">{displayData.categoryForecast.length}</Badge>}</>}>
-              <div className="p-4">
+              <div className="forecast-rankings-panel p-4">
                 <Row className="g-4">
                   <Col lg={8}>
                     <Card className="border-0 shadow-sm h-100">
                       <Card.Body>
                         <h5 className="mb-4 fw-semibold">Category Forecast</h5>
-                        <CategoryChart categories={displayData.categoryForecast} hasData={hasData} />
+                        <CategoryChart categories={displayData.categoryForecast} hasData={hasData} isMobile={isMobile} />
                       </Card.Body>
                     </Card>
                   </Col>

@@ -35,7 +35,7 @@ const CartScreen = () => {
   };
 
   return (
-    <Row>
+    <Row className="cart-screen g-3">
       <Col md={8}>
         <h1 style={{ marginBottom: '20px' }}>Shopping Cart</h1>
         {cartItems.length === 0 ? (
@@ -45,16 +45,16 @@ const CartScreen = () => {
         ) : (
           <ListGroup variant='flush'>
             {cartItems.map((item) => (
-              <ListGroup.Item key={item._id}>
-                <Row>
+              <ListGroup.Item key={item._id} className="cart-item">
+                <Row className="align-items-center g-3">
                   <Col md={2}>
                     <Image src={item.image} alt={item.name} fluid rounded />
                   </Col>
-                  <Col md={3}>
+                  <Col xs={8} md={3}>
                     <Link to={`/product/${item._id}`}>{item.name}</Link>
                   </Col>
-                  <Col md={2}>${item.price}</Col>
-                  <Col md={2}>
+                  <Col xs={4} md={2}>${item.price}</Col>
+                  <Col xs={7} md={2}>
                     <Form.Control
                       as='select'
                       value={item.qty}
@@ -69,7 +69,7 @@ const CartScreen = () => {
                       ))}
                     </Form.Control>
                   </Col>
-                  <Col md={2}>
+                  <Col xs={5} md={2} className="text-end text-md-start">
                     <Button
                       type='button'
                       variant='light'

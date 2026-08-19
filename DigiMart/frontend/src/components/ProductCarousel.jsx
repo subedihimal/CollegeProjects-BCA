@@ -76,13 +76,13 @@ const ProductCarousel = () => {
   };
 
   return (
-    <Carousel pause='hover' className='mb-4'>
+    <Carousel pause='hover' className='product-carousel mb-4'>
       {products.map((product) => (
         <Carousel.Item key={product._id}>
           <Link to={`/product/${product._id}`} style={{ textDecoration: 'none' }}>
-            <div style={containerStyle}>
+            <div className="product-carousel-content" style={containerStyle}>
               {/* Image Section */}
-              <div style={imageContainerStyle}>
+              <div className="product-carousel-image" style={imageContainerStyle}>
                 <Image 
                   src={product.image} 
                   alt={product.name} 
@@ -93,11 +93,11 @@ const ProductCarousel = () => {
               </div>
 
               {/* Text Section */}
-              <div style={textContainerStyle}>
-                <h2 style={titleStyle}>
+              <div className="product-carousel-copy" style={textContainerStyle}>
+                <h2 className="product-carousel-title" style={titleStyle}>
                   {product.name}
                 </h2>
-                <div style={priceStyle}>
+                <div className="product-carousel-price" style={priceStyle}>
                    $ {product.price}
                 </div>
               </div>

@@ -2,6 +2,18 @@ main {
   min-height: 80vh;
 }
 
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
 .rating span {
   margin: 0.1rem;
 }
@@ -50,4 +62,309 @@ table th {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+}
+
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+}
+
+.pagination {
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+@media (max-width: 991.98px) {
+  .digimart-navbar .navbar-collapse {
+    padding: 0.9rem 0 0.35rem;
+  }
+
+  .digimart-nav {
+    width: 100%;
+    align-items: stretch !important;
+    gap: 0.55rem;
+  }
+
+  .digimart-search,
+  .digimart-cart-link,
+  .digimart-nav > .nav-link,
+  .digimart-nav > .nav-item {
+    width: 100%;
+    margin-right: 0 !important;
+  }
+
+  .digimart-nav .dropdown-toggle,
+  .digimart-nav .nav-link {
+    text-align: left;
+  }
+
+  .digimart-nav .dropdown-menu {
+    width: 100%;
+  }
+
+  .digimart-search-form,
+  .digimart-search-form .form-control {
+    width: 100%;
+  }
+}
+
+@media (max-width: 767.98px) {
+  main.py-3 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 1.25rem !important;
+  }
+
+  main > .container,
+  .digimart-navbar-container {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  h1 {
+    font-size: clamp(1.55rem, 7vw, 2rem);
+  }
+
+  h2 {
+    font-size: clamp(1.3rem, 6vw, 1.7rem);
+  }
+
+  .form-control,
+  .form-select,
+  select.form-control {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .btn-block {
+    width: 100%;
+  }
+
+  .table-responsive > .table {
+    min-width: 650px;
+    margin-bottom: 0;
+  }
+
+  .table-responsive th,
+  .table-responsive td {
+    white-space: nowrap;
+  }
+
+  .product-carousel-content {
+    height: 350px !important;
+    padding: 1.25rem 2.4rem !important;
+    gap: 0.8rem !important;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .product-carousel-image {
+    width: min(220px, 78vw) !important;
+    height: 190px !important;
+    flex: 0 0 190px;
+  }
+
+  .product-carousel-copy {
+    flex: 0 1 auto !important;
+    align-items: center;
+    gap: 0.65rem !important;
+    text-align: center;
+  }
+
+  .product-carousel-title {
+    max-width: 100%;
+    font-size: 1.25rem !important;
+    line-height: 1.2 !important;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .product-carousel-price {
+    padding: 0.45rem 1rem !important;
+    font-size: 1.15rem !important;
+    align-self: center !important;
+  }
+
+  .product-card-image {
+    height: 220px !important;
+  }
+
+  .home-products-heading {
+    align-items: flex-start !important;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+
+  .home-products-heading .badge {
+    white-space: normal;
+    text-align: left;
+    font-size: 0.78rem !important;
+  }
+
+  .shopping-profile-card {
+    padding: 1.25rem !important;
+    max-height: 88vh !important;
+  }
+
+  .shopping-profile-stats {
+    flex-direction: column;
+    gap: 1rem !important;
+  }
+
+  .product-detail-image {
+    height: min(380px, 82vw) !important;
+  }
+
+  .product-detail-title {
+    font-size: 1.65rem !important;
+  }
+
+  .product-detail-meta {
+    flex-direction: column;
+    gap: 0.45rem !important;
+  }
+
+  .product-purchase-section {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 0.85rem !important;
+  }
+
+  .product-purchase-section > div {
+    width: 100%;
+  }
+
+  .product-purchase-section .form-control {
+    flex: 1;
+  }
+
+  .product-review-header {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .cart-screen .card {
+    margin-top: 0.5rem;
+  }
+
+  .cart-item img {
+    max-height: 120px;
+    object-fit: contain;
+  }
+
+  .checkout-steps {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start !important;
+    padding-bottom: 0.35rem;
+  }
+
+  .checkout-steps .nav-link {
+    white-space: nowrap;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.85rem;
+  }
+
+  .admin-list-screen {
+    padding: 0 !important;
+  }
+
+  .responsive-screen-container {
+    padding: 0 !important;
+  }
+
+  .responsive-screen-header {
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  .responsive-screen-header h1 {
+    font-size: 1.55rem !important;
+  }
+
+  .responsive-screen-header svg {
+    font-size: 1.75rem !important;
+    flex: 0 0 auto;
+  }
+
+  .order-detail-item {
+    align-items: flex-start !important;
+    flex-wrap: wrap;
+    gap: 0.75rem !important;
+  }
+
+  .order-detail-item > div:nth-child(2) {
+    min-width: calc(100% - 76px);
+  }
+
+  .order-detail-item > div:last-child {
+    width: 100%;
+    text-align: left !important;
+    padding-left: 76px;
+  }
+
+  .admin-list-header {
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  .admin-list-header h1,
+  .admin-products-header h1 {
+    font-size: 1.55rem !important;
+  }
+
+  .admin-list-header svg {
+    font-size: 1.75rem !important;
+    flex: 0 0 auto;
+  }
+
+  .admin-products-header-row > .col {
+    flex: 0 0 100%;
+    width: 100%;
+    text-align: left !important;
+  }
+
+  .admin-products-header-row .btn {
+    width: 100%;
+  }
+
+  .Toastify__toast-container {
+    width: calc(100vw - 1rem);
+    left: 0.5rem;
+    right: 0.5rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .digimart-brand {
+    font-size: 1.25rem !important;
+  }
+
+  .digimart-brand > div {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .digimart-search-form {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .digimart-search-button {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
+  .product-carousel-content {
+    height: 330px !important;
+    padding-left: 2.1rem !important;
+    padding-right: 2.1rem !important;
+  }
+
+  .product-carousel-image {
+    height: 170px !important;
+    flex-basis: 170px;
+  }
 }
