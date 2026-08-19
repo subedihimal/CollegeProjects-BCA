@@ -8281,3 +8281,17 @@ textarea.form-control {
   height: 60px; }
   .submit:hover {
     background: #ba1839 !important; }
+
+@media (max-width: 575.98px) {
+  .ftco-section {
+    padding: 2rem 0; }
+
+  .heading-section {
+    font-size: 23px; }
+
+  .login-wrap {
+    padding: 1.5rem !important; }
+
+  .form-group label {
+    margin-left: 18px; }
+}

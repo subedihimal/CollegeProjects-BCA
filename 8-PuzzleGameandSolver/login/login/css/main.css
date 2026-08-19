@@ -186,7 +186,7 @@ iframe {
 }
 
 .wrap-login100 {
-  width: 390px;
+  width: min(390px, 100%);
   background: #fff;
   border-radius: 10px;
   overflow: hidden;
@@ -436,8 +436,20 @@ iframe {
 [ Responsive ]*/
 
 @media (max-width: 576px) {
+  .container-login100 {
+    padding: 12px;
+  }
+
   .wrap-login100 {
-    padding: 77px 15px 33px 15px;
+    padding: 42px 20px 28px;
+  }
+
+  .login100-form-title {
+    font-size: 25px;
+  }
+
+  .login100-form .p-t-115 {
+    padding-top: 55px;
   }
 }
 

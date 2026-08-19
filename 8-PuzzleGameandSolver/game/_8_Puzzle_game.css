@@ -1,279 +1,250 @@
-*{
-    margin: 0px;
-    padding: 0px;
-}
-/* Container for How to Play */
-#how_to_play_container {
-    position: absolute; /* Use absolute positioning */
-    right: 80px; /* Adjust the distance from the right */
-    top: 100px; /* Adjust as needed for alignment with other elements */
-    background-color: #f3f3df; /* Same background as Top Scores */
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 400px; /* Same width for consistency */
-}
-
-#how_to_play_container h2 {
-    font-size: 24px; /* Title size */
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-#how_to_play_container ol {
-    padding-left: 20px; /* Indentation for the ordered list */
-}
-
-#how_to_play_container ul {
-    padding-left: 20px; /* Indentation for the unordered list */
-}
-
-/* Optional: Style the list items for better readability */
-#how_to_play_container li {
-    margin-bottom: 10px; /* Space between list items */
-    font-size: 18px; /* Text size */
-}
-
-#timer {
-    font-size: 80px; /* Large size for the timer */
-    font-weight: bold;
-    text-align: center;
-    color: black; /* Black color for the numbers */
-    margin: 50px auto; /* Increase margin for more space above and below */
-    font-family: 'Orbitron', sans-serif; /* Digital clock style font */
-    display: inline-block;
-    letter-spacing: 5px; /* Adds spacing between digits for a boxy look */
-    width: 100%; /* Make sure the container spans the full width */
-    display: flex;
-    justify-content: center; 
-}
-
-
-
-
-.game_title {
-    text-align: center;
-    margin-bottom: 10px;
-}
-
-/* Top Scores Section */
-#top_scores {
-    position: absolute;
-    left: 100px; /* Aligned to the left */
-    top: 100px;
-    background-color: #f3f3df !important;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 350px; /* Adjusted width */
-}
-
-#top_scores h2 {
-    font-size: 24px; /* Larger title */
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-#top_scores ul {
-    list-style-type: none;
+* {
+    box-sizing: border-box;
+    margin: 0;
     padding: 0;
 }
 
-#top_scores li {
-    margin: 10px 0;
-    font-size: 20px;
-    display: flex; /* Use flexbox for name and score alignment */
-    justify-content: space-between;
-    align-items: center;
-    background-color: white; /* Background for each score */
-    padding: 10px; /* Padding inside the box */
-    border-radius: 5px; /* Rounded corners */
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
+html {
+    overflow-x: hidden;
+    scroll-behavior: smooth;
 }
-
-#top_scores li .rank {
-    font-weight: bold; /* Make rank bold */
-    color: #000; /* Color for rank */
-    font-size: 20px; /* Smaller font size for rank */
-    margin-right: 10px; /* Gap between rank and player name */
-    width: 40px;
-}
-
-#top_scores li .player_name {
-    font-weight: bold;
-    color: #000;
-    text-align: left;
-    flex: 1; /* Allow player name to take available space */
-    padding-right: 20px; /* Adjust padding for gap */
-}
-
-#top_scores li .score_time {
-    color: #333;
-    text-align: right;
-    min-width: 100px; /* Ensure the score column has a fixed width */
-    font-family: 'Courier New', Courier, monospace; /* Digital clock-style font for score */
-    margin-left: 10px; /* Add margin for space between name and score */
-}
-.medal {
-    width: 40px; /* Adjust the size of the medal icons */
-    height: auto; /* Maintain aspect ratio */
-    margin-right: 5px; /* Space between medal and rank */
-    vertical-align: middle; /* Align with text */
-}
-
-
-
-
-
-
 
 body {
-    font-family: 'Helvetica';
-    width: 100%;
-    height: 100%;
+    min-width: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-family: Helvetica, Arial, sans-serif;
+    background: #808080;
+    color: #111;
 }
 
-.game_title {
+.game-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 350px) minmax(320px, 1fr) minmax(300px, 400px);
+    grid-template-areas: "scores game instructions";
+    gap: clamp(16px, 2vw, 32px);
+    align-items: start;
+    width: min(100%, 1500px);
+    margin: 0 auto;
+    padding: clamp(18px, 3vw, 40px);
+}
+
+.game-main,
+#top_scores,
+#how_to_play_container {
+    min-width: 0;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.game-main {
+    grid-area: game;
+    padding: clamp(14px, 2vw, 24px);
+    background: rgba(243, 243, 223, 0.94);
     text-align: center;
+}
+
+#timer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 0 0 clamp(16px, 3vw, 28px);
+    color: #111;
+    font-family: "Courier New", monospace;
+    font-size: clamp(2.6rem, 7vw, 5rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: clamp(2px, 0.7vw, 5px);
 }
 
 #game_area {
-    height: 306px;
-    width: 306px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: min(306px, 100%);
+    aspect-ratio: 1;
     margin: 0 auto;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    border: 2px solid black;
+    overflow: hidden;
+    border: 2px solid #000;
+    background: #000;
 }
 
 .number-block {
-    height: 100px;
-    width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    aspect-ratio: 1;
     border: 1px solid rgb(0, 8, 56);
-    text-align: center;
-    font-size: 78px;
-    cursor: pointer;
     background-color: #da916a;
+    font-size: clamp(2.2rem, 12vw, 4.8rem);
+    line-height: 1;
+    text-align: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
 }
 
 .void_class {
-    /* background: black;
-    color: grey; */
     cursor: not-allowed;
 }
 
 #game_controls {
-    height: auto;
-    width: 300px;
-    margin: 20px auto 0 auto;
+    width: 100%;
+    margin: 20px auto 0;
     text-align: center;
 }
 
-.reset_btn {
-    padding: 12px;
-    background-color: #1665cc;
-    border: none;
+.reset_btn,
+.backHome,
+.backHome a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 18px;
+    border: 0;
     border-radius: 10px;
-    color: white;
+    background-color: #1665cc;
+    color: #fff;
     font-size: 14px;
     font-weight: 600;
-    letter-spacing: 0.1rem;
-    cursor: pointer;
-}
-
-.reset_btn.focus,
-.reset_btn:focus {
-    outline: 0;
-    box-shadow: none !important;
-}
-
-.backHome a:hover,
-.backHome:hover {
+    letter-spacing: 0.08rem;
     text-decoration: none;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.reset_btn:focus,
+.backHome:focus {
+    outline: 3px solid rgba(22, 101, 204, 0.35);
+    outline-offset: 2px;
+}
+
+.backHome:hover,
+.backHome a:hover {
     background-color: #92d3ff;
     color: rgb(35, 107, 159);
 }
 
-.backHome,
-.backHome a {
-    text-decoration: none;
-    padding: 12px;
-    background-color: #1665cc;
-    border: none;
-    border-radius: 10px;
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.1rem;
-    cursor: pointer;
-}
-
-
-.footer-container{
-    border-top: 1px solid #ffb780;
+#top_scores,
+#how_to_play_container {
     width: 100%;
-    background:linear-gradient(#1e2b59 , #0f1d34 );
-    padding: 20px;
-    /* background: url(Image.png); */
-     background-position: center;
-     line-height: 2.5rem;
+    padding: clamp(16px, 2vw, 22px);
+    background: #f3f3df;
 }
-.foot-head h2{
+
+#top_scores {
+    grid-area: scores;
+}
+
+#how_to_play_container {
+    grid-area: instructions;
+}
+
+#top_scores h2,
+#how_to_play_container h2 {
+    margin-bottom: 15px;
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    line-height: 1.25;
     text-align: center;
-    color: aqua;
-    font-weight: 600;
 }
-.foot-head p{
-    color: #ffb780;
+
+#top_scores ul {
+    list-style: none;
+}
+
+#top_scores li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin: 9px 0;
+    padding: 10px;
+    border-radius: 7px;
+    background: #fff;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.1);
+    font-size: clamp(0.9rem, 1.7vw, 1.1rem);
+}
+
+#top_scores .rank {
+    flex: 0 0 40px;
+    font-weight: 700;
     text-align: center;
-    font-size: 1.20rem;
 }
 
-html{
-    overflow-x: hidden;
-}
-#head{
-    margin-top: 30px;
-    margin-bottom: 20px;
+#top_scores .player_name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-weight: 700;
+    text-align: left;
 }
 
-@media screen and (max-width:525px) {
-    body{
-        width: 100%;
+#top_scores .score_time {
+    flex: 0 0 auto;
+    min-width: 55px;
+    color: #333;
+    font-family: "Courier New", monospace;
+    text-align: right;
+}
+
+.medal {
+    display: block;
+    width: 34px;
+    height: auto;
+    margin: auto;
+}
+
+#how_to_play_container ol,
+#how_to_play_container ul {
+    padding-left: 22px;
+}
+
+#how_to_play_container li {
+    margin-bottom: 9px;
+    font-size: clamp(0.95rem, 1.7vw, 1.05rem);
+    line-height: 1.45;
+    text-align: left;
+}
+
+@media (max-width: 1099px) {
+    .game-layout {
+        grid-template-columns: minmax(0, 680px);
+        grid-template-areas:
+            "game"
+            "scores"
+            "instructions";
+        justify-content: center;
     }
-    html{
-        overflow-x: hidden;
+}
+
+@media (max-width: 480px) {
+    .game-layout {
+        gap: 14px;
+        padding: 12px;
     }
 
-    
-    
-}
-@media screen and (max-width:380px) {
-    body{
-        width: 100%;
-    }
-    html{
-        overflow-x: hidden;
+    .game-main,
+    #top_scores,
+    #how_to_play_container {
+        border-radius: 9px;
     }
 
-    
-    
+    #top_scores li {
+        padding: 9px 8px;
+    }
+
+    #top_scores .rank {
+        flex-basis: 34px;
+    }
+
+    .medal {
+        width: 30px;
+    }
 }
-html {
-    scroll-behavior: smooth;
-  }
-  
-  ::-webkit-scrollbar {
-    width: 15px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    border-radius: 5px;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.25);
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    border-radius: 5px;
-    background: linear-gradient(to top, rgba(0, 212, 255, 1), rgba(9, 9, 121, 1));
-  }
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
