@@ -192,44 +192,52 @@ function existSolution(arr) {
 
 // A* algorithm for solving the puzzle
 function aStarAlgorithm(initialState) {
-    const openSet = [initialState];
+    const initialKey = stateKey(initialState);
+    const goalKey = stateKey(goalState);
+    const openSet = new Map([[initialKey, [...initialState]]]);
     const closedSet = new Set();
     const gScore = new Map();
     const fScore = new Map();
     const cameFrom = new Map();
     let iterations = 0;
 
-    gScore.set(JSON.stringify(initialState), 0);
-    fScore.set(JSON.stringify(initialState), heuristic(initialState));
+    gScore.set(initialKey, 0);
+    fScore.set(initialKey, heuristic(initialState));
 
-    while (openSet.length > 0 && iterations < maxIterations) {
-        const current = findLowestFScore(openSet, fScore);
-        if (JSON.stringify(current) === JSON.stringify(goalState)) {
-            const solutionPath = reconstructPath(cameFrom, current);
+    while (openSet.size > 0 && iterations < maxIterations) {
+        const currentKey = findLowestFScore(openSet, fScore);
+        const current = openSet.get(currentKey);
+
+        if (currentKey === goalKey) {
+            const solutionPath = reconstructPath(cameFrom, currentKey);
             console.log('Solution Tree Structure:');
             displaySolutionTables(solutionPath);
             return solutionPath;
         }
 
-        openSet.splice(openSet.indexOf(current), 1);
-        closedSet.add(JSON.stringify(current));
+        openSet.delete(currentKey);
+        closedSet.add(currentKey);
 
         const neighbors = getNeighbors(current);
         neighbors.forEach((neighbor) => {
-            if (closedSet.has(JSON.stringify(neighbor))) {
+            const neighborKey = stateKey(neighbor);
+            const tentativeGScore = gScore.get(currentKey) + 1;
+            const knownGScore = gScore.get(neighborKey) ?? Infinity;
+            const wasClosed = closedSet.has(neighborKey);
+
+            if (tentativeGScore >= knownGScore) {
                 return;
             }
 
-            const tentativeGScore = gScore.get(JSON.stringify(current)) + 1;
-            if (!openSet.includes(neighbor) || tentativeGScore < gScore.get(JSON.stringify(neighbor))) {
-                cameFrom.set(JSON.stringify(neighbor), current);
-                gScore.set(JSON.stringify(neighbor), tentativeGScore);
-                fScore.set(JSON.stringify(neighbor), tentativeGScore + heuristic(neighbor));
+            cameFrom.set(neighborKey, currentKey);
+            gScore.set(neighborKey, tentativeGScore);
+            fScore.set(neighborKey, tentativeGScore + heuristic(neighbor));
 
-                if (!openSet.includes(neighbor)) {
-                    openSet.push(neighbor);
-                }
+            // Reopen the state if a shorter route to it is ever discovered.
+            if (wasClosed) {
+                closedSet.delete(neighborKey);
             }
+            openSet.set(neighborKey, neighbor);
         });
 
         iterations++;
@@ -240,6 +248,11 @@ function aStarAlgorithm(initialState) {
     }
 
     return null; // No solution found
+}
+
+// Use one canonical value-based identity for every puzzle state.
+function stateKey(state) {
+    return JSON.stringify(state);
 }
 
 function displaySolutionTables(solutionPath) {
@@ -295,17 +308,17 @@ function heuristic(state) {
 // Function to find the state with the lowest fScore in the open set
 function findLowestFScore(openSet, fScore) {
     let lowestScore = Infinity;
-    let lowestState = null;
+    let lowestKey = null;
 
-    openSet.forEach((state) => {
-        const score = fScore.get(JSON.stringify(state));
+    openSet.forEach((state, key) => {
+        const score = fScore.get(key) ?? Infinity;
         if (score < lowestScore) {
             lowestScore = score;
-            lowestState = state;
+            lowestKey = key;
         }
     });
 
-    return lowestState;
+    return lowestKey;
 }
 
 // Function to get neighboring states
@@ -336,11 +349,11 @@ function getNeighbors(state) {
 }
 
 // Function to reconstruct the path from the solution
-function reconstructPath(cameFrom, current) {
-    const path = [current];
-    while (cameFrom.has(JSON.stringify(current))) {
-        current = cameFrom.get(JSON.stringify(current));
-        path.unshift(current);
+function reconstructPath(cameFrom, currentKey) {
+    const path = [JSON.parse(currentKey)];
+    while (cameFrom.has(currentKey)) {
+        currentKey = cameFrom.get(currentKey);
+        path.unshift(JSON.parse(currentKey));
     }
     return path;
 }
