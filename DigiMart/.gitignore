@@ -27,5 +27,10 @@ frontend/build
 uploads/*png
 uploads/*jpg
 
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
 # API tests
 http
