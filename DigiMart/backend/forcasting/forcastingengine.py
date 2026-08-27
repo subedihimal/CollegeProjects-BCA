@@ -357,6 +357,7 @@ class SalesForecastingEngine:
                     "actual": round(float(value), 2),
                     "testPredicted": round(predicted, 2) if predicted is not None else None,
                     "futurePredicted": None,
+                    "isForecastBridge": False,
                     "type": "test" if is_test else "training",
                 }
             )
@@ -366,6 +367,7 @@ class SalesForecastingEngine:
             self.primary_train_size - 1
         ]["actual"]
         lines[-1]["futurePredicted"] = lines[-1]["actual"]
+        lines[-1]["isForecastBridge"] = True
         last_date = self.daily_sales["Date"].iloc[-1]
         for index, value in enumerate(future, start=1):
             lines.append(
@@ -374,6 +376,7 @@ class SalesForecastingEngine:
                     "actual": None,
                     "testPredicted": None,
                     "futurePredicted": round(float(value), 2),
+                    "isForecastBridge": False,
                     "type": "forecast",
                 }
             )

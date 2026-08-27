@@ -55,11 +55,16 @@ const Loader = () => {
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
+
+  const isForecastBridge = payload[0]?.payload?.isForecastBridge;
+  const visibleEntries = payload.filter(
+    entry => !(isForecastBridge && entry.dataKey === 'futurePredicted')
+  );
   
   return (
     <div className="forecast-tooltip bg-white p-3 rounded shadow border">
       <p className="fw-bold mb-2 text-dark">Date: {new Date(label).toLocaleDateString('en-IN')}</p>
-      {payload.map((entry, index) => (
+      {visibleEntries.map((entry, index) => (
         <p key={index} className="mb-1" style={{ color: entry.color }}>
           {entry.name}: {formatCurrency(entry.value)}
         </p>
@@ -599,8 +604,11 @@ const SalesForcastingScreen = () => {
                           dataKey="futurePredicted"
                           stroke="#16a34a"
                           strokeWidth={2.5}
-                          strokeDasharray="5 5"
+                          strokeDasharray="8 2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                           dot={false}
+                          activeDot={false}
                           name="Future Forecast"
                           connectNulls={true}
                         />
