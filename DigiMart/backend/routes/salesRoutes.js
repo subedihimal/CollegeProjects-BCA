@@ -1,5 +1,10 @@
 import express from 'express';
-import { getModelMetrics, getSalesForecast } from '../controllers/salesController.js';
+import {
+  getModelMetrics,
+  getSalesForecast,
+  recalculateForecast,
+} from '../controllers/salesController.js';
+import { admin, protect } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 // @desc    Get sales forecast data
@@ -7,5 +12,6 @@ const router = express.Router();
 // @access  Private/Admin
 router.get('/forecast', getSalesForecast);
 router.get('/metrics', getModelMetrics);
+router.post('/recalculate', protect, admin, recalculateForecast);
 
 export default router;

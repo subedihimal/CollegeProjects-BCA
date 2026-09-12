@@ -346,3 +346,10 @@ const getRecommendedProducts = async (requestData) => {
 };
 
 export default getRecommendedProducts;
+export {
+  extractFeatures,
+  aggregateFeatures,
+  calculateFeatureMatchScore,
+  calculateTraditionalSimilarity,
+  calculateDescriptionSimilarity,
+};

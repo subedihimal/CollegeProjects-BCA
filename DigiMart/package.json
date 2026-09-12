@@ -12,6 +12,7 @@
     "data:destroy": "node backend/seeder -d",
     "build": "npm install --prefix frontend && npm run build --prefix frontend",
     "vercel-build": "npm install --prefix frontend && npm run build --prefix frontend",
+    "test:recommendations": "node --test backend/utils/recommendHelper.test.js",
     "generate-toc": "markdown-toc -i readme.md"
   },
   "author": "Himal Subedi",

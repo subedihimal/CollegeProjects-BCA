@@ -29,8 +29,23 @@ uploads/*jpg
 
 # Python
 .venv/
+temp_env/
 __pycache__/
 *.py[cod]
 
 # API tests
 http
+
+# LaTeX build artifacts (keep Documentation/report/DigiMart.pdf)
+Documentation/report/*.aux
+Documentation/report/*.bbl
+Documentation/report/*.blg
+Documentation/report/*.fdb_latexmk
+Documentation/report/*.fls
+Documentation/report/*.lof
+Documentation/report/*.log
+Documentation/report/*.lot
+Documentation/report/*.out
+Documentation/report/*.synctex.gz
+Documentation/report/*.toc
+Documentation/report/main.pdf

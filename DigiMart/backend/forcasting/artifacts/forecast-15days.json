@@ -1,0 +1,4307 @@
+{
+  "summary": {
+    "predictedRevenue": 2103532.21,
+    "growthRate": -0.0,
+    "bestCase": 2316812.99,
+    "worstCase": 1984178.62,
+    "dailyAverage": 140235.48,
+    "historicalRevenue": 2104196.55,
+    "interval80": {
+      "level": 0.8,
+      "lowerTotal": 1984178.62,
+      "upperTotal": 2316812.99
+    },
+    "interval95": {
+      "level": 0.95,
+      "lowerTotal": 1904941.22,
+      "upperTotal": 2447674.82
+    }
+  },
+  "dailyForecast": [
+    {
+      "date": "2024-09-24",
+      "predicted": 130280.08,
+      "lower80": 101736.85,
+      "upper80": 173311.02,
+      "lower95": 82301.94,
+      "upper95": 211305.12,
+      "day_name": "Tuesday",
+      "is_weekend": false
+    },
+    {
+      "date": "2024-09-25",
+      "predicted": 144153.19,
+      "lower80": 109923.21,
+      "upper80": 192189.28,
+      "lower95": 90849.74,
+      "upper95": 228902.9,
+      "day_name": "Wednesday",
+      "is_weekend": false
+    },
+    {
+      "date": "2024-09-26",
+      "predicted": 149568.94,
+      "lower80": 116415.76,
+      "upper80": 200453.41,
+      "lower95": 95275.66,
+      "upper95": 240546.61,
+      "day_name": "Thursday",
+      "is_weekend": false
+    },
+    {
+      "date": "2024-09-27",
+      "predicted": 137024.27,
+      "lower80": 105832.39,
+      "upper80": 182699.62,
+      "lower95": 86162.41,
+      "upper95": 218212.37,
+      "day_name": "Friday",
+      "is_weekend": false
+    },
+    {
+      "date": "2024-09-28",
+      "predicted": 149341.28,
+      "lower80": 115286.27,
+      "upper80": 199303.71,
+      "lower95": 94499.6,
+      "upper95": 236569.07,
+      "day_name": "Saturday",
+      "is_weekend": true
+    },
+    {
+      "date": "2024-09-29",
+      "predicted": 128058.42,
+      "lower80": 98965.01,
+      "upper80": 171024.34,
+      "lower95": 81511.61,
+      "upper95": 206506.09,
+      "day_name": "Sunday",
+      "is_weekend": true
+    },
+    {
+      "date": "2024-09-30",
+      "predicted": 148355.0,
+      "lower80": 115307.3,
+      "upper80": 199965.02,
+      "lower95": 93808.03,
+      "upper95": 241523.78,
+      "day_name": "Monday",
+      "is_weekend": false
+    },
+    {
+      "date": "2024-10-01",
+      "predicted": 130116.71,
+      "lower80": 98819.07,
+      "upper80": 173110.18,
+      "lower95": 82315.27,
+      "upper95": 202034.07,
+      "day_name": "Tuesday",
+      "is_weekend": false
+    },
+    {
+      "date": "2024-10-02",
+      "predicted": 144169.55,
+      "lower80": 110371.48,
+      "upper80": 196348.88,
+      "lower95": 89913.77,
+      "upper95": 229042.74,
+      "day_name": "Wednesday",
+      "is_weekend": false
+    },
+    {
+      "date": "2024-10-03",
+      "predicted": 149569.2,
+      "lower80": 115181.8,
+      "upper80": 200649.59,
+      "lower95": 94619.77,
+      "upper95": 239051.22,
+      "day_name": "Thursday",
+      "is_weekend": false
+    },
+    {
+      "date": "2024-10-04",
+      "predicted": 137024.13,
+      "lower80": 104348.42,
+      "upper80": 181701.05,
+      "lower95": 86421.33,
+      "upper95": 217371.25,
+      "day_name": "Friday",
+      "is_weekend": false
+    },
+    {
+      "date": "2024-10-05",
+      "predicted": 149341.29,
+      "lower80": 114433.7,
+      "upper80": 202910.13,
+      "lower95": 95476.96,
+      "upper95": 238331.57,
+      "day_name": "Saturday",
+      "is_weekend": true
+    },
+    {
+      "date": "2024-10-06",
+      "predicted": 128058.43,
+      "lower80": 96564.22,
+      "upper80": 172340.05,
+      "lower95": 80520.18,
+      "upper95": 207889.55,
+      "day_name": "Sunday",
+      "is_weekend": true
+    },
+    {
+      "date": "2024-10-07",
+      "predicted": 148355.0,
+      "lower80": 112855.45,
+      "upper80": 201817.95,
+      "lower95": 91502.38,
+      "upper95": 238121.6,
+      "day_name": "Monday",
+      "is_weekend": false
+    },
+    {
+      "date": "2024-10-08",
+      "predicted": 130116.71,
+      "lower80": 97127.6,
+      "upper80": 175255.66,
+      "lower95": 81471.53,
+      "upper95": 204866.41,
+      "day_name": "Tuesday",
+      "is_weekend": false
+    }
+  ],
+  "categoryForecast": [
+    {
+      "category": "Smartphone",
+      "total_predicted_quantity": 1035,
+      "total_predicted_revenue": 753276.35,
+      "daily_average": 69.0,
+      "daily_forecasts": [
+        {
+          "date": "2024-09-24",
+          "predicted_quantity": 72.1,
+          "predicted_revenue": 52462.72,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-25",
+          "predicted_quantity": 69.13,
+          "predicted_revenue": 50296.57,
+          "day_name": "Wednesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-26",
+          "predicted_quantity": 68.81,
+          "predicted_revenue": 50065.57,
+          "day_name": "Thursday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-27",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50040.42,
+          "day_name": "Friday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-28",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50037.67,
+          "day_name": "Saturday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-09-29",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50037.37,
+          "day_name": "Sunday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-09-30",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50037.34,
+          "day_name": "Monday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-01",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50037.34,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-02",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50037.34,
+          "day_name": "Wednesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-03",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50037.34,
+          "day_name": "Thursday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-04",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50037.34,
+          "day_name": "Friday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-05",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50037.34,
+          "day_name": "Saturday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-10-06",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50037.34,
+          "day_name": "Sunday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-10-07",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50037.34,
+          "day_name": "Monday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-08",
+          "predicted_quantity": 68.77,
+          "predicted_revenue": 50037.34,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        }
+      ],
+      "validation_mape": 28.2,
+      "validation_mase": 0.685,
+      "final_test_mase": 0.698,
+      "model": "SARIMA(1,1,1)(0,0,0,7)",
+      "average_price": 727.6,
+      "growth": -7.4
+    },
+    {
+      "category": "Tablet",
+      "total_predicted_quantity": 749,
+      "total_predicted_revenue": 413764.46,
+      "daily_average": 50.0,
+      "daily_forecasts": [
+        {
+          "date": "2024-09-24",
+          "predicted_quantity": 49.41,
+          "predicted_revenue": 27278.55,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-25",
+          "predicted_quantity": 49.55,
+          "predicted_revenue": 27352.7,
+          "day_name": "Wednesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-26",
+          "predicted_quantity": 47.64,
+          "predicted_revenue": 26302.73,
+          "day_name": "Thursday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-27",
+          "predicted_quantity": 49.42,
+          "predicted_revenue": 27281.29,
+          "day_name": "Friday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-28",
+          "predicted_quantity": 48.6,
+          "predicted_revenue": 26828.97,
+          "day_name": "Saturday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-09-29",
+          "predicted_quantity": 49.86,
+          "predicted_revenue": 27526.27,
+          "day_name": "Sunday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-09-30",
+          "predicted_quantity": 52.01,
+          "predicted_revenue": 28713.06,
+          "day_name": "Monday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-01",
+          "predicted_quantity": 50.46,
+          "predicted_revenue": 27859.68,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-02",
+          "predicted_quantity": 50.36,
+          "predicted_revenue": 27803.03,
+          "day_name": "Wednesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-03",
+          "predicted_quantity": 50.36,
+          "predicted_revenue": 27803.03,
+          "day_name": "Thursday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-04",
+          "predicted_quantity": 50.36,
+          "predicted_revenue": 27803.03,
+          "day_name": "Friday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-05",
+          "predicted_quantity": 50.36,
+          "predicted_revenue": 27803.03,
+          "day_name": "Saturday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-10-06",
+          "predicted_quantity": 50.36,
+          "predicted_revenue": 27803.03,
+          "day_name": "Sunday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-10-07",
+          "predicted_quantity": 50.36,
+          "predicted_revenue": 27803.03,
+          "day_name": "Monday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-08",
+          "predicted_quantity": 50.36,
+          "predicted_revenue": 27803.03,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        }
+      ],
+      "validation_mape": 48.7,
+      "validation_mase": 0.87,
+      "final_test_mase": 0.798,
+      "model": "SARIMA(0,1,2)(0,0,1,7)",
+      "average_price": 552.08,
+      "growth": -6.1
+    },
+    {
+      "category": "Laptop",
+      "total_predicted_quantity": 608,
+      "total_predicted_revenue": 355500.37,
+      "daily_average": 40.5,
+      "daily_forecasts": [
+        {
+          "date": "2024-09-24",
+          "predicted_quantity": 40.72,
+          "predicted_revenue": 23809.57,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-25",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Wednesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-26",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Thursday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-27",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Friday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-28",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Saturday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-09-29",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Sunday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-09-30",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Monday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-01",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-02",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Wednesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-03",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Thursday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-04",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Friday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-05",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Saturday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-10-06",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Sunday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-10-07",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Monday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-08",
+          "predicted_quantity": 40.52,
+          "predicted_revenue": 23692.2,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        }
+      ],
+      "validation_mape": 34.2,
+      "validation_mase": 0.896,
+      "final_test_mase": 0.691,
+      "model": "SARIMA(0,1,2)(0,0,0,7)",
+      "average_price": 584.66,
+      "growth": 1.2
+    },
+    {
+      "category": "Smartwatch",
+      "total_predicted_quantity": 459,
+      "total_predicted_revenue": 291440.71,
+      "daily_average": 30.6,
+      "daily_forecasts": [
+        {
+          "date": "2024-09-24",
+          "predicted_quantity": 29.81,
+          "predicted_revenue": 18935.6,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-25",
+          "predicted_quantity": 33.51,
+          "predicted_revenue": 21279.96,
+          "day_name": "Wednesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-26",
+          "predicted_quantity": 32.19,
+          "predicted_revenue": 20442.89,
+          "day_name": "Thursday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-27",
+          "predicted_quantity": 33.26,
+          "predicted_revenue": 21127.22,
+          "day_name": "Friday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-28",
+          "predicted_quantity": 36.15,
+          "predicted_revenue": 22956.52,
+          "day_name": "Saturday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-09-29",
+          "predicted_quantity": 26.96,
+          "predicted_revenue": 17122.0,
+          "day_name": "Sunday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-09-30",
+          "predicted_quantity": 28.21,
+          "predicted_revenue": 17919.79,
+          "day_name": "Monday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-01",
+          "predicted_quantity": 30.47,
+          "predicted_revenue": 19355.14,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-02",
+          "predicted_quantity": 31.62,
+          "predicted_revenue": 20082.78,
+          "day_name": "Wednesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-03",
+          "predicted_quantity": 30.37,
+          "predicted_revenue": 19291.44,
+          "day_name": "Thursday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-04",
+          "predicted_quantity": 31.39,
+          "predicted_revenue": 19938.38,
+          "day_name": "Friday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-05",
+          "predicted_quantity": 34.12,
+          "predicted_revenue": 21667.75,
+          "day_name": "Saturday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-10-06",
+          "predicted_quantity": 25.43,
+          "predicted_revenue": 16151.96,
+          "day_name": "Sunday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-10-07",
+          "predicted_quantity": 26.62,
+          "predicted_revenue": 16906.17,
+          "day_name": "Monday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-08",
+          "predicted_quantity": 28.76,
+          "predicted_revenue": 18263.11,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        }
+      ],
+      "validation_mape": 40.0,
+      "validation_mase": 0.938,
+      "final_test_mase": 0.9,
+      "model": "SARIMA(0,1,2)(0,1,1,7)",
+      "average_price": 635.12,
+      "growth": -26.2
+    },
+    {
+      "category": "Headphones",
+      "total_predicted_quantity": 310,
+      "total_predicted_revenue": 112027.83,
+      "daily_average": 20.7,
+      "daily_forecasts": [
+        {
+          "date": "2024-09-24",
+          "predicted_quantity": 20.53,
+          "predicted_revenue": 7414.3,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-25",
+          "predicted_quantity": 20.82,
+          "predicted_revenue": 7519.51,
+          "day_name": "Wednesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-26",
+          "predicted_quantity": 20.78,
+          "predicted_revenue": 7504.82,
+          "day_name": "Thursday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-27",
+          "predicted_quantity": 20.66,
+          "predicted_revenue": 7462.36,
+          "day_name": "Friday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-09-28",
+          "predicted_quantity": 20.6,
+          "predicted_revenue": 7441.15,
+          "day_name": "Saturday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-09-29",
+          "predicted_quantity": 20.94,
+          "predicted_revenue": 7563.39,
+          "day_name": "Sunday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-09-30",
+          "predicted_quantity": 20.48,
+          "predicted_revenue": 7397.63,
+          "day_name": "Monday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-01",
+          "predicted_quantity": 20.67,
+          "predicted_revenue": 7464.86,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-02",
+          "predicted_quantity": 20.67,
+          "predicted_revenue": 7466.21,
+          "day_name": "Wednesday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-03",
+          "predicted_quantity": 20.67,
+          "predicted_revenue": 7466.02,
+          "day_name": "Thursday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-04",
+          "predicted_quantity": 20.67,
+          "predicted_revenue": 7465.48,
+          "day_name": "Friday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-05",
+          "predicted_quantity": 20.67,
+          "predicted_revenue": 7465.2,
+          "day_name": "Saturday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-10-06",
+          "predicted_quantity": 20.67,
+          "predicted_revenue": 7466.77,
+          "day_name": "Sunday",
+          "is_weekend": true
+        },
+        {
+          "date": "2024-10-07",
+          "predicted_quantity": 20.67,
+          "predicted_revenue": 7464.64,
+          "day_name": "Monday",
+          "is_weekend": false
+        },
+        {
+          "date": "2024-10-08",
+          "predicted_quantity": 20.67,
+          "predicted_revenue": 7465.51,
+          "day_name": "Tuesday",
+          "is_weekend": false
+        }
+      ],
+      "validation_mape": 54.2,
+      "validation_mase": 1.168,
+      "final_test_mase": 0.997,
+      "model": "SARIMA(0,1,1)(1,0,0,7)",
+      "average_price": 361.18,
+      "growth": -13.6
+    }
+  ],
+  "lineGraphData": [
+    {
+      "date": "2023-09-24",
+      "actual": 36036.83,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-09-25",
+      "actual": 31987.62,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-09-26",
+      "actual": 30996.41,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-09-27",
+      "actual": 41971.19,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-09-28",
+      "actual": 55126.5,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-09-29",
+      "actual": 22105.24,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-09-30",
+      "actual": 65411.96,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-01",
+      "actual": 77311.04,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-02",
+      "actual": 52033.51,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-03",
+      "actual": 63484.68,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-04",
+      "actual": 67456.01,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-05",
+      "actual": 50107.26,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-06",
+      "actual": 37137.04,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-07",
+      "actual": 64618.38,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-08",
+      "actual": 34606.7,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-09",
+      "actual": 43231.0,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-10",
+      "actual": 53818.17,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-11",
+      "actual": 55596.94,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-12",
+      "actual": 60687.54,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-13",
+      "actual": 46293.81,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-14",
+      "actual": 45210.93,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-15",
+      "actual": 19892.76,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-16",
+      "actual": 31430.35,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-17",
+      "actual": 50027.78,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-18",
+      "actual": 41146.08,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-19",
+      "actual": 41450.31,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-20",
+      "actual": 58577.75,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-21",
+      "actual": 79130.25,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-22",
+      "actual": 32848.54,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-23",
+      "actual": 37835.22,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-24",
+      "actual": 78324.82,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-25",
+      "actual": 44259.68,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-26",
+      "actual": 18420.19,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-27",
+      "actual": 65079.03,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-28",
+      "actual": 48335.15,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-29",
+      "actual": 58768.12,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-30",
+      "actual": 62488.36,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-10-31",
+      "actual": 35718.46,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-01",
+      "actual": 41909.36,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-02",
+      "actual": 55014.37,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-03",
+      "actual": 38188.46,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-04",
+      "actual": 60312.52,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-05",
+      "actual": 60223.15,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-06",
+      "actual": 35424.84,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-07",
+      "actual": 41704.12,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-08",
+      "actual": 25779.58,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-09",
+      "actual": 45288.78,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-10",
+      "actual": 43154.26,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-11",
+      "actual": 16573.14,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-12",
+      "actual": 48899.38,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-13",
+      "actual": 65834.17,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-14",
+      "actual": 38401.02,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-15",
+      "actual": 40169.85,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-16",
+      "actual": 23060.94,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-17",
+      "actual": 40495.87,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-18",
+      "actual": 68530.22,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-19",
+      "actual": 66639.27,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-20",
+      "actual": 32062.41,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-21",
+      "actual": 55784.12,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-22",
+      "actual": 40264.91,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-23",
+      "actual": 23073.46,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-24",
+      "actual": 47255.52,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-25",
+      "actual": 41000.04,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-26",
+      "actual": 58665.14,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-27",
+      "actual": 57586.64,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-28",
+      "actual": 63528.5,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-29",
+      "actual": 65876.94,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-11-30",
+      "actual": 49415.52,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-01",
+      "actual": 67715.9,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-02",
+      "actual": 48021.13,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-03",
+      "actual": 26978.34,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-04",
+      "actual": 31088.07,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-05",
+      "actual": 44759.02,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-06",
+      "actual": 64558.35,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-07",
+      "actual": 35674.9,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-08",
+      "actual": 39305.57,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-09",
+      "actual": 57260.77,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-10",
+      "actual": 24325.56,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-11",
+      "actual": 19479.61,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-12",
+      "actual": 34403.43,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-13",
+      "actual": 40033.63,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-14",
+      "actual": 49721.83,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-15",
+      "actual": 47734.57,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-16",
+      "actual": 34461.9,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-17",
+      "actual": 34079.7,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-18",
+      "actual": 52333.04,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-19",
+      "actual": 63770.56,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-20",
+      "actual": 52157.06,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-21",
+      "actual": 54896.96,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-22",
+      "actual": 41096.18,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-23",
+      "actual": 47362.56,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-24",
+      "actual": 13603.64,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-25",
+      "actual": 47849.08,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-26",
+      "actual": 65182.29,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-27",
+      "actual": 49650.75,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-28",
+      "actual": 29908.12,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-29",
+      "actual": 28199.66,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-30",
+      "actual": 31381.24,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2023-12-31",
+      "actual": 33029.45,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-01",
+      "actual": 124334.73,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-02",
+      "actual": 147034.03,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-03",
+      "actual": 179373.65,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-04",
+      "actual": 132408.21,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-05",
+      "actual": 161698.86,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-06",
+      "actual": 122192.52,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-07",
+      "actual": 168536.51,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-08",
+      "actual": 105371.04,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-09",
+      "actual": 142606.11,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-10",
+      "actual": 148064.7,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-11",
+      "actual": 95859.18,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-12",
+      "actual": 194805.3,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-13",
+      "actual": 101290.11,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-14",
+      "actual": 125416.57,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-15",
+      "actual": 203282.98,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-16",
+      "actual": 150188.97,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-17",
+      "actual": 163834.36,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-18",
+      "actual": 165241.14,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-19",
+      "actual": 135365.96,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-20",
+      "actual": 166948.37,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-21",
+      "actual": 144392.25,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-22",
+      "actual": 112831.31,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-23",
+      "actual": 167850.78,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-24",
+      "actual": 171424.56,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-25",
+      "actual": 111806.49,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-26",
+      "actual": 124179.09,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-27",
+      "actual": 145765.51,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-28",
+      "actual": 186040.42,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-29",
+      "actual": 143179.57,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-30",
+      "actual": 154911.52,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-01-31",
+      "actual": 120043.01,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-01",
+      "actual": 98986.3,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-02",
+      "actual": 162220.76,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-03",
+      "actual": 151463.4,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-04",
+      "actual": 108726.36,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-05",
+      "actual": 175592.34,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-06",
+      "actual": 128521.79,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-07",
+      "actual": 134168.21,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-08",
+      "actual": 80448.67,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-09",
+      "actual": 118014.65,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-10",
+      "actual": 126092.96,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-11",
+      "actual": 175827.53,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-12",
+      "actual": 124036.59,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-13",
+      "actual": 144432.98,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-14",
+      "actual": 83782.31,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-15",
+      "actual": 166777.82,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-16",
+      "actual": 140515.9,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-17",
+      "actual": 124138.96,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-18",
+      "actual": 80615.79,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-19",
+      "actual": 95966.99,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-20",
+      "actual": 156876.08,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-21",
+      "actual": 189172.38,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-22",
+      "actual": 89472.61,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-23",
+      "actual": 159361.87,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-24",
+      "actual": 151634.38,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-25",
+      "actual": 158355.69,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-26",
+      "actual": 172794.88,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-27",
+      "actual": 128917.56,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-28",
+      "actual": 140067.24,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-02-29",
+      "actual": 130267.16,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-01",
+      "actual": 135978.7,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-02",
+      "actual": 135126.32,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-03",
+      "actual": 105703.89,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-04",
+      "actual": 89988.7,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-05",
+      "actual": 126231.07,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-06",
+      "actual": 114432.84,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-07",
+      "actual": 173121.95,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-08",
+      "actual": 146622.83,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-09",
+      "actual": 143598.68,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-10",
+      "actual": 173728.37,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-11",
+      "actual": 120222.48,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-12",
+      "actual": 135516.38,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-13",
+      "actual": 110557.29,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-14",
+      "actual": 85262.62,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-15",
+      "actual": 162594.01,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-16",
+      "actual": 127968.89,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-17",
+      "actual": 161998.94,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-18",
+      "actual": 152507.37,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-19",
+      "actual": 138038.89,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-20",
+      "actual": 182160.07,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-21",
+      "actual": 122093.58,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-22",
+      "actual": 141644.9,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-23",
+      "actual": 155095.55,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-24",
+      "actual": 131146.57,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-25",
+      "actual": 112094.48,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-26",
+      "actual": 159516.32,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-27",
+      "actual": 141109.11,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-28",
+      "actual": 104240.38,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-29",
+      "actual": 149607.17,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-30",
+      "actual": 120323.62,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-03-31",
+      "actual": 167894.68,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-01",
+      "actual": 116751.86,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-02",
+      "actual": 131010.36,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-03",
+      "actual": 148577.08,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-04",
+      "actual": 103192.7,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-05",
+      "actual": 174134.07,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-06",
+      "actual": 118823.16,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-07",
+      "actual": 154196.57,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-08",
+      "actual": 118420.67,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-09",
+      "actual": 124061.11,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-10",
+      "actual": 120860.52,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-11",
+      "actual": 83735.06,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-12",
+      "actual": 169168.59,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-13",
+      "actual": 143563.38,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-14",
+      "actual": 165537.26,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-15",
+      "actual": 182176.95,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-16",
+      "actual": 118370.16,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-17",
+      "actual": 147924.04,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-18",
+      "actual": 136445.73,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-19",
+      "actual": 172833.45,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-20",
+      "actual": 176858.47,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-21",
+      "actual": 130392.7,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-22",
+      "actual": 114348.08,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-23",
+      "actual": 138166.46,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-24",
+      "actual": 154138.57,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-25",
+      "actual": 209829.09,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-26",
+      "actual": 181248.56,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-27",
+      "actual": 182787.05,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-28",
+      "actual": 133941.15,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-29",
+      "actual": 114914.14,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-04-30",
+      "actual": 133916.7,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-01",
+      "actual": 110883.09,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-02",
+      "actual": 137682.59,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-03",
+      "actual": 173247.62,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-04",
+      "actual": 117433.57,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-05",
+      "actual": 100960.27,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-06",
+      "actual": 174066.58,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-07",
+      "actual": 128533.78,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-08",
+      "actual": 190123.28,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-09",
+      "actual": 192564.51,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-10",
+      "actual": 164818.67,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-11",
+      "actual": 94162.36,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-12",
+      "actual": 121285.05,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-13",
+      "actual": 146192.13,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-14",
+      "actual": 118784.74,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-15",
+      "actual": 176475.18,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-16",
+      "actual": 150919.69,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-17",
+      "actual": 194996.44,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-18",
+      "actual": 183513.04,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-19",
+      "actual": 196164.48,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-20",
+      "actual": 155967.77,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-21",
+      "actual": 133482.83,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-22",
+      "actual": 158512.96,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-23",
+      "actual": 142308.25,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-24",
+      "actual": 136244.2,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-25",
+      "actual": 138512.28,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-26",
+      "actual": 106621.76,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-27",
+      "actual": 90624.46,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-28",
+      "actual": 126352.15,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-29",
+      "actual": 143794.44,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-30",
+      "actual": 119613.1,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-05-31",
+      "actual": 138073.93,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-01",
+      "actual": 213332.8,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-02",
+      "actual": 120549.33,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-03",
+      "actual": 139526.34,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-04",
+      "actual": 134405.76,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-05",
+      "actual": 133322.83,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-06",
+      "actual": 121476.05,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-07",
+      "actual": 153199.66,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-08",
+      "actual": 131718.86,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-09",
+      "actual": 156409.92,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-10",
+      "actual": 164107.6,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-11",
+      "actual": 111785.21,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-12",
+      "actual": 159715.27,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-13",
+      "actual": 198898.21,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-14",
+      "actual": 155947.01,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-15",
+      "actual": 167223.63,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-16",
+      "actual": 128277.03,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-17",
+      "actual": 151338.73,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-18",
+      "actual": 167157.23,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-19",
+      "actual": 162586.01,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-20",
+      "actual": 148627.39,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-21",
+      "actual": 153789.32,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-22",
+      "actual": 149959.35,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-23",
+      "actual": 104692.83,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-24",
+      "actual": 201014.69,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-25",
+      "actual": 118849.15,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-26",
+      "actual": 173741.67,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-27",
+      "actual": 137793.06,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-28",
+      "actual": 128678.68,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-29",
+      "actual": 98866.04,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-06-30",
+      "actual": 179005.05,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-01",
+      "actual": 130054.93,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-02",
+      "actual": 205920.97,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-03",
+      "actual": 143941.39,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-04",
+      "actual": 135627.83,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-05",
+      "actual": 145252.59,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-06",
+      "actual": 135566.3,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-07",
+      "actual": 139191.67,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-08",
+      "actual": 183093.15,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-09",
+      "actual": 149038.77,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-10",
+      "actual": 110575.46,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-11",
+      "actual": 104482.92,
+      "testPredicted": null,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-12",
+      "actual": 180199.15,
+      "testPredicted": 180199.15,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "training"
+    },
+    {
+      "date": "2024-07-13",
+      "actual": 101831.4,
+      "testPredicted": 135112.04,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-14",
+      "actual": 176887.84,
+      "testPredicted": 140212.7,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-15",
+      "actual": 159594.99,
+      "testPredicted": 156643.2,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-16",
+      "actual": 166973.5,
+      "testPredicted": 147699.33,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-17",
+      "actual": 185136.32,
+      "testPredicted": 141470.14,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-18",
+      "actual": 128599.19,
+      "testPredicted": 131503.92,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-19",
+      "actual": 167912.78,
+      "testPredicted": 155183.49,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-20",
+      "actual": 172671.16,
+      "testPredicted": 135954.53,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-21",
+      "actual": 86682.32,
+      "testPredicted": 138805.93,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-22",
+      "actual": 186615.21,
+      "testPredicted": 156606.55,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-23",
+      "actual": 128439.63,
+      "testPredicted": 147592.46,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-24",
+      "actual": 123996.29,
+      "testPredicted": 141461.01,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-25",
+      "actual": 152942.83,
+      "testPredicted": 131496.67,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-26",
+      "actual": 126235.65,
+      "testPredicted": 155182.22,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-27",
+      "actual": 127903.0,
+      "testPredicted": 135953.93,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-28",
+      "actual": 158733.64,
+      "testPredicted": 126830.24,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-29",
+      "actual": 101155.75,
+      "testPredicted": 158253.65,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-30",
+      "actual": 126337.3,
+      "testPredicted": 144214.98,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-07-31",
+      "actual": 119352.55,
+      "testPredicted": 145246.83,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-01",
+      "actual": 121405.53,
+      "testPredicted": 136178.02,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-02",
+      "actual": 157268.02,
+      "testPredicted": 150685.01,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-03",
+      "actual": 189328.19,
+      "testPredicted": 135250.6,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-04",
+      "actual": 120149.58,
+      "testPredicted": 129542.76,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-05",
+      "actual": 164450.36,
+      "testPredicted": 159315.61,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-06",
+      "actual": 111884.78,
+      "testPredicted": 144580.22,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-07",
+      "actual": 143692.06,
+      "testPredicted": 145363.19,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-08",
+      "actual": 179954.11,
+      "testPredicted": 136219.2,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-09",
+      "actual": 165730.95,
+      "testPredicted": 150699.46,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-10",
+      "actual": 161320.65,
+      "testPredicted": 135255.48,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-11",
+      "actual": 134463.09,
+      "testPredicted": 129544.24,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-12",
+      "actual": 121394.63,
+      "testPredicted": 151099.44,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-13",
+      "actual": 162237.15,
+      "testPredicted": 132959.55,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-14",
+      "actual": 124071.96,
+      "testPredicted": 139134.5,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-15",
+      "actual": 160112.98,
+      "testPredicted": 142733.73,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-16",
+      "actual": 157571.65,
+      "testPredicted": 154942.59,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-17",
+      "actual": 138736.31,
+      "testPredicted": 150204.59,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-18",
+      "actual": 109312.69,
+      "testPredicted": 132393.7,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-19",
+      "actual": 101462.88,
+      "testPredicted": 150104.09,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-20",
+      "actual": 130198.42,
+      "testPredicted": 132765.18,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-21",
+      "actual": 132432.37,
+      "testPredicted": 139049.37,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-22",
+      "actual": 138051.24,
+      "testPredicted": 142714.05,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-23",
+      "actual": 147393.51,
+      "testPredicted": 154933.81,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-24",
+      "actual": 166654.67,
+      "testPredicted": 150202.64,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-25",
+      "actual": 136286.83,
+      "testPredicted": 132393.0,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-26",
+      "actual": 109642.9,
+      "testPredicted": 150103.91,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-27",
+      "actual": 78299.4,
+      "testPredicted": 139503.9,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-28",
+      "actual": 185436.1,
+      "testPredicted": 132513.0,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-29",
+      "actual": 147892.36,
+      "testPredicted": 145573.07,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-30",
+      "actual": 131961.89,
+      "testPredicted": 153323.33,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-08-31",
+      "actual": 149635.84,
+      "testPredicted": 151278.38,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-01",
+      "actual": 102387.97,
+      "testPredicted": 128875.01,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-02",
+      "actual": 214274.21,
+      "testPredicted": 127065.61,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-03",
+      "actual": 186753.1,
+      "testPredicted": 137917.88,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-04",
+      "actual": 145405.89,
+      "testPredicted": 134927.51,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-05",
+      "actual": 184101.09,
+      "testPredicted": 145289.44,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-06",
+      "actual": 111069.31,
+      "testPredicted": 153665.39,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-07",
+      "actual": 167464.23,
+      "testPredicted": 151232.19,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-08",
+      "actual": 166594.44,
+      "testPredicted": 128910.73,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-09",
+      "actual": 153317.51,
+      "testPredicted": 127059.83,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-10",
+      "actual": 127971.91,
+      "testPredicted": 137922.66,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-11",
+      "actual": 162171.39,
+      "testPredicted": 146296.49,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-12",
+      "actual": 123148.34,
+      "testPredicted": 154017.37,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-13",
+      "actual": 111515.48,
+      "testPredicted": 138497.05,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-14",
+      "actual": 138239.85,
+      "testPredicted": 154102.88,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-15",
+      "actual": 152125.31,
+      "testPredicted": 131195.36,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-16",
+      "actual": 163423.05,
+      "testPredicted": 145287.89,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-17",
+      "actual": 122989.4,
+      "testPredicted": 132004.51,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-18",
+      "actual": 128799.72,
+      "testPredicted": 145916.04,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-19",
+      "actual": 163302.27,
+      "testPredicted": 154020.09,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-20",
+      "actual": 156656.06,
+      "testPredicted": 138499.54,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-21",
+      "actual": 145328.11,
+      "testPredicted": 154102.59,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-22",
+      "actual": 106420.12,
+      "testPredicted": 131195.37,
+      "futurePredicted": null,
+      "futureInterval80": null,
+      "isForecastBridge": false,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-23",
+      "actual": 148788.03,
+      "testPredicted": 145287.89,
+      "futurePredicted": 148788.03,
+      "futureInterval80": [
+        148788.03,
+        148788.03
+      ],
+      "isForecastBridge": true,
+      "type": "test"
+    },
+    {
+      "date": "2024-09-24",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 130280.08,
+      "futureInterval80": [
+        101736.85,
+        173311.02
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-09-25",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 144153.19,
+      "futureInterval80": [
+        109923.21,
+        192189.28
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-09-26",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 149568.94,
+      "futureInterval80": [
+        116415.76,
+        200453.41
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-09-27",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 137024.27,
+      "futureInterval80": [
+        105832.39,
+        182699.62
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-09-28",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 149341.28,
+      "futureInterval80": [
+        115286.27,
+        199303.71
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-09-29",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 128058.42,
+      "futureInterval80": [
+        98965.01,
+        171024.34
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-09-30",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 148355.0,
+      "futureInterval80": [
+        115307.3,
+        199965.02
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-10-01",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 130116.71,
+      "futureInterval80": [
+        98819.07,
+        173110.18
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-10-02",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 144169.55,
+      "futureInterval80": [
+        110371.48,
+        196348.88
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-10-03",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 149569.2,
+      "futureInterval80": [
+        115181.8,
+        200649.59
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-10-04",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 137024.13,
+      "futureInterval80": [
+        104348.42,
+        181701.05
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-10-05",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 149341.29,
+      "futureInterval80": [
+        114433.7,
+        202910.13
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-10-06",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 128058.43,
+      "futureInterval80": [
+        96564.22,
+        172340.05
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-10-07",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 148355.0,
+      "futureInterval80": [
+        112855.45,
+        201817.95
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    },
+    {
+      "date": "2024-10-08",
+      "actual": null,
+      "testPredicted": null,
+      "futurePredicted": 130116.71,
+      "futureInterval80": [
+        97127.6,
+        175255.66
+      ],
+      "isForecastBridge": false,
+      "type": "forecast"
+    }
+  ],
+  "topProducts": [
+    {
+      "name": "Smartphone",
+      "predictedSales": 753276.35,
+      "predictedQuantity": 1035,
+      "growth": -7.4,
+      "avgPrice": 727.6
+    },
+    {
+      "name": "Tablet",
+      "predictedSales": 413764.46,
+      "predictedQuantity": 749,
+      "growth": -6.1,
+      "avgPrice": 552.08
+    },
+    {
+      "name": "Laptop",
+      "predictedSales": 355500.37,
+      "predictedQuantity": 608,
+      "growth": 1.2,
+      "avgPrice": 584.66
+    },
+    {
+      "name": "Smartwatch",
+      "predictedSales": 291440.71,
+      "predictedQuantity": 459,
+      "growth": -26.2,
+      "avgPrice": 635.12
+    },
+    {
+      "name": "Headphones",
+      "predictedSales": 112027.83,
+      "predictedQuantity": 310,
+      "growth": -13.6,
+      "avgPrice": 361.18
+    }
+  ],
+  "modelInfo": {
+    "type": "SARIMA(2,0,0)(0,1,1,7)",
+    "implementation": "From-scratch multiplicative SARIMA estimated by CSS",
+    "seasonalPeriod": 7,
+    "targetSeries": "Raw daily revenue",
+    "dataPoints": 366,
+    "forecastHorizon": "15 days",
+    "validationMethod": "7 expanding 15-day rolling origins inside an 80% development period, followed by horizon-matched final testing",
+    "outerTrainPercentage": 80,
+    "rollingValidationFolds": 7,
+    "rollingValidationHorizon": 15,
+    "selectedTrainingWindowDays": 126,
+    "finalTestPeriod": "73 days",
+    "lastDataDate": "2024-09-23",
+    "trainEndDate": "2024-07-12",
+    "mape": "17.0%",
+    "mase": 0.761,
+    "categoryModels": 5,
+    "trainSize": 293,
+    "testSize": 73,
+    "predictionIntervalLevel": "80%"
+  }
+}

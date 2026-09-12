@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Card, Row, Col, Table, Badge, Dropdown, Tabs, Tab, ProgressBar } from 'react-bootstrap';
-import { FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown, FaBoxes, FaChevronDown } from 'react-icons/fa';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { Alert, Button, Card, Row, Col, Table, Badge, Dropdown, Tabs, Tab, ProgressBar } from 'react-bootstrap';
+import { FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown, FaBoxes, FaChevronDown, FaSyncAlt } from 'react-icons/fa';
+import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 // Constants
-const PERIOD_OPTIONS = { '7days': '7 Days', '15days': '15 Days' };
-const REVENUE_SCENARIOS = {
-  predicted: { label: 'Expected Revenue', key: 'predictedRevenue', color: '#16a34a' },
-  best: { label: 'Best Case', key: 'bestCase', color: '#2563eb' },
-  worst: { label: 'Worst Case', key: 'worstCase', color: '#dc3545' }
+const DEFAULT_REVENUE_SCENARIOS = {
+  predicted: { label: 'Point Forecast', key: 'predictedRevenue', color: '#16a34a' },
+  best: { label: 'Upper Bound', key: 'bestCase', color: '#2563eb' },
+  worst: { label: 'Lower Bound', key: 'worstCase', color: '#dc3545' }
 };
 const CHART_COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'];
 
@@ -16,7 +15,36 @@ const CHART_COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#0
 const formatCurrency = (amount) => 
   amount ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount) : '$0';
 
-const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+const parseCalendarDate = (dateString) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString || '');
+  if (!match) return new Date(dateString);
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+};
+
+const formatDate = (dateString, options = { month: 'short', day: 'numeric' }) =>
+  parseCalendarDate(dateString).toLocaleDateString('en-IN', options);
+
+const toFiniteNumber = (value) => {
+  if (value === null || value === undefined || value === '') return undefined;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+};
+
+const intervalLevelLabel = (forecast) => {
+  const interval = forecast?.summary?.interval80;
+  const configuredLevel = forecast?.modelInfo?.predictionIntervalLevel;
+
+  if (!interval && !configuredLevel) return null;
+  if (typeof configuredLevel === 'string' && configuredLevel.trim()) {
+    return configuredLevel.includes('%')
+      ? configuredLevel
+      : `${configuredLevel}%`;
+  }
+
+  const level = toFiniteNumber(interval?.level);
+  if (level === undefined) return '80%';
+  return `${level <= 1 ? Math.round(level * 100) : Math.round(level)}%`;
+};
 
 const useMediaQuery = (query) => {
   const getMatches = () => typeof window !== 'undefined' && window.matchMedia(query).matches;
@@ -58,15 +86,19 @@ const CustomTooltip = ({ active, payload, label }) => {
 
   const isForecastBridge = payload[0]?.payload?.isForecastBridge;
   const visibleEntries = payload.filter(
-    entry => !(isForecastBridge && entry.dataKey === 'futurePredicted')
+    entry => !(isForecastBridge && String(entry.dataKey).startsWith('future'))
   );
   
   return (
     <div className="forecast-tooltip bg-white p-3 rounded shadow border">
-      <p className="fw-bold mb-2 text-dark">Date: {new Date(label).toLocaleDateString('en-IN')}</p>
+      <p className="fw-bold mb-2 text-dark">
+        Date: {formatDate(label, { year: 'numeric', month: 'numeric', day: 'numeric' })}
+      </p>
       {visibleEntries.map((entry, index) => (
         <p key={index} className="mb-1" style={{ color: entry.color }}>
-          {entry.name}: {formatCurrency(entry.value)}
+          {entry.name}: {Array.isArray(entry.value)
+            ? `${formatCurrency(entry.value[0])} to ${formatCurrency(entry.value[1])}`
+            : formatCurrency(entry.value)}
         </p>
       ))}
     </div>
@@ -157,7 +189,8 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
       format: (val) => `$${val?.toFixed(0) || 0}`,
       formatNormalized: (val) => `${(val * 100)?.toFixed(2) || 0}%`,
       description: 'Mean Absolute Error',
-      showNormalized: true
+      showNormalized: true,
+      errorRatio: metrics.mae_normalized
     },
     rmse: { 
       label: 'RMSE', 
@@ -166,26 +199,63 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
       format: (val) => `$${val?.toFixed(0) || 0}`,
       formatNormalized: (val) => `${(val * 100)?.toFixed(2) || 0}%`,
       description: 'Root Mean Squared Error',
-      showNormalized: true
+      showNormalized: true,
+      errorRatio: metrics.rmse_normalized
     },
     mape: { 
       label: 'MAPE', 
       value: metrics.mape, 
       format: (val) => `${val?.toFixed(1) || 0}%`,
       description: 'Mean Absolute Percentage Error',
-      showNormalized: false
+      showNormalized: false,
+      errorRatio: (metrics.mape || 0) / 100
     }
   };
 
-  const current = metricOptions[selectedMetric];
-  const normalizedError = current.showNormalized
-    ? (current.normalizedValue || 0)
-    : (current.value || 0) / 100;
-  const metricPerformance = normalizedError <= 0.1
-    ? { variant: 'success', text: 'Excellent' }
-    : normalizedError <= 0.2
-      ? { variant: 'warning', text: 'Good' }
-      : { variant: 'danger', text: 'Needs Improvement' };
+  const mase = toFiniteNumber(metrics.mase);
+  if (mase !== undefined) {
+    metricOptions.mase = {
+      label: 'MASE',
+      value: mase,
+      format: (val) => val.toFixed(2),
+      description: 'Mean Absolute Scaled Error',
+      showNormalized: false,
+      baselineRatio: mase
+    };
+  }
+
+  const wape = toFiniteNumber(metrics.wape);
+  if (wape !== undefined) {
+    metricOptions.wape = {
+      label: 'WAPE',
+      value: wape,
+      format: (val) => `${val.toFixed(1)}%`,
+      description: 'Weighted Absolute Percentage Error',
+      showNormalized: false,
+      errorRatio: wape / 100
+    };
+  }
+
+  const rmsse = toFiniteNumber(metrics.rmsse);
+  if (rmsse !== undefined) {
+    metricOptions.rmsse = {
+      label: 'RMSSE',
+      value: rmsse,
+      format: (val) => val.toFixed(2),
+      description: 'Root Mean Squared Scaled Error',
+      showNormalized: false,
+      baselineRatio: rmsse
+    };
+  }
+
+  const current = metricOptions[selectedMetric] || metricOptions.mae;
+  const metricPerformance = current.baselineRatio !== undefined
+    ? current.baselineRatio < 1
+      ? { variant: 'success', text: 'Beats Seasonal Naive' }
+      : current.baselineRatio <= 1.1
+        ? { variant: 'warning', text: 'Near Seasonal Naive' }
+        : { variant: 'danger', text: 'Below Seasonal Naive' }
+    : null;
 
   return (
     <Card className="border-0 shadow-sm h-100">
@@ -222,7 +292,9 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
                 Normalized: {current.formatNormalized(current.normalizedValue)}
               </p>
             )}
-            <Badge bg={metricPerformance.variant} className="mt-1">{metricPerformance.text}</Badge>
+            {metricPerformance && (
+              <Badge bg={metricPerformance.variant} className="mt-1">{metricPerformance.text}</Badge>
+            )}
           </div>
           <div className="text-center">
             <div className="text-info mb-1" style={{ fontSize: '14px', fontWeight: 'bold' }}>
@@ -303,79 +375,199 @@ const CategoryChart = ({ categories, hasData, isMobile }) => {
   );
 };
 
+const EvaluationPanel = ({ evaluation }) => {
+  if (!evaluation?.modelComparison?.length) {
+    return <Alert variant="secondary" className="mb-0">Model evaluation is unavailable.</Alert>;
+  }
+
+  const tests = evaluation.diagnostics?.ljung_box || [];
+  const residualsPass = tests.length > 0 && tests.every((test) => test.p_value >= 0.05);
+  const interval80 = evaluation.predictionIntervals?.['80'];
+  const interval95 = evaluation.predictionIntervals?.['95'];
+
+  return (
+    <div className="forecast-panel p-4">
+      <h4 className="mb-2 fw-semibold">Model Evaluation</h4>
+      <p className="text-muted small mb-4">
+        Orders are selected on rolling validation data. Final-test results are reported only after selection.
+      </p>
+      <Table hover responsive className="forecast-category-table align-middle">
+        <thead className="bg-light">
+          <tr>
+            <th className="p-3">Model</th>
+            <th className="p-3">Validation MASE</th>
+            <th className="p-3">Validation RMSE</th>
+            <th className="p-3">Final MASE</th>
+            <th className="p-3">Final RMSE</th>
+          </tr>
+        </thead>
+        <tbody>
+          {evaluation.modelComparison.map((row) => (
+            <tr key={row.key}>
+              <td className="p-3 fw-semibold">{row.model}</td>
+              <td className="p-3">{toFiniteNumber(row.validation?.mase)?.toFixed(3) || 'N/A'}</td>
+              <td className="p-3">{formatCurrency(row.validation?.rmse)}</td>
+              <td className="p-3">{toFiniteNumber(row.final_test?.mase)?.toFixed(3) || 'N/A'}</td>
+              <td className="p-3">{formatCurrency(row.final_test?.rmse)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+
+      <Row className="g-3 mt-1">
+        <Col md={6}>
+          <Card className="border-0 bg-light h-100">
+            <Card.Body>
+              <h6 className="fw-semibold">Residual check</h6>
+              <Badge bg={residualsPass ? 'success' : 'warning'} className="mb-2">
+                {residualsPass ? 'No significant autocorrelation' : 'Autocorrelation remains'}
+              </Badge>
+              <div className="small text-muted">
+                {tests.map((test) => `Lag ${test.lag}: p=${Number(test.p_value).toFixed(4)}`).join(' | ') || 'No diagnostic results'}
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card className="border-0 bg-light h-100">
+            <Card.Body>
+              <h6 className="fw-semibold">Prediction interval coverage</h6>
+              <div className="small text-muted">
+                80% interval: {interval80 ? `${(interval80.coverage * 100).toFixed(1)}%` : 'N/A'}
+              </div>
+              <div className="small text-muted">
+                95% interval: {interval95 ? `${(interval95.coverage * 100).toFixed(1)}%` : 'N/A'}
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
+const buildForecastViewModel = (forecastResult, metricsData) => {
+  const forecastIsAvailable = Boolean(
+    forecastResult &&
+    (!forecastResult.serviceStatus || forecastResult.serviceStatus === 'success') &&
+    Array.isArray(forecastResult.dailyForecast) &&
+    forecastResult.dailyForecast.length > 0
+  );
+  if (!forecastIsAvailable) {
+    throw new Error(forecastResult?.message || 'Forecast data is unavailable');
+  }
+
+  let mainModelMetrics = null;
+  let categoryModelsCount = forecastResult.modelInfo?.categoryModels || 0;
+  let dataPoints = forecastResult.modelInfo?.dataPoints || 0;
+  let modelType = forecastResult.modelInfo?.type || 'Unknown';
+  let evaluation = null;
+
+  if (
+    metricsData?.serviceStatus !== 'unavailable' &&
+    metricsData?.main_model
+  ) {
+    mainModelMetrics = {
+      mae: toFiniteNumber(metricsData.main_model.mae),
+      rmse: toFiniteNumber(metricsData.main_model.rmse),
+      mape: toFiniteNumber(metricsData.main_model.mape),
+      mae_normalized: toFiniteNumber(metricsData.main_model.mae_normalized),
+      rmse_normalized: toFiniteNumber(metricsData.main_model.rmse_normalized),
+      mean_actual: toFiniteNumber(metricsData.main_model.mean_actual),
+      mase: toFiniteNumber(metricsData.main_model.mase),
+      wape: toFiniteNumber(metricsData.main_model.wape),
+      rmsse: toFiniteNumber(metricsData.main_model.rmsse)
+    };
+    modelType = metricsData.main_model.type || 'Unknown';
+    categoryModelsCount =
+      metricsData.category_models_count ?? categoryModelsCount;
+    dataPoints = metricsData.data_points ?? dataPoints;
+    evaluation = {
+      modelComparison: Array.isArray(metricsData.model_comparison)
+        ? metricsData.model_comparison
+        : [],
+      diagnostics: metricsData.diagnostics || null,
+      predictionIntervals: metricsData.prediction_intervals || null,
+      methodology: metricsData.methodology || null
+    };
+  }
+
+  return {
+    ...forecastResult,
+    modelInfo: {
+      ...forecastResult.modelInfo,
+      metrics: mainModelMetrics,
+      categoryModels: categoryModelsCount,
+      dataPoints,
+      modelType
+    },
+    evaluation
+  };
+};
+
 const SalesForcastingScreen = () => {
   const [forecastData, setForecastData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState('7days');
+  const [fetchError, setFetchError] = useState(null);
   const [selectedScenario, setSelectedScenario] = useState('predicted');
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedDate, setSelectedDate] = useState(null);
   const [tableAnimate, setTableAnimate] = useState(false);
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [recalculationNotice, setRecalculationNotice] = useState(null);
   const isMobile = useMediaQuery('(max-width: 575.98px)');
 
   // Fetch data
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        
+        setFetchError(null);
+        setForecastData(null);
+        setSelectedDate(null);
+
         const [forecastResponse, metricsResponse] = await Promise.all([
-          fetch(`/api/sales/forecast?period=${selectedPeriod}`).catch(() => ({ ok: false })),
-          fetch(`/api/sales/metrics?period=${selectedPeriod}`).catch(() => ({ ok: false }))
+          fetch('/api/sales/forecast', {
+            signal: controller.signal
+          }),
+          fetch('/api/sales/metrics', {
+            signal: controller.signal
+          }).catch((error) => {
+            if (error.name === 'AbortError') throw error;
+            return null;
+          })
         ]);
-        
-        const forecastData = forecastResponse.ok ? await forecastResponse.json().catch(() => null) : null;
-        const metricsData = metricsResponse.ok ? await metricsResponse.json().catch(() => null) : null;
-        
-        // Extract metrics - simplified structure (removed MSE)
-        let mainModelMetrics = null;
-        let categoryModelsCount = 0;
-        let dataPoints = 0;
-        let modelType = 'Unknown';
-        
-                  if (metricsData?.main_model) {
-            mainModelMetrics = {
-              mae: metricsData.main_model.mae,
-              rmse: metricsData.main_model.rmse,
-              mape: metricsData.main_model.mape,
-              mae_normalized: metricsData.main_model.mae_normalized,
-              rmse_normalized: metricsData.main_model.rmse_normalized,
-              mean_actual: metricsData.main_model.mean_actual
-            };
-            modelType = metricsData.main_model.type || 'Unknown';
-            categoryModelsCount = metricsData.category_models_count || 0;
-            dataPoints = metricsData.data_points || 0;
-          }
-        
-        if (forecastData && Object.keys(forecastData).length > 0) {
-          setForecastData({
-            ...forecastData,
-            modelInfo: {
-              ...forecastData.modelInfo,
-              metrics: mainModelMetrics,
-              categoryModels: categoryModelsCount,
-              dataPoints: dataPoints,
-              modelType: modelType
-            }
-          });
-          // set default selected date to first forecast date
-          if (forecastData.dailyForecast && forecastData.dailyForecast.length > 0) {
-            setSelectedDate(forecastData.dailyForecast[0].date);
-          }
-        } else {
-          setForecastData(null);
+
+        if (!forecastResponse.ok) {
+          const errorData = await forecastResponse.json().catch(() => null);
+          throw new Error(errorData?.message || 'Forecast data is unavailable');
         }
-        
+
+        const forecastResult = await forecastResponse.json().catch(() => null);
+        const metricsData = metricsResponse?.ok
+          ? await metricsResponse.json().catch(() => null)
+          : null;
+
+        if (controller.signal.aborted) return;
+
+        setForecastData(buildForecastViewModel(forecastResult, metricsData));
+        setSelectedDate(forecastResult.dailyForecast[0].date);
       } catch (err) {
+        if (err.name === 'AbortError' || controller.signal.aborted) return;
         console.error('Error fetching data:', err);
         setForecastData(null);
+        setFetchError(err.message || 'Forecast data is temporarily unavailable');
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [selectedPeriod]);
+
+    return () => controller.abort();
+  }, []);
 
   // Animate table when selectedDate changes
   useEffect(() => {
@@ -389,11 +581,33 @@ const SalesForcastingScreen = () => {
   const displayData = useMemo(() => forecastData || {
     summary: { predictedRevenue: 0, growthRate: 0, confidence: 0, bestCase: 0, worstCase: 0, dailyAverage: 0 },
     dailyForecast: [], categoryForecast: [], lineGraphData: [], topProducts: [],
-    modelInfo: { metrics: null }
+    modelInfo: { metrics: null }, evaluation: null
   }, [forecastData]);
   
   const hasData = useMemo(() => Boolean(forecastData), [forecastData]);
   const hasMetrics = useMemo(() => Boolean(forecastData?.modelInfo?.metrics), [forecastData]);
+  const selectedForecastRow = useMemo(() => {
+    const forecasts = displayData.dailyForecast || [];
+    if (!forecasts.length) return null;
+    return forecasts.find((row) => row.date === selectedDate) || forecasts[0];
+  }, [displayData.dailyForecast, selectedDate]);
+
+  const revenueScenarios = useMemo(() => {
+    const level = intervalLevelLabel(displayData);
+    if (!level) return DEFAULT_REVENUE_SCENARIOS;
+
+    return {
+      ...DEFAULT_REVENUE_SCENARIOS,
+      best: {
+        ...DEFAULT_REVENUE_SCENARIOS.best,
+        label: `${level} Upper Bound`
+      },
+      worst: {
+        ...DEFAULT_REVENUE_SCENARIOS.worst,
+        label: `${level} Lower Bound`
+      }
+    };
+  }, [displayData]);
   
   const chartInterval = useMemo(() => {
     if (!displayData.lineGraphData?.length) return 0;
@@ -411,8 +625,52 @@ const SalesForcastingScreen = () => {
   }, [hasData, displayData.summary.growthRate]);
 
   // Event handlers
-  const handlePeriodChange = useCallback((period) => setSelectedPeriod(period), []);
   const handleScenarioChange = useCallback((scenario) => setSelectedScenario(scenario), []);
+  const handleRecalculate = useCallback(async () => {
+    if (isRecalculating) return;
+    setIsRecalculating(true);
+    setRecalculationNotice({
+      variant: 'info',
+      message: 'Recalculating from cleaned_customer_data.csv. This can take one to two minutes.'
+    });
+
+    try {
+      const response = await fetch('/api/sales/recalculate', {
+        method: 'POST'
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.message || 'Forecast recalculation failed');
+      }
+
+      const nextForecast = buildForecastViewModel(
+        result.forecast,
+        result.metrics
+      );
+      setForecastData(nextForecast);
+      setSelectedDate(result.forecast.dailyForecast[0]?.date || null);
+      setFetchError(null);
+      const persistenceNote =
+        result.persistence === 'temporary'
+          ? ' The result is active on this page; commit regenerated artifacts for permanent Vercel storage.'
+          : ' The local artifact files were updated.';
+      setRecalculationNotice({
+        variant: 'success',
+        message:
+          'Forecast recalculated in ' +
+          Number(result.durationSeconds).toFixed(1) +
+          ' seconds.' +
+          persistenceNote
+      });
+    } catch (error) {
+      setRecalculationNotice({
+        variant: 'danger',
+        message: error.message || 'Forecast recalculation failed'
+      });
+    } finally {
+      setIsRecalculating(false);
+    }
+  }, [isRecalculating]);
 
   if (isLoading) return <Loader />;
 
@@ -426,11 +684,14 @@ const SalesForcastingScreen = () => {
         .nav-tabs .nav-link.active { border: none; color: #667eea; background: transparent; border-bottom: 3px solid #667eea; }
         .fade-in { animation: fadeIn 0.6s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .fa-spin { animation: forecastSpin 1s linear infinite; }
+        @keyframes forecastSpin { to { transform: rotate(360deg); } }
         .forecast-dashboard { max-width: 1400px; padding: 20px; }
         .forecast-chart { width: 100%; height: 400px; min-width: 0; }
         .forecast-legend { display: flex; gap: 1.5rem; flex-wrap: wrap; }
         .forecast-summary-item { min-width: 0; }
         .forecast-summary-item .fw-bold { overflow-wrap: anywhere; }
+        .forecast-header-actions { gap: 0.75rem; }
         @media (max-width: 575.98px) {
           .forecast-dashboard { padding: 0; }
           .forecast-dashboard .card-body { padding: 0.9rem; }
@@ -438,7 +699,7 @@ const SalesForcastingScreen = () => {
           .forecast-dashboard-header h1 { font-size: 1.5rem; line-height: 1.2; }
           .forecast-dashboard-header p { font-size: 0.85rem; }
           .forecast-header-icon { font-size: 2rem; flex: 0 0 auto; margin-right: 0.65rem !important; }
-          .forecast-period-dropdown, .forecast-period-dropdown .dropdown-toggle { width: 100%; }
+          .forecast-header-actions, .forecast-period-dropdown, .forecast-recalculate-button { width: 100%; }
           .forecast-dashboard .nav-tabs .nav-link { padding: 0.75rem 0.35rem; font-size: 0.78rem; }
           .forecast-dashboard .nav-tabs svg { margin-right: 0.25rem !important; }
           .forecast-panel { padding: 0.75rem !important; }
@@ -457,6 +718,23 @@ const SalesForcastingScreen = () => {
         }
       `}</style>
 
+      {fetchError && (
+        <Alert variant="warning" role="alert" className="mb-4">
+          {fetchError}
+        </Alert>
+      )}
+      {recalculationNotice && (
+        <Alert
+          variant={recalculationNotice.variant}
+          role="status"
+          className="mb-4"
+          dismissible={!isRecalculating}
+          onClose={() => setRecalculationNotice(null)}
+        >
+          {recalculationNotice.message}
+        </Alert>
+      )}
+
       {/* Header */}
       <Card className="border-0 mb-4 text-white" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '15px' }}>
         <Card.Body>
@@ -465,27 +743,26 @@ const SalesForcastingScreen = () => {
               <FaChartLine size={48} className="forecast-header-icon me-3" />
               <div>
                 <h1 className="mb-2 fw-bold">Sales Forecasting Dashboard</h1>
-                <p className="mb-0 opacity-75">AI-powered revenue predictions with model performance metrics</p>
-                {hasData && displayData.modelInfo?.categoryModels > 0 && (
-                  <small className="d-block mt-1 opacity-75">
-                    {displayData.modelInfo.categoryModels} Category Models Active
-                  </small>
-                )}
               </div>
             </div>
-            <Dropdown className="forecast-period-dropdown">
-              <Dropdown.Toggle variant="outline-light">
+            <div className="forecast-header-actions d-flex flex-column flex-sm-row">
+              <Button
+                variant="outline-light"
+                className="forecast-recalculate-button"
+                onClick={handleRecalculate}
+                disabled={isRecalculating}
+                title="Rebuild the forecast from cleaned_customer_data.csv"
+              >
+                <FaSyncAlt
+                  className={'me-2 ' + (isRecalculating ? 'fa-spin' : '')}
+                />
+                {isRecalculating ? 'Recalculating...' : 'Recalculate Forecast'}
+              </Button>
+              <div className="forecast-period-dropdown btn btn-outline-light">
                 <FaCalendarAlt className="me-2" />
-                {PERIOD_OPTIONS[selectedPeriod]}
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                {Object.entries(PERIOD_OPTIONS).map(([key, label]) => (
-                  <Dropdown.Item key={key} onClick={() => handlePeriodChange(key)}>
-                    {label}
-                  </Dropdown.Item>
-                ))}
-              </Dropdown.Menu>
-            </Dropdown>
+                15 Days
+              </div>
+            </div>
           </div>
         </Card.Body>
       </Card>
@@ -494,7 +771,7 @@ const SalesForcastingScreen = () => {
       <Row className="g-3 mb-4">
         <Col lg={3} md={6}>
           <DropdownMetricCard
-            scenarios={REVENUE_SCENARIOS}
+            scenarios={revenueScenarios}
             currentKey={selectedScenario}
             onSelect={handleScenarioChange}
             displayData={displayData}
@@ -538,8 +815,16 @@ const SalesForcastingScreen = () => {
                       <span className="small text-muted">Historical</span>
                     </div>
                     <div className="d-flex align-items-center gap-2">
-                      <div style={{ width: '12px', height: '12px', backgroundColor: '#16a34a', borderRadius: '2px' }}></div>
-                      <span className="small text-muted">Predicted</span>
+                      <div style={{ width: '12px', height: '3px', backgroundColor: '#f97316' }}></div>
+                      <span className="small text-muted">Final-test prediction</span>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      <div style={{ width: '12px', height: '3px', backgroundColor: '#16a34a' }}></div>
+                      <span className="small text-muted">Future forecast</span>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      <div style={{ width: '12px', height: '12px', backgroundColor: '#bbf7d0', borderRadius: '2px' }}></div>
+                      <span className="small text-muted">80% interval</span>
                     </div>
                   </div>
                 </div>
@@ -547,7 +832,7 @@ const SalesForcastingScreen = () => {
                 <div className="forecast-chart">
                   {hasData && displayData.lineGraphData?.length ? (
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
+                      <ComposedChart
                         data={displayData.lineGraphData}
                         margin={isMobile
                           ? { top: 10, right: 4, left: -18, bottom: 42 }
@@ -578,6 +863,17 @@ const SalesForcastingScreen = () => {
                         />
 
                         <Tooltip content={<CustomTooltip />} />
+                        <Area
+                          type="monotone"
+                          dataKey="futureInterval80"
+                          stroke="none"
+                          fill="#86efac"
+                          fillOpacity={0.3}
+                          name="80% Prediction Interval"
+                          connectNulls={false}
+                          activeDot={false}
+                          isAnimationActive={false}
+                        />
                         {/* Blue line - Historical/Actual data from dataset */}
                         <Line 
                           type="monotone" 
@@ -587,8 +883,9 @@ const SalesForcastingScreen = () => {
                           dot={false} 
                           name="Historical Sales"
                           connectNulls={false}
+                          isAnimationActive={false}
                         />
-                        {/* Orange line - Test predictions (validation period) - connects from training */}
+                        {/* Orange line - protected rolling final-test predictions */}
                         <Line
                           type="monotone"
                           dataKey="testPredicted"
@@ -597,6 +894,7 @@ const SalesForcastingScreen = () => {
                           dot={false}
                           name="Test Predictions"
                           connectNulls={true}
+                          isAnimationActive={false}
                         />
                         {/* Green line - Future forecasts (beyond dataset) - connects from test */}
                         <Line
@@ -611,8 +909,9 @@ const SalesForcastingScreen = () => {
                           activeDot={false}
                           name="Future Forecast"
                           connectNulls={true}
+                          isAnimationActive={false}
                         />
-                      </LineChart>
+                      </ComposedChart>
                     </ResponsiveContainer>
                   ) : (
                     <div className="d-flex flex-column align-items-center justify-content-center bg-light rounded h-100">
@@ -655,6 +954,13 @@ const SalesForcastingScreen = () => {
                               
                               return formatCurrency((displayData.dailyForecast.find(d => d.date === dateToUse) || {}).predicted || 0);
                             })()}</div>
+                            {selectedForecastRow?.lower80 !== undefined &&
+                              selectedForecastRow?.upper80 !== undefined && (
+                              <div className="small text-muted mt-1">
+                                80% interval: {formatCurrency(selectedForecastRow.lower80)} to{' '}
+                                {formatCurrency(selectedForecastRow.upper80)}
+                              </div>
+                            )}
                           </div>
                         </Col>
                         <Col xs={12} sm={4}>
@@ -708,6 +1014,10 @@ const SalesForcastingScreen = () => {
                   </Card>
                 )}
               </div>
+            </Tab>
+
+            <Tab eventKey="evaluation" title={<><FaChartLine className="me-2" />Evaluation</>}>
+              <EvaluationPanel evaluation={displayData.evaluation} />
             </Tab>
 
             <Tab eventKey="categories" title={<><FaBoxes className="me-2" />Rankings {hasData && displayData.categoryForecast?.length > 0 && <Badge bg="primary" className="ms-2">{displayData.categoryForecast.length}</Badge>}</>}>

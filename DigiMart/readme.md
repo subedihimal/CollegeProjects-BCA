@@ -1,69 +1,70 @@
-# 🛒 DigiMart — Intelligent Recommendation & Demand Forecasting System
+# DigiMart: Recommendation and Sales Forecasting
 
-An intelligent system for DigiMart that combines a **Content-Based Recommendation Engine** with **ARIMA-based Time Series Forecasting** to deliver personalized product suggestions and data-driven sales predictions.
+DigiMart is a MERN electronics marketplace with deterministic content-based recommendation and a reproducible, from-scratch SARIMA forecasting study.
 
-## 📖 Overview
+## Overview
 
-DigiMart integrates two core intelligent components:
+- The recommendation service builds a temporary profile from viewed products, cart items, and completed orders.
+- The offline forecasting pipeline evaluates raw daily revenue and category quantities for a 15-day forecast horizon.
+- The deployed Flask service validates and serves pre-generated JSON artifacts during normal page loads. An administrator can explicitly start a rebuild from the forecasting page.
 
-- A **recommendation system** that analyzes product attributes and user interaction data to generate personalized suggestions
-- A **forecasting model** that analyzes historical sales data to predict future revenue and product demand
+## Content-Based Recommendation
 
-Together, these components help improve customer experience through relevant recommendations while supporting operational and strategic decisions through accurate demand prediction.
+The service compares each product with the user's recent interactions:
 
-## 🎯 Content-Based Recommendation System
-
-Generates personalized product recommendations by building a user profile from interaction history and scoring candidate products against it.
-
-**How it works:**
-1. **🧾 Check User Activity** — no activity falls back to an Explore Mode showing the latest products; active users get a profile built from their cart, views, and purchase history
-2. **👤 Build User Profile** — aggregates recent interactions, extracts features from product descriptions, and compiles average price, average rating, categories, and brands
-3. **📦 Score Every Product** — combines two similarity components:
-   - **Traditional Similarity (40%)** — category match, brand match, price similarity, rating similarity
-   - **Description Similarity (60%)** — deep feature matching against extracted product attributes
-4. **🏆 Rank & Paginate** — products are sorted by final similarity score, ranked, and returned with a full scoring breakdown
+1. No activity returns the latest products in Explore Mode.
+2. Product identifiers from the cart, views, and orders are deduplicated.
+3. A profile is built from category, brand, price, rating, and colon-delimited key-value specifications.
+4. Traditional similarity contributes 40%. Exact and partial specification matching contributes 60%.
+5. Products are ranked by the deterministic combined score.
 
 ```
 Final Score = 0.40 × Traditional Similarity + 0.60 × Description Similarity
 ```
 
-Recommendations are served in two modes:
-- **🏠 Home Page** — diverse suggestions from full interaction history
-- **📱 Product Page** — similar items based on a single product's context
+The score is a similarity value, not recommendation accuracy. Automated tests cover parsing, aggregation, exact and partial matching, and the declared weights. The project does not yet include relevance labels or a user study.
 
-## 📈 ARIMA Time Series Forecasting
+## From-Scratch SARIMA Study
 
-Predicts future revenue and product demand from historical sales data using a validated ARIMA pipeline.
+The primary target is raw daily revenue from 366 chronological observations. A trailing 3-day mean is evaluated only as an ablation.
 
-**How it works:**
-1. **📊 Load & Prepare Data** — aggregates daily sales and smooths noise with a 3-day rolling average
-2. **🔧 Preprocess** — applies log transformation, extracts trend via 7-day moving average, and standardizes residuals
-3. **🎛️ Tune Parameters** — searches (p, d, q) combinations and selects the best fit via approximate AIC
-4. **✅ Train-Test Validation** — 75/25 split with MAE, RMSE, and MAPE evaluation
-5. **🔮 Forecast** — retrains on full data and projects revenue and demand 7–15 days ahead
-6. **🗂️ Category-Level Forecasts** — separate models per product category, with unreliable categories filtered out
+1. Reserve the first 80% for development and the final 20% for protected rolling testing.
+2. Create seven expanding 15-day rolling-origin validation folds.
+3. Combine 72 declared combinations of d,D,p,q,P,Q with 91-day, 126-day, 182-day, and expanding training histories.
+4. Evaluate the 288 configurations on every validation origin, using the complete available history for a common MASE scale.
+5. For the dashboard revenue forecast, retain adequate candidates with weekly seasonal dynamics, then rank them by mean MASE, pooled RMSE, and fewer terms. Retain the unrestricted ranking for comparison.
+6. Compare the selected order and coefficients with naive, weekly seasonal-naive, non-seasonal ARIMA, and a same-order statsmodels SARIMA reference.
+7. Evaluate all 73 final observations in expanding 15-day blocks.
+8. Report MAE, RMSE, MAPE, WAPE, MASE, RMSSE, residual diagnostics, and bootstrap interval coverage.
+9. Fit the selected revenue configuration using its selected history and generate versioned artifacts.
 
-## 📊 Results
+## Main Results
 
-**ARIMA Model Evaluation** — the 75/25 train-test split delivered the best accuracy:
+| Horizon | Selected custom order | Validation MASE | Final-test MASE | Final-test MAPE |
+|---|---|---:|---:|---:|
+| 15 days | SARIMA(2,0,0)(0,1,1,7), 126 days | 0.817 | 0.761 | 16.97% |
 
-| Train-Test Split | MAE | RMSE | MAPE | Accuracy | Rank |
-|---|---|---|---|---|---|
-| 70-30 | 14,503 | 18,094 | 9.6% | 90.4% | 3rd |
-| **75-25** | **12,079** | **14,765** | **8.5%** | **91.5%** | 🥇 1st |
-| 80-20 | 18,323 | 21,933 | 12.2% | 87.8% | 4th |
-| 90-10 | 13,902 | 17,713 | 9.4% | 90.6% | 2nd |
+The 72 orders and four history policies are evaluated on the same rolling origins. Candidates with patterned residuals or unstable roots are excluded. The selected model improves validation MASE from 0.824 for the naive baseline to 0.817 and produces a recurring seven-day pattern. On the protected final test, its MAPE is 16.97%, compared with 20.28% for the naive baseline.
 
-**Recommendation Quality** — evaluated using a test profile centered on Tablets, Smartwatches, and Laptops (Samsung/Apple):
+## Reproduce the Forecasting Study
 
-- 🏠 **Home Page recommendations** scored **92–96%**, effectively aligning multiple product features with historical interaction patterns
-- 📱 **Product Page recommendations** correctly prioritized same-category items (e.g., other smartphones) before suggesting cross-category alternatives
+~~~bash
+cd backend/forcasting
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python data/datapreprocess.py
+python generate_artifacts.py
+python -m unittest discover -s tests -p 'test_*.py'
+~~~
 
-## 🛠️ Tech Highlights
+Run the recommendation scoring tests from the repository root:
 
-- Content-based filtering using product metadata and NLP-driven feature extraction
-- Custom ARIMA implementation with automated parameter selection and category-level modeling
-- Modular, maintainable architecture built for scalability and future enhancement
+~~~bash
+npm run test:recommendations
+~~~
+
+The report source and generated PDF are in **Documentation/report**. Editable SVG diagrams are in **Documentation/svg**.
 
 ## ▲ Deploying to Vercel
 
@@ -88,10 +89,17 @@ Product image uploads remain available on Vercel. Images up to 1 MB are encoded
 as data URIs and saved with the product document, avoiding Vercel's ephemeral
 filesystem. Local development continues to save images in `uploads/`.
 
-The Python forecasting engine is deployed as a third Vercel service. Vercel
+The Python forecasting artifact API is deployed as a third Vercel service. Vercel
 injects its private URL into the Express backend as `FORECAST_API_URL`, so no
 manual forecasting URL or separate hosting account is required. For local
 development, run the Flask service on port 5001 or set `FORECAST_API_URL`.
+Set `FORECAST_RECALC_SECRET` to the same long random value for the backend and
+forecasting services. The forecasting page uses it indirectly through the
+authenticated Express endpoint; it is never exposed to the browser. A manual
+recalculation can take one to two minutes. Local recalculation replaces the JSON
+artifact files. On Vercel, the generated result is returned to the current page,
+but serverless storage is temporary, so permanent deployment artifacts should
+still be generated locally and committed.
 
 ## 🔑 Keywords
-DigiMart, Content-Based Filtering, Product Recommendation, ARIMA, Time Series Forecasting, Demand Prediction
+DigiMart, Content-Based Filtering, Product Recommendation, SARIMA, Rolling-Origin Evaluation, Time Series Forecasting, Demand Prediction

@@ -10,6 +10,11 @@
       "root": "backend",
       "framework": "express",
       "entrypoint": "app.js",
+      "functions": {
+        "**/*.js": {
+          "maxDuration": 300
+        }
+      },
       "bindings": [
         {
           "type": "service",
@@ -26,7 +31,7 @@
       "functions": {
         "**/*.py": {
           "maxDuration": 300,
-          "includeFiles": "cleaned_customer_data.csv"
+          "includeFiles": ["data/cleaned_customer_data.csv", "artifacts/**"]
         }
       }
     }
