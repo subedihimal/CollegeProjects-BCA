@@ -31,7 +31,7 @@
       "functions": {
         "**/*.py": {
           "maxDuration": 300,
-          "includeFiles": ["data/cleaned_customer_data.csv", "artifacts/**"]
+          "includeFiles": "{data/cleaned_customer_data.csv,artifacts/**}"
         }
       }
     }

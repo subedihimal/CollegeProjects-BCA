@@ -109,12 +109,9 @@ class FromScratchSarimaTests(unittest.TestCase):
 
         first = model.prediction_intervals(7, simulations=200, random_state=9)
         second = model.prediction_intervals(7, simulations=200, random_state=9)
-        for level in (0.80, 0.95):
-            np.testing.assert_allclose(first[level][0], second[level][0])
-            np.testing.assert_allclose(first[level][1], second[level][1])
-            self.assertTrue(np.all(first[level][0] <= first[level][1]))
-        self.assertTrue(np.all(first[0.95][0] <= first[0.80][0]))
-        self.assertTrue(np.all(first[0.80][1] <= first[0.95][1]))
+        np.testing.assert_allclose(first[0.80][0], second[0.80][0])
+        np.testing.assert_allclose(first[0.80][1], second[0.80][1])
+        self.assertTrue(np.all(first[0.80][0] <= first[0.80][1]))
 
     def test_residual_diagnostics_report_roots_and_ljung_box(self) -> None:
         random = np.random.default_rng(13)

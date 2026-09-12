@@ -454,8 +454,6 @@ def evaluate_custom_holdout(
     actual: list[float] = []
     lower80: list[float] = []
     upper80: list[float] = []
-    lower95: list[float] = []
-    upper95: list[float] = []
 
     for number, window in enumerate(windows, start=1):
         fit_data = training_sample(window.train, training_window)
@@ -469,7 +467,6 @@ def evaluate_custom_holdout(
             random_state=10_000 + number,
         )
         current_lower80, current_upper80 = np.quantile(samples, (0.10, 0.90), axis=0)
-        current_lower95, current_upper95 = np.quantile(samples, (0.025, 0.975), axis=0)
         metrics = calculate_forecast_metrics(
             window.test,
             point,
@@ -489,14 +486,10 @@ def evaluate_custom_holdout(
         actual.extend(window.test.tolist())
         lower80.extend(current_lower80.tolist())
         upper80.extend(current_upper80.tolist())
-        lower95.extend(current_lower95.tolist())
-        upper95.extend(current_upper95.tolist())
 
     actual_array = np.asarray(actual)
     lower80_array = np.asarray(lower80)
     upper80_array = np.asarray(upper80)
-    lower95_array = np.asarray(lower95)
-    upper95_array = np.asarray(upper95)
     return {
         "name": order.name,
         "order": order,
@@ -512,14 +505,6 @@ def evaluate_custom_holdout(
                     np.mean((actual_array >= lower80_array) & (actual_array <= upper80_array))
                 ),
                 "mean_width": float(np.mean(upper80_array - lower80_array)),
-            },
-            "95": {
-                "lower": lower95_array,
-                "upper": upper95_array,
-                "coverage": float(
-                    np.mean((actual_array >= lower95_array) & (actual_array <= upper95_array))
-                ),
-                "mean_width": float(np.mean(upper95_array - lower95_array)),
             },
         },
     }

@@ -1,6 +1,15 @@
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+
 const BASE_URL = (process.env.FORECAST_API_URL || 'http://localhost:5001').replace(
   /\/$/,
   ''
+);
+const METRICS_ARTIFACT = fileURLToPath(
+  new URL('../forcasting/artifacts/metrics-15days.json', import.meta.url)
+);
+const FORECAST_ARTIFACT = fileURLToPath(
+  new URL('../forcasting/artifacts/forecast-15days.json', import.meta.url)
 );
 
 // Forecast responses are served from precomputed artifacts. Keep the timeout
@@ -16,7 +25,7 @@ const configuredRecalculationTimeout = Number(
 );
 const RECALCULATION_TIMEOUT =
   Number.isFinite(configuredRecalculationTimeout) &&
-  configuredRecalculationTimeout > 0
+    configuredRecalculationTimeout > 0
     ? configuredRecalculationTimeout
     : 280000;
 
@@ -60,14 +69,11 @@ const serviceErrorStatus = (error) =>
 // @access  Private/Admin
 const getSalesForecast = async (_req, res) => {
   try {
-    const response = await fetchWithTimeout(`${BASE_URL}/api/sales/forecast`);
-    if (!response.ok) {
-      throw new Error(`Forecasting service returned ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = JSON.parse(await readFile(FORECAST_ARTIFACT, 'utf8'));
+    res.set('Cache-Control', 'no-store');
     return res.json({
       ...data,
+      artifactSource: 'forecast-15days.json',
       serviceStatus: 'success',
       timestamp: new Date().toISOString(),
       period: '15days',
@@ -88,7 +94,6 @@ const getSalesForecast = async (_req, res) => {
         dailyForecast: [],
         categoryForecast: [],
         lineGraphData: [],
-        topProducts: [],
         modelInfo: {
           type: 'No model available',
           metrics: null,
@@ -104,14 +109,11 @@ const getSalesForecast = async (_req, res) => {
 // @access  Private/Admin
 const getModelMetrics = async (_req, res) => {
   try {
-    const response = await fetchWithTimeout(`${BASE_URL}/api/sales/metrics`);
-    if (!response.ok) {
-      throw new Error(`Metrics service returned ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = JSON.parse(await readFile(METRICS_ARTIFACT, 'utf8'));
+    res.set('Cache-Control', 'no-store');
     return res.json({
       ...data,
+      artifactSource: 'metrics-15days.json',
       serviceStatus: 'success',
       timestamp: new Date().toISOString(),
       period: '15days',
@@ -130,6 +132,23 @@ const getModelMetrics = async (_req, res) => {
   }
 };
 
+const getRecalculationStatus = async (_req, res) => {
+  try {
+    const response = await fetchWithTimeout(
+      `${BASE_URL}/api/sales/recalculation-status`
+    );
+    if (!response.ok) {
+      throw new Error(`Forecasting service returned ${response.status}`);
+    }
+    return res.json(await response.json());
+  } catch (error) {
+    return res.status(serviceErrorStatus(error)).json({
+      running: false,
+      status: 'unavailable',
+    });
+  }
+};
+
 // @desc    Recalculate forecasting artifacts on demand
 // @route   POST /api/sales/recalculate
 // @access  Private/Admin
@@ -140,10 +159,6 @@ const recalculateForecast = async (_req, res) => {
       {
         method: 'POST',
         timeout: RECALCULATION_TIMEOUT,
-        headers: {
-          'X-Forecast-Recalculation-Key':
-            process.env.FORECAST_RECALC_SECRET || '',
-        },
       }
     );
     const data = await response.json().catch(() => null);
@@ -164,4 +179,9 @@ const recalculateForecast = async (_req, res) => {
   }
 };
 
-export { getSalesForecast, getModelMetrics, recalculateForecast };
+export {
+  getSalesForecast,
+  getModelMetrics,
+  getRecalculationStatus,
+  recalculateForecast,
+};

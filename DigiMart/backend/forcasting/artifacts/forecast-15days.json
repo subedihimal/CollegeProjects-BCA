@@ -1,20 +1,13 @@
 {
   "summary": {
     "predictedRevenue": 2103532.21,
-    "growthRate": -0.0,
+    "growthRate": -0.03,
     "bestCase": 2316812.99,
     "worstCase": 1984178.62,
     "dailyAverage": 140235.48,
     "historicalRevenue": 2104196.55,
     "interval80": {
-      "level": 0.8,
-      "lowerTotal": 1984178.62,
-      "upperTotal": 2316812.99
-    },
-    "interval95": {
-      "level": 0.95,
-      "lowerTotal": 1904941.22,
-      "upperTotal": 2447674.82
+      "level": 0.8
     }
   },
   "dailyForecast": [
@@ -22,151 +15,91 @@
       "date": "2024-09-24",
       "predicted": 130280.08,
       "lower80": 101736.85,
-      "upper80": 173311.02,
-      "lower95": 82301.94,
-      "upper95": 211305.12,
-      "day_name": "Tuesday",
-      "is_weekend": false
+      "upper80": 173311.02
     },
     {
       "date": "2024-09-25",
       "predicted": 144153.19,
       "lower80": 109923.21,
-      "upper80": 192189.28,
-      "lower95": 90849.74,
-      "upper95": 228902.9,
-      "day_name": "Wednesday",
-      "is_weekend": false
+      "upper80": 192189.28
     },
     {
       "date": "2024-09-26",
       "predicted": 149568.94,
       "lower80": 116415.76,
-      "upper80": 200453.41,
-      "lower95": 95275.66,
-      "upper95": 240546.61,
-      "day_name": "Thursday",
-      "is_weekend": false
+      "upper80": 200453.41
     },
     {
       "date": "2024-09-27",
       "predicted": 137024.27,
       "lower80": 105832.39,
-      "upper80": 182699.62,
-      "lower95": 86162.41,
-      "upper95": 218212.37,
-      "day_name": "Friday",
-      "is_weekend": false
+      "upper80": 182699.62
     },
     {
       "date": "2024-09-28",
       "predicted": 149341.28,
       "lower80": 115286.27,
-      "upper80": 199303.71,
-      "lower95": 94499.6,
-      "upper95": 236569.07,
-      "day_name": "Saturday",
-      "is_weekend": true
+      "upper80": 199303.71
     },
     {
       "date": "2024-09-29",
       "predicted": 128058.42,
       "lower80": 98965.01,
-      "upper80": 171024.34,
-      "lower95": 81511.61,
-      "upper95": 206506.09,
-      "day_name": "Sunday",
-      "is_weekend": true
+      "upper80": 171024.34
     },
     {
       "date": "2024-09-30",
       "predicted": 148355.0,
       "lower80": 115307.3,
-      "upper80": 199965.02,
-      "lower95": 93808.03,
-      "upper95": 241523.78,
-      "day_name": "Monday",
-      "is_weekend": false
+      "upper80": 199965.02
     },
     {
       "date": "2024-10-01",
       "predicted": 130116.71,
       "lower80": 98819.07,
-      "upper80": 173110.18,
-      "lower95": 82315.27,
-      "upper95": 202034.07,
-      "day_name": "Tuesday",
-      "is_weekend": false
+      "upper80": 173110.18
     },
     {
       "date": "2024-10-02",
       "predicted": 144169.55,
       "lower80": 110371.48,
-      "upper80": 196348.88,
-      "lower95": 89913.77,
-      "upper95": 229042.74,
-      "day_name": "Wednesday",
-      "is_weekend": false
+      "upper80": 196348.88
     },
     {
       "date": "2024-10-03",
       "predicted": 149569.2,
       "lower80": 115181.8,
-      "upper80": 200649.59,
-      "lower95": 94619.77,
-      "upper95": 239051.22,
-      "day_name": "Thursday",
-      "is_weekend": false
+      "upper80": 200649.59
     },
     {
       "date": "2024-10-04",
       "predicted": 137024.13,
       "lower80": 104348.42,
-      "upper80": 181701.05,
-      "lower95": 86421.33,
-      "upper95": 217371.25,
-      "day_name": "Friday",
-      "is_weekend": false
+      "upper80": 181701.05
     },
     {
       "date": "2024-10-05",
       "predicted": 149341.29,
       "lower80": 114433.7,
-      "upper80": 202910.13,
-      "lower95": 95476.96,
-      "upper95": 238331.57,
-      "day_name": "Saturday",
-      "is_weekend": true
+      "upper80": 202910.13
     },
     {
       "date": "2024-10-06",
       "predicted": 128058.43,
       "lower80": 96564.22,
-      "upper80": 172340.05,
-      "lower95": 80520.18,
-      "upper95": 207889.55,
-      "day_name": "Sunday",
-      "is_weekend": true
+      "upper80": 172340.05
     },
     {
       "date": "2024-10-07",
       "predicted": 148355.0,
       "lower80": 112855.45,
-      "upper80": 201817.95,
-      "lower95": 91502.38,
-      "upper95": 238121.6,
-      "day_name": "Monday",
-      "is_weekend": false
+      "upper80": 201817.95
     },
     {
       "date": "2024-10-08",
       "predicted": 130116.71,
       "lower80": 97127.6,
-      "upper80": 175255.66,
-      "lower95": 81471.53,
-      "upper95": 204866.41,
-      "day_name": "Tuesday",
-      "is_weekend": false
+      "upper80": 175255.66
     }
   ],
   "categoryForecast": [
@@ -179,107 +112,77 @@
         {
           "date": "2024-09-24",
           "predicted_quantity": 72.1,
-          "predicted_revenue": 52462.72,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 52462.72
         },
         {
           "date": "2024-09-25",
           "predicted_quantity": 69.13,
-          "predicted_revenue": 50296.57,
-          "day_name": "Wednesday",
-          "is_weekend": false
+          "predicted_revenue": 50296.57
         },
         {
           "date": "2024-09-26",
           "predicted_quantity": 68.81,
-          "predicted_revenue": 50065.57,
-          "day_name": "Thursday",
-          "is_weekend": false
+          "predicted_revenue": 50065.57
         },
         {
           "date": "2024-09-27",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50040.42,
-          "day_name": "Friday",
-          "is_weekend": false
+          "predicted_revenue": 50040.42
         },
         {
           "date": "2024-09-28",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50037.67,
-          "day_name": "Saturday",
-          "is_weekend": true
+          "predicted_revenue": 50037.67
         },
         {
           "date": "2024-09-29",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50037.37,
-          "day_name": "Sunday",
-          "is_weekend": true
+          "predicted_revenue": 50037.37
         },
         {
           "date": "2024-09-30",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50037.34,
-          "day_name": "Monday",
-          "is_weekend": false
+          "predicted_revenue": 50037.34
         },
         {
           "date": "2024-10-01",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50037.34,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 50037.34
         },
         {
           "date": "2024-10-02",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50037.34,
-          "day_name": "Wednesday",
-          "is_weekend": false
+          "predicted_revenue": 50037.34
         },
         {
           "date": "2024-10-03",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50037.34,
-          "day_name": "Thursday",
-          "is_weekend": false
+          "predicted_revenue": 50037.34
         },
         {
           "date": "2024-10-04",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50037.34,
-          "day_name": "Friday",
-          "is_weekend": false
+          "predicted_revenue": 50037.34
         },
         {
           "date": "2024-10-05",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50037.34,
-          "day_name": "Saturday",
-          "is_weekend": true
+          "predicted_revenue": 50037.34
         },
         {
           "date": "2024-10-06",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50037.34,
-          "day_name": "Sunday",
-          "is_weekend": true
+          "predicted_revenue": 50037.34
         },
         {
           "date": "2024-10-07",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50037.34,
-          "day_name": "Monday",
-          "is_weekend": false
+          "predicted_revenue": 50037.34
         },
         {
           "date": "2024-10-08",
           "predicted_quantity": 68.77,
-          "predicted_revenue": 50037.34,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 50037.34
         }
       ],
       "validation_mape": 28.2,
@@ -298,107 +201,77 @@
         {
           "date": "2024-09-24",
           "predicted_quantity": 49.41,
-          "predicted_revenue": 27278.55,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 27278.55
         },
         {
           "date": "2024-09-25",
           "predicted_quantity": 49.55,
-          "predicted_revenue": 27352.7,
-          "day_name": "Wednesday",
-          "is_weekend": false
+          "predicted_revenue": 27352.7
         },
         {
           "date": "2024-09-26",
           "predicted_quantity": 47.64,
-          "predicted_revenue": 26302.73,
-          "day_name": "Thursday",
-          "is_weekend": false
+          "predicted_revenue": 26302.73
         },
         {
           "date": "2024-09-27",
           "predicted_quantity": 49.42,
-          "predicted_revenue": 27281.29,
-          "day_name": "Friday",
-          "is_weekend": false
+          "predicted_revenue": 27281.29
         },
         {
           "date": "2024-09-28",
           "predicted_quantity": 48.6,
-          "predicted_revenue": 26828.97,
-          "day_name": "Saturday",
-          "is_weekend": true
+          "predicted_revenue": 26828.97
         },
         {
           "date": "2024-09-29",
           "predicted_quantity": 49.86,
-          "predicted_revenue": 27526.27,
-          "day_name": "Sunday",
-          "is_weekend": true
+          "predicted_revenue": 27526.27
         },
         {
           "date": "2024-09-30",
           "predicted_quantity": 52.01,
-          "predicted_revenue": 28713.06,
-          "day_name": "Monday",
-          "is_weekend": false
+          "predicted_revenue": 28713.06
         },
         {
           "date": "2024-10-01",
           "predicted_quantity": 50.46,
-          "predicted_revenue": 27859.68,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 27859.68
         },
         {
           "date": "2024-10-02",
           "predicted_quantity": 50.36,
-          "predicted_revenue": 27803.03,
-          "day_name": "Wednesday",
-          "is_weekend": false
+          "predicted_revenue": 27803.03
         },
         {
           "date": "2024-10-03",
           "predicted_quantity": 50.36,
-          "predicted_revenue": 27803.03,
-          "day_name": "Thursday",
-          "is_weekend": false
+          "predicted_revenue": 27803.03
         },
         {
           "date": "2024-10-04",
           "predicted_quantity": 50.36,
-          "predicted_revenue": 27803.03,
-          "day_name": "Friday",
-          "is_weekend": false
+          "predicted_revenue": 27803.03
         },
         {
           "date": "2024-10-05",
           "predicted_quantity": 50.36,
-          "predicted_revenue": 27803.03,
-          "day_name": "Saturday",
-          "is_weekend": true
+          "predicted_revenue": 27803.03
         },
         {
           "date": "2024-10-06",
           "predicted_quantity": 50.36,
-          "predicted_revenue": 27803.03,
-          "day_name": "Sunday",
-          "is_weekend": true
+          "predicted_revenue": 27803.03
         },
         {
           "date": "2024-10-07",
           "predicted_quantity": 50.36,
-          "predicted_revenue": 27803.03,
-          "day_name": "Monday",
-          "is_weekend": false
+          "predicted_revenue": 27803.03
         },
         {
           "date": "2024-10-08",
           "predicted_quantity": 50.36,
-          "predicted_revenue": 27803.03,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 27803.03
         }
       ],
       "validation_mape": 48.7,
@@ -417,107 +290,77 @@
         {
           "date": "2024-09-24",
           "predicted_quantity": 40.72,
-          "predicted_revenue": 23809.57,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 23809.57
         },
         {
           "date": "2024-09-25",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Wednesday",
-          "is_weekend": false
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-09-26",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Thursday",
-          "is_weekend": false
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-09-27",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Friday",
-          "is_weekend": false
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-09-28",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Saturday",
-          "is_weekend": true
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-09-29",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Sunday",
-          "is_weekend": true
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-09-30",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Monday",
-          "is_weekend": false
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-10-01",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-10-02",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Wednesday",
-          "is_weekend": false
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-10-03",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Thursday",
-          "is_weekend": false
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-10-04",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Friday",
-          "is_weekend": false
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-10-05",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Saturday",
-          "is_weekend": true
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-10-06",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Sunday",
-          "is_weekend": true
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-10-07",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Monday",
-          "is_weekend": false
+          "predicted_revenue": 23692.2
         },
         {
           "date": "2024-10-08",
           "predicted_quantity": 40.52,
-          "predicted_revenue": 23692.2,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 23692.2
         }
       ],
       "validation_mape": 34.2,
@@ -536,107 +379,77 @@
         {
           "date": "2024-09-24",
           "predicted_quantity": 29.81,
-          "predicted_revenue": 18935.6,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 18935.6
         },
         {
           "date": "2024-09-25",
           "predicted_quantity": 33.51,
-          "predicted_revenue": 21279.96,
-          "day_name": "Wednesday",
-          "is_weekend": false
+          "predicted_revenue": 21279.96
         },
         {
           "date": "2024-09-26",
           "predicted_quantity": 32.19,
-          "predicted_revenue": 20442.89,
-          "day_name": "Thursday",
-          "is_weekend": false
+          "predicted_revenue": 20442.89
         },
         {
           "date": "2024-09-27",
           "predicted_quantity": 33.26,
-          "predicted_revenue": 21127.22,
-          "day_name": "Friday",
-          "is_weekend": false
+          "predicted_revenue": 21127.22
         },
         {
           "date": "2024-09-28",
           "predicted_quantity": 36.15,
-          "predicted_revenue": 22956.52,
-          "day_name": "Saturday",
-          "is_weekend": true
+          "predicted_revenue": 22956.52
         },
         {
           "date": "2024-09-29",
           "predicted_quantity": 26.96,
-          "predicted_revenue": 17122.0,
-          "day_name": "Sunday",
-          "is_weekend": true
+          "predicted_revenue": 17122.0
         },
         {
           "date": "2024-09-30",
           "predicted_quantity": 28.21,
-          "predicted_revenue": 17919.79,
-          "day_name": "Monday",
-          "is_weekend": false
+          "predicted_revenue": 17919.79
         },
         {
           "date": "2024-10-01",
           "predicted_quantity": 30.47,
-          "predicted_revenue": 19355.14,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 19355.14
         },
         {
           "date": "2024-10-02",
           "predicted_quantity": 31.62,
-          "predicted_revenue": 20082.78,
-          "day_name": "Wednesday",
-          "is_weekend": false
+          "predicted_revenue": 20082.78
         },
         {
           "date": "2024-10-03",
           "predicted_quantity": 30.37,
-          "predicted_revenue": 19291.44,
-          "day_name": "Thursday",
-          "is_weekend": false
+          "predicted_revenue": 19291.44
         },
         {
           "date": "2024-10-04",
           "predicted_quantity": 31.39,
-          "predicted_revenue": 19938.38,
-          "day_name": "Friday",
-          "is_weekend": false
+          "predicted_revenue": 19938.38
         },
         {
           "date": "2024-10-05",
           "predicted_quantity": 34.12,
-          "predicted_revenue": 21667.75,
-          "day_name": "Saturday",
-          "is_weekend": true
+          "predicted_revenue": 21667.75
         },
         {
           "date": "2024-10-06",
           "predicted_quantity": 25.43,
-          "predicted_revenue": 16151.96,
-          "day_name": "Sunday",
-          "is_weekend": true
+          "predicted_revenue": 16151.96
         },
         {
           "date": "2024-10-07",
           "predicted_quantity": 26.62,
-          "predicted_revenue": 16906.17,
-          "day_name": "Monday",
-          "is_weekend": false
+          "predicted_revenue": 16906.17
         },
         {
           "date": "2024-10-08",
           "predicted_quantity": 28.76,
-          "predicted_revenue": 18263.11,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 18263.11
         }
       ],
       "validation_mape": 40.0,
@@ -655,107 +468,77 @@
         {
           "date": "2024-09-24",
           "predicted_quantity": 20.53,
-          "predicted_revenue": 7414.3,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 7414.3
         },
         {
           "date": "2024-09-25",
           "predicted_quantity": 20.82,
-          "predicted_revenue": 7519.51,
-          "day_name": "Wednesday",
-          "is_weekend": false
+          "predicted_revenue": 7519.51
         },
         {
           "date": "2024-09-26",
           "predicted_quantity": 20.78,
-          "predicted_revenue": 7504.82,
-          "day_name": "Thursday",
-          "is_weekend": false
+          "predicted_revenue": 7504.82
         },
         {
           "date": "2024-09-27",
           "predicted_quantity": 20.66,
-          "predicted_revenue": 7462.36,
-          "day_name": "Friday",
-          "is_weekend": false
+          "predicted_revenue": 7462.36
         },
         {
           "date": "2024-09-28",
           "predicted_quantity": 20.6,
-          "predicted_revenue": 7441.15,
-          "day_name": "Saturday",
-          "is_weekend": true
+          "predicted_revenue": 7441.15
         },
         {
           "date": "2024-09-29",
           "predicted_quantity": 20.94,
-          "predicted_revenue": 7563.39,
-          "day_name": "Sunday",
-          "is_weekend": true
+          "predicted_revenue": 7563.39
         },
         {
           "date": "2024-09-30",
           "predicted_quantity": 20.48,
-          "predicted_revenue": 7397.63,
-          "day_name": "Monday",
-          "is_weekend": false
+          "predicted_revenue": 7397.63
         },
         {
           "date": "2024-10-01",
           "predicted_quantity": 20.67,
-          "predicted_revenue": 7464.86,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 7464.86
         },
         {
           "date": "2024-10-02",
           "predicted_quantity": 20.67,
-          "predicted_revenue": 7466.21,
-          "day_name": "Wednesday",
-          "is_weekend": false
+          "predicted_revenue": 7466.21
         },
         {
           "date": "2024-10-03",
           "predicted_quantity": 20.67,
-          "predicted_revenue": 7466.02,
-          "day_name": "Thursday",
-          "is_weekend": false
+          "predicted_revenue": 7466.02
         },
         {
           "date": "2024-10-04",
           "predicted_quantity": 20.67,
-          "predicted_revenue": 7465.48,
-          "day_name": "Friday",
-          "is_weekend": false
+          "predicted_revenue": 7465.48
         },
         {
           "date": "2024-10-05",
           "predicted_quantity": 20.67,
-          "predicted_revenue": 7465.2,
-          "day_name": "Saturday",
-          "is_weekend": true
+          "predicted_revenue": 7465.2
         },
         {
           "date": "2024-10-06",
           "predicted_quantity": 20.67,
-          "predicted_revenue": 7466.77,
-          "day_name": "Sunday",
-          "is_weekend": true
+          "predicted_revenue": 7466.77
         },
         {
           "date": "2024-10-07",
           "predicted_quantity": 20.67,
-          "predicted_revenue": 7464.64,
-          "day_name": "Monday",
-          "is_weekend": false
+          "predicted_revenue": 7464.64
         },
         {
           "date": "2024-10-08",
           "predicted_quantity": 20.67,
-          "predicted_revenue": 7465.51,
-          "day_name": "Tuesday",
-          "is_weekend": false
+          "predicted_revenue": 7465.51
         }
       ],
       "validation_mape": 54.2,
@@ -4243,43 +4026,6 @@
       ],
       "isForecastBridge": false,
       "type": "forecast"
-    }
-  ],
-  "topProducts": [
-    {
-      "name": "Smartphone",
-      "predictedSales": 753276.35,
-      "predictedQuantity": 1035,
-      "growth": -7.4,
-      "avgPrice": 727.6
-    },
-    {
-      "name": "Tablet",
-      "predictedSales": 413764.46,
-      "predictedQuantity": 749,
-      "growth": -6.1,
-      "avgPrice": 552.08
-    },
-    {
-      "name": "Laptop",
-      "predictedSales": 355500.37,
-      "predictedQuantity": 608,
-      "growth": 1.2,
-      "avgPrice": 584.66
-    },
-    {
-      "name": "Smartwatch",
-      "predictedSales": 291440.71,
-      "predictedQuantity": 459,
-      "growth": -26.2,
-      "avgPrice": 635.12
-    },
-    {
-      "name": "Headphones",
-      "predictedSales": 112027.83,
-      "predictedQuantity": 310,
-      "growth": -13.6,
-      "avgPrice": 361.18
     }
   ],
   "modelInfo": {

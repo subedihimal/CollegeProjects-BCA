@@ -297,10 +297,8 @@ def build_forecast_response(
         random_state=42 + horizon,
     )
     lower80, upper80 = np.quantile(samples, (0.10, 0.90), axis=0)
-    lower95, upper95 = np.quantile(samples, (0.025, 0.975), axis=0)
     totals = np.sum(samples, axis=1)
     total_lower80, total_upper80 = np.quantile(totals, (0.10, 0.90))
-    total_lower95, total_upper95 = np.quantile(totals, (0.025, 0.975))
     last_date = pd.Timestamp(daily["Date"].iloc[-1])
 
     daily_forecast = []
@@ -312,10 +310,6 @@ def build_forecast_response(
                 "predicted": round(float(point[index]), 2),
                 "lower80": round(float(lower80[index]), 2),
                 "upper80": round(float(upper80[index]), 2),
-                "lower95": round(float(lower95[index]), 2),
-                "upper95": round(float(upper95[index]), 2),
-                "day_name": date.strftime("%A"),
-                "is_weekend": date.weekday() >= 5,
             }
         )
 
@@ -342,35 +336,18 @@ def build_forecast_response(
     forecast_response = {
         "summary": {
             "predictedRevenue": round(predicted_total, 2),
-            "growthRate": round(growth_rate, 1),
+            "growthRate": round(growth_rate, 2),
             "bestCase": round(float(total_upper80), 2),
             "worstCase": round(float(total_lower80), 2),
             "dailyAverage": round(predicted_total / horizon, 2),
             "historicalRevenue": round(previous_total, 2),
             "interval80": {
                 "level": 0.80,
-                "lowerTotal": round(float(total_lower80), 2),
-                "upperTotal": round(float(total_upper80), 2),
-            },
-            "interval95": {
-                "level": 0.95,
-                "lowerTotal": round(float(total_lower95), 2),
-                "upperTotal": round(float(total_upper95), 2),
             },
         },
         "dailyForecast": daily_forecast,
         "categoryForecast": category_forecasts,
         "lineGraphData": line_graph,
-        "topProducts": [
-            {
-                "name": category["category"],
-                "predictedSales": category["total_predicted_revenue"],
-                "predictedQuantity": category["total_predicted_quantity"],
-                "growth": category["growth"],
-                "avgPrice": category["average_price"],
-            }
-            for category in category_forecasts[:10]
-        ],
         "modelInfo": {
             "type": order.name,
             "implementation": "From-scratch multiplicative SARIMA estimated by CSS",
@@ -413,20 +390,6 @@ def _build_metrics_response(
     horizon: int,
 ) -> dict[str, Any]:
     result = experiment["horizons"][str(horizon)]
-    target = daily["Revenue"].to_numpy(dtype=float)
-    predicted_total = float(
-        np.sum(
-            FromScratchSARIMA(result["selected_order"])
-            .fit(training_sample(target, result["selected_training_window"]))
-            .forecast(horizon)
-        )
-    )
-    historical_total = float(np.sum(target[-horizon:]))
-    growth_rate = (
-        (predicted_total - historical_total) / historical_total * 100
-        if historical_total > 0
-        else 0.0
-    )
     final_metrics = result["final_comparison"]["custom_sarima"]["metrics"]
     diagnostics = result["diagnostics"]
     comparison = []
@@ -445,7 +408,6 @@ def _build_metrics_response(
         )
 
     return {
-        "growth_rate": round(growth_rate, 1),
         "main_model": {
             "type": result["selected_order"].name,
             "implementation": "from_scratch_css",
@@ -455,7 +417,6 @@ def _build_metrics_response(
             "wape": round(final_metrics["wape"], 2),
             "mase": round(final_metrics["mase"], 3),
             "rmsse": round(final_metrics["rmsse"], 3),
-            "mae_normalized": round(final_metrics["mae_normalized"], 4),
             "rmse_normalized": round(final_metrics["rmse_normalized"], 4),
             "mean_actual": round(final_metrics["mean_actual"], 2),
             "train_size": experiment["development_size"],
@@ -482,13 +443,14 @@ def _build_metrics_response(
         "coefficient_comparison": result["coefficient_comparison"],
         "point_forecast_comparison": result["point_forecast_comparison"],
         "prediction_intervals": {
-            level: {
-                "coverage": interval["coverage"],
-                "mean_width": interval["mean_width"],
+            "80": {
+                "coverage": result["final_comparison"]["custom_sarima"][
+                    "intervals"
+                ]["80"]["coverage"],
+                "mean_width": result["final_comparison"]["custom_sarima"][
+                    "intervals"
+                ]["80"]["mean_width"],
             }
-            for level, interval in result["final_comparison"]["custom_sarima"][
-                "intervals"
-            ].items()
         },
         "methodology": {
             "split_type": "chronological",
@@ -515,7 +477,6 @@ def _build_metrics_response(
         },
         "data_points": experiment["observations"],
         "category_models_count": len(category_experiment),
-        "category_models": len(category_experiment),
     }
 
 
@@ -546,8 +507,6 @@ def _build_category_forecasts(
                     "date": date.strftime("%Y-%m-%d"),
                     "predicted_quantity": round(float(prediction), 2),
                     "predicted_revenue": round(float(prediction) * average_price, 2),
-                    "day_name": date.strftime("%A"),
-                    "is_weekend": date.weekday() >= 5,
                 }
             )
         predicted_quantity = float(np.sum(predictions))
@@ -679,7 +638,9 @@ def write_plots(
     development = daily["Revenue"].to_numpy(dtype=float)[: raw_experiment["development_size"]]
     for row, horizon in enumerate(HORIZONS):
         result = raw_experiment["horizons"][str(horizon)]
-        model = FromScratchSARIMA(result["selected_order"]).fit(development)
+        model = FromScratchSARIMA(result["selected_order"]).fit(
+            training_sample(development, result["selected_training_window"])
+        )
         residuals = model.residuals[model._maximum_lag :]
         axes[row, 0].plot(residuals, color="#334155", linewidth=0.8)
         axes[row, 0].axhline(0, color="black", linewidth=0.6)
@@ -701,7 +662,7 @@ def write_plots(
         smoothed_experiment["horizons"]["15"]["final_comparison"]["custom_sarima"]["metrics"]["mase"],
     ]
     figure, axis = plt.subplots(figsize=(8, 4.5))
-    bars = axis.bar(labels, values, color=["#2563eb", "#94a3b8", "#2563eb", "#94a3b8"])
+    bars = axis.bar(labels, values, color=["#2563eb", "#94a3b8"])
     axis.axhline(1.0, color="#dc2626", linestyle="--", label="Seasonal-naive scale")
     axis.set_ylabel("Final-test MASE")
     axis.set_title("Raw and smoothed target ablation")

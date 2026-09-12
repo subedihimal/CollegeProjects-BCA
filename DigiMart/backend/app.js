@@ -17,6 +17,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Forecasts and evaluation metrics are served from versioned artifacts and do
+// not require a MongoDB connection.
+app.use('/api/sales', salesRoutes);
+
 // Reuse the MongoDB connection when Vercel keeps a function instance warm.
 app.use('/api', async (req, res, next) => {
   try {
@@ -32,7 +36,6 @@ app.use('/api/recommend', recommendRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/sales', salesRoutes);
 
 app.get('/api/config/paypal', (req, res) =>
   res.send({ clientId: process.env.PAYPAL_CLIENT_ID })

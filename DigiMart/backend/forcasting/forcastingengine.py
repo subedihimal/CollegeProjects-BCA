@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import os
 from pathlib import Path
@@ -12,7 +11,7 @@ from threading import Lock
 from time import perf_counter
 from typing import Any
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 
 
 ROOT = Path(__file__).resolve().parent
@@ -96,15 +95,6 @@ def _replace_artifacts(bundle: dict[str, Any]) -> None:
         artifact_bundle = normalized
 
 
-def _authorized() -> bool:
-    secret = os.environ.get("FORECAST_RECALC_SECRET", "")
-    if not secret:
-        return not os.environ.get("VERCEL")
-    return hmac.compare_digest(
-        request.headers.get("X-Forecast-Recalculation-Key", ""), secret
-    )
-
-
 def _generate(directory: Path) -> dict[str, Any]:
     try:
         from .generate_artifacts import generate_artifact_bundle
@@ -124,26 +114,14 @@ def artifact_error(error: ArtifactError):
     return jsonify({"error": str(error), "status": "artifact_unavailable"}), 503
 
 
-def _period_error():
-    if request.args.get("period", PERIOD) != PERIOD:
-        return jsonify({"error": f"period must be {PERIOD}"}), 400
-    return None
-
-
-@app.get("/api/sales/forecast")
-def get_forecast():
-    return _period_error() or jsonify(_current_artifacts()["forecast"])
-
-
-@app.get("/api/sales/metrics")
-def get_metrics():
-    return _period_error() or jsonify(_current_artifacts()["metrics"])
+@app.get("/api/sales/recalculation-status")
+def get_recalculation_status():
+    running = recalculation_lock.locked()
+    return jsonify({"running": running, "status": "running" if running else "idle"})
 
 
 @app.post("/api/sales/recalculate")
 def recalculate_forecast():
-    if not _authorized():
-        return jsonify({"error": "Forecast recalculation is not authorized"}), 403
     if not recalculation_lock.acquire(blocking=False):
         return jsonify({"error": "Forecast recalculation is already running"}), 409
 

@@ -270,7 +270,7 @@ class FromScratchSARIMA:
         self,
         steps: int,
         *,
-        levels: Sequence[float] = (0.80, 0.95),
+        levels: Sequence[float] = (0.80,),
         simulations: int = 2_000,
         random_state: int = 42,
     ) -> dict[float, tuple[np.ndarray, np.ndarray]]:

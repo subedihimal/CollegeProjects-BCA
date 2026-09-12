@@ -1,5 +1,4 @@
 {
-  "growth_rate": -0.0,
   "main_model": {
     "type": "SARIMA(2,0,0)(0,1,1,7)",
     "implementation": "from_scratch_css",
@@ -9,7 +8,6 @@
     "wape": 15.91,
     "mase": 0.761,
     "rmsse": 0.695,
-    "mae_normalized": 0.1591,
     "rmse_normalized": 0.1922,
     "mean_actual": 143269.61,
     "train_size": 293,
@@ -3137,10 +3135,6 @@
     "80": {
       "coverage": 0.8493150684931506,
       "mean_width": 85171.38334396487
-    },
-    "95": {
-      "coverage": 0.9452054794520548,
-      "mean_width": 129369.35604225627
     }
   },
   "methodology": {
@@ -3167,6 +3161,5 @@
     "seasonal_period": 7
   },
   "data_points": 366,
-  "category_models_count": 5,
-  "category_models": 5
+  "category_models_count": 5
 }

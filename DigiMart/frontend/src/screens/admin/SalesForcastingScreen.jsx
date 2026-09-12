@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Alert, Button, Card, Row, Col, Table, Badge, Dropdown, Tabs, Tab, ProgressBar } from 'react-bootstrap';
 import { FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown, FaBoxes, FaChevronDown, FaSyncAlt } from 'react-icons/fa';
 import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
+import { DEMO_ADMIN_MESSAGE, isDemoAdmin } from '../../constants';
 
 // Constants
 const DEFAULT_REVENUE_SCENARIOS = {
@@ -12,8 +15,11 @@ const DEFAULT_REVENUE_SCENARIOS = {
 const CHART_COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'];
 
 // Utility functions
-const formatCurrency = (amount) => 
+const formatCurrency = (amount) =>
   amount ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount) : '$0';
+
+const formatWholeDollars = (amount) =>
+  `$${Math.round(Number(amount) || 0).toLocaleString('en-US')}`;
 
 const parseCalendarDate = (dateString) => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString || '');
@@ -64,7 +70,7 @@ const useMediaQuery = (query) => {
 
 
 // Components
-const Loader = () => {
+const Loader = ({ recalculating = false }) => {
   const [dots, setDots] = useState('');
   useEffect(() => {
     const interval = setInterval(() => setDots(prev => prev === '...' ? '' : prev + '.'), 500);
@@ -76,7 +82,11 @@ const Loader = () => {
       <div className="spinner-border text-primary mb-3" style={{ width: '3rem', height: '3rem' }}>
         <span className="visually-hidden">Loading...</span>
       </div>
-      <h3 className="text-primary">Forecasting{dots}</h3>
+      <h3 className="text-primary">
+        {recalculating
+          ? 'A forecast recalculation is in progress. Updated results will be available in approximately 1-2 minutes.'
+          : `Forecasting${dots}`}
+      </h3>
     </div>
   );
 };
@@ -88,7 +98,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   const visibleEntries = payload.filter(
     entry => !(isForecastBridge && String(entry.dataKey).startsWith('future'))
   );
-  
+
   return (
     <div className="forecast-tooltip bg-white p-3 rounded shadow border">
       <p className="fw-bold mb-2 text-dark">
@@ -127,7 +137,7 @@ const MetricCard = ({ title, value, icon: Icon, color = '#667eea', hasData, prog
 const DropdownMetricCard = ({ scenarios, currentKey, onSelect, displayData, hasData, icon: Icon }) => {
   const current = scenarios[currentKey];
   const currentValue = displayData.summary[current.key];
-  
+
   return (
     <Card className="border-0 shadow-sm h-100">
       <Card.Body className="p-3">
@@ -142,7 +152,7 @@ const DropdownMetricCard = ({ scenarios, currentKey, onSelect, displayData, hasD
                   <FaChevronDown size={12} className="text-muted" />
                 </div>
               </Dropdown.Toggle>
-              
+
               <Dropdown.Menu className="shadow border-0 rounded" style={{ minWidth: '280px' }}>
                 {Object.entries(scenarios).map(([key, scenario]) => (
                   <Dropdown.Item key={key} onClick={() => onSelect(key)} className="py-2">
@@ -182,32 +192,23 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
   }
 
   const metricOptions = {
-    mae: { 
-      label: 'MAE', 
-      value: metrics.mae, 
-      normalizedValue: metrics.mae_normalized,
-      format: (val) => `$${val?.toFixed(0) || 0}`,
-      formatNormalized: (val) => `${(val * 100)?.toFixed(2) || 0}%`,
+    mae: {
+      label: 'MAE',
+      value: metrics.mae,
+      format: formatWholeDollars,
       description: 'Mean Absolute Error',
-      showNormalized: true,
-      errorRatio: metrics.mae_normalized
     },
-    rmse: { 
-      label: 'RMSE', 
-      value: metrics.rmse, 
-      normalizedValue: metrics.rmse_normalized,
-      format: (val) => `$${val?.toFixed(0) || 0}`,
-      formatNormalized: (val) => `${(val * 100)?.toFixed(2) || 0}%`,
+    rmse: {
+      label: 'RMSE',
+      value: metrics.rmse,
+      format: formatWholeDollars,
       description: 'Root Mean Squared Error',
-      showNormalized: true,
-      errorRatio: metrics.rmse_normalized
     },
-    mape: { 
-      label: 'MAPE', 
-      value: metrics.mape, 
-      format: (val) => `${val?.toFixed(1) || 0}%`,
+    mape: {
+      label: 'MAPE',
+      value: metrics.mape,
+      format: (val) => `${val ?? 0}%`,
       description: 'Mean Absolute Percentage Error',
-      showNormalized: false,
       errorRatio: (metrics.mape || 0) / 100
     }
   };
@@ -219,7 +220,6 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
       value: mase,
       format: (val) => val.toFixed(2),
       description: 'Mean Absolute Scaled Error',
-      showNormalized: false,
       baselineRatio: mase
     };
   }
@@ -231,7 +231,6 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
       value: wape,
       format: (val) => `${val.toFixed(1)}%`,
       description: 'Weighted Absolute Percentage Error',
-      showNormalized: false,
       errorRatio: wape / 100
     };
   }
@@ -243,7 +242,6 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
       value: rmsse,
       format: (val) => val.toFixed(2),
       description: 'Root Mean Squared Scaled Error',
-      showNormalized: false,
       baselineRatio: rmsse
     };
   }
@@ -269,36 +267,26 @@ const ModelMetricsCard = ({ metrics, hasData }) => {
                   <FaChevronDown size={12} className="text-muted" />
                 </div>
               </Dropdown.Toggle>
-              
+
               <Dropdown.Menu className="shadow border-0 rounded">
                 {Object.entries(metricOptions).map(([key, metric]) => (
                   <Dropdown.Item key={key} onClick={() => setSelectedMetric(key)} className="py-2">
                     <div className="fw-semibold text-primary">{metric.label}</div>
                     <div className="fw-bold text-dark">{metric.format(metric.value)}</div>
-                    {metric.showNormalized && (
-                      <div className="fw-bold text-success">
-                        Normalized: {metric.formatNormalized(metric.normalizedValue)}
-                      </div>
-                    )}
                     <div className="small text-muted">{metric.description}</div>
                   </Dropdown.Item>
                 ))}
               </Dropdown.Menu>
             </Dropdown>
-            
+
             <p className="mb-0 text-muted small fw-medium">{current.description}</p>
-            {current.showNormalized && (
-              <p className="mb-1 text-success small fw-medium">
-                Normalized: {current.formatNormalized(current.normalizedValue)}
-              </p>
-            )}
             {metricPerformance && (
               <Badge bg={metricPerformance.variant} className="mt-1">{metricPerformance.text}</Badge>
             )}
           </div>
           <div className="text-center">
             <div className="text-info mb-1" style={{ fontSize: '14px', fontWeight: 'bold' }}>
-              ${metrics.mean_actual?.toFixed(0) || 0}
+              {formatWholeDollars(metrics.mean_actual)}
             </div>
             <div className="text-muted" style={{ fontSize: '11px' }}>
               Mean Actual
@@ -383,7 +371,6 @@ const EvaluationPanel = ({ evaluation }) => {
   const tests = evaluation.diagnostics?.ljung_box || [];
   const residualsPass = tests.length > 0 && tests.every((test) => test.p_value >= 0.05);
   const interval80 = evaluation.predictionIntervals?.['80'];
-  const interval95 = evaluation.predictionIntervals?.['95'];
 
   return (
     <div className="forecast-panel p-4">
@@ -435,9 +422,6 @@ const EvaluationPanel = ({ evaluation }) => {
               <div className="small text-muted">
                 80% interval: {interval80 ? `${(interval80.coverage * 100).toFixed(1)}%` : 'N/A'}
               </div>
-              <div className="small text-muted">
-                95% interval: {interval95 ? `${(interval95.coverage * 100).toFixed(1)}%` : 'N/A'}
-              </div>
             </Card.Body>
           </Card>
         </Col>
@@ -449,6 +433,7 @@ const EvaluationPanel = ({ evaluation }) => {
 const buildForecastViewModel = (forecastResult, metricsData) => {
   const forecastIsAvailable = Boolean(
     forecastResult &&
+    forecastResult.artifactSource === 'forecast-15days.json' &&
     (!forecastResult.serviceStatus || forecastResult.serviceStatus === 'success') &&
     Array.isArray(forecastResult.dailyForecast) &&
     forecastResult.dailyForecast.length > 0
@@ -464,6 +449,7 @@ const buildForecastViewModel = (forecastResult, metricsData) => {
   let evaluation = null;
 
   if (
+    metricsData?.artifactSource === 'metrics-15days.json' &&
     metricsData?.serviceStatus !== 'unavailable' &&
     metricsData?.main_model
   ) {
@@ -471,8 +457,6 @@ const buildForecastViewModel = (forecastResult, metricsData) => {
       mae: toFiniteNumber(metricsData.main_model.mae),
       rmse: toFiniteNumber(metricsData.main_model.rmse),
       mape: toFiniteNumber(metricsData.main_model.mape),
-      mae_normalized: toFiniteNumber(metricsData.main_model.mae_normalized),
-      rmse_normalized: toFiniteNumber(metricsData.main_model.rmse_normalized),
       mean_actual: toFiniteNumber(metricsData.main_model.mean_actual),
       mase: toFiniteNumber(metricsData.main_model.mase),
       wape: toFiniteNumber(metricsData.main_model.wape),
@@ -506,6 +490,8 @@ const buildForecastViewModel = (forecastResult, metricsData) => {
 };
 
 const SalesForcastingScreen = () => {
+  const { userInfo } = useSelector((state) => state.auth);
+  const demoAdmin = isDemoAdmin(userInfo);
   const [forecastData, setForecastData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
@@ -520,20 +506,48 @@ const SalesForcastingScreen = () => {
   // Fetch data
   useEffect(() => {
     const controller = new AbortController();
+    let pollTimeout;
 
     const fetchData = async () => {
+      let recalculationRunning = false;
       try {
         setIsLoading(true);
         setFetchError(null);
         setForecastData(null);
         setSelectedDate(null);
 
+        const statusResponse = await fetch('/api/sales/recalculation-status', {
+          signal: controller.signal,
+          cache: 'no-store'
+        }).catch((error) => {
+          if (error.name === 'AbortError') throw error;
+          return null;
+        });
+        const statusData = statusResponse?.ok
+          ? await statusResponse.json().catch(() => null)
+          : null;
+        recalculationRunning = Boolean(statusData?.running);
+
+        if (statusData?.running) {
+          setIsRecalculating(true);
+          setIsLoading(true);
+          setRecalculationNotice({
+            variant: 'info',
+            message: 'A forecast recalculation is already in progress. Updated results will be available in approximately 1-2 minutes.'
+          });
+          pollTimeout = setTimeout(fetchData, 5000);
+          return;
+        }
+
+        setIsRecalculating(false);
+
         const [forecastResponse, metricsResponse] = await Promise.all([
           fetch('/api/sales/forecast', {
             signal: controller.signal
           }),
           fetch('/api/sales/metrics', {
-            signal: controller.signal
+            signal: controller.signal,
+            cache: 'no-store'
           }).catch((error) => {
             if (error.name === 'AbortError') throw error;
             return null;
@@ -560,13 +574,18 @@ const SalesForcastingScreen = () => {
         setForecastData(null);
         setFetchError(err.message || 'Forecast data is temporarily unavailable');
       } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
+        if (!controller.signal.aborted && !recalculationRunning) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchData();
 
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      clearTimeout(pollTimeout);
+    };
   }, []);
 
   // Animate table when selectedDate changes
@@ -580,10 +599,10 @@ const SalesForcastingScreen = () => {
   // Memoized values
   const displayData = useMemo(() => forecastData || {
     summary: { predictedRevenue: 0, growthRate: 0, confidence: 0, bestCase: 0, worstCase: 0, dailyAverage: 0 },
-    dailyForecast: [], categoryForecast: [], lineGraphData: [], topProducts: [],
+    dailyForecast: [], categoryForecast: [], lineGraphData: [],
     modelInfo: { metrics: null }, evaluation: null
   }, [forecastData]);
-  
+
   const hasData = useMemo(() => Boolean(forecastData), [forecastData]);
   const hasMetrics = useMemo(() => Boolean(forecastData?.modelInfo?.metrics), [forecastData]);
   const selectedForecastRow = useMemo(() => {
@@ -608,7 +627,7 @@ const SalesForcastingScreen = () => {
       }
     };
   }, [displayData]);
-  
+
   const chartInterval = useMemo(() => {
     if (!displayData.lineGraphData?.length) return 0;
     const targetTicks = isMobile ? 5 : 20;
@@ -617,7 +636,7 @@ const SalesForcastingScreen = () => {
 
   const growthMetrics = useMemo(() => {
     if (!hasData) return { icon: FaChartLine, color: '#6c757d' };
-    const growth = displayData.summary.growthRate;
+    const growth = Number(displayData.summary.growthRate) || 0;
     return {
       icon: growth > 0 ? FaArrowUp : growth < 0 ? FaArrowDown : FaChartLine,
       color: growth > 0 ? '#28a745' : growth < 0 ? '#dc3545' : '#6c757d'
@@ -628,10 +647,18 @@ const SalesForcastingScreen = () => {
   const handleScenarioChange = useCallback((scenario) => setSelectedScenario(scenario), []);
   const handleRecalculate = useCallback(async () => {
     if (isRecalculating) return;
+    if (demoAdmin) {
+      toast.warning(DEMO_ADMIN_MESSAGE);
+      return;
+    }
     setIsRecalculating(true);
+    setForecastData(null);
+    setSelectedDate(null);
+    setIsLoading(true);
+    setFetchError(null);
     setRecalculationNotice({
       variant: 'info',
-      message: 'Recalculating from cleaned_customer_data.csv. This can take one to two minutes.'
+      message: 'Forecast recalculation is running. This may take 2-3 minutes.'
     });
 
     try {
@@ -643,12 +670,16 @@ const SalesForcastingScreen = () => {
         throw new Error(result?.message || 'Forecast recalculation failed');
       }
 
+      const [forecastResponse, metricsResponse] = await Promise.all([
+        fetch('/api/sales/forecast', { cache: 'no-store' }),
+        fetch('/api/sales/metrics', { cache: 'no-store' })
+      ]);
       const nextForecast = buildForecastViewModel(
-        result.forecast,
-        result.metrics
+        await forecastResponse.json(),
+        await metricsResponse.json()
       );
       setForecastData(nextForecast);
-      setSelectedDate(result.forecast.dailyForecast[0]?.date || null);
+      setSelectedDate(nextForecast.dailyForecast[0]?.date || null);
       setFetchError(null);
       const persistenceNote =
         result.persistence === 'temporary'
@@ -663,16 +694,18 @@ const SalesForcastingScreen = () => {
           persistenceNote
       });
     } catch (error) {
+      setIsLoading(false);
       setRecalculationNotice({
         variant: 'danger',
         message: error.message || 'Forecast recalculation failed'
       });
     } finally {
       setIsRecalculating(false);
+      setIsLoading(false);
     }
-  }, [isRecalculating]);
+  }, [demoAdmin, isRecalculating]);
 
-  if (isLoading) return <Loader />;
+  if (isLoading) return <Loader recalculating={isRecalculating} />;
 
   return (
     <div className="forecast-dashboard container-fluid">
@@ -790,7 +823,7 @@ const SalesForcastingScreen = () => {
         <Col lg={3} md={6}>
           <MetricCard
             title="Growth Rate"
-            value={hasData ? `${displayData.summary.growthRate > 0 ? '+' : ''}${displayData.summary.growthRate}%` : 'No Data'}
+            value={hasData ? `${Number(displayData.summary.growthRate) > 0 ? '+' : ''}${displayData.summary.growthRate}%` : 'No Data'}
             icon={growthMetrics.icon}
             color={growthMetrics.color}
             hasData={hasData}
@@ -804,7 +837,7 @@ const SalesForcastingScreen = () => {
       <Card className="border-0 shadow-sm">
         <Card.Body className="p-0">
           <Tabs activeKey={activeTab} onSelect={setActiveTab} className="nav-fill">
-            
+
             <Tab eventKey="overview" title={<><FaChartLine className="me-2" />Revenue Forecast</>}>
               <div className="forecast-panel p-4">
                 <div className="forecast-panel-heading d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4">
@@ -828,7 +861,7 @@ const SalesForcastingScreen = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="forecast-chart">
                   {hasData && displayData.lineGraphData?.length ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -841,12 +874,12 @@ const SalesForcastingScreen = () => {
                           try {
                             const date = e?.activeLabel || e?.payload?.date || null;
                             if (date) setSelectedDate(date);
-                          } catch (err) {}
+                          } catch (err) { }
                         }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis 
-                          dataKey="date" 
+                        <XAxis
+                          dataKey="date"
                           stroke="#64748b"
                           fontSize={isMobile ? 9 : 10}
                           angle={isMobile ? -35 : -45}
@@ -875,12 +908,12 @@ const SalesForcastingScreen = () => {
                           isAnimationActive={false}
                         />
                         {/* Blue line - Historical/Actual data from dataset */}
-                        <Line 
-                          type="monotone" 
-                          dataKey="actual" 
-                          stroke="#2563eb" 
-                          strokeWidth={2.5} 
-                          dot={false} 
+                        <Line
+                          type="monotone"
+                          dataKey="actual"
+                          stroke="#2563eb"
+                          strokeWidth={2.5}
+                          dot={false}
                           name="Historical Sales"
                           connectNulls={false}
                           isAnimationActive={false}
@@ -930,17 +963,17 @@ const SalesForcastingScreen = () => {
                       <Row className="g-2 mb-3">
                         <Col xs={12} sm={4}>
                           <div className="forecast-summary-item">
-                          <div className="small text-muted">Selected Date</div>
-                          <div className="fw-bold">{(() => {
-                            // Get the effective date (default to first forecast date if selected is before forecast range)
-                            const firstForecastDate = displayData.dailyForecast[0].date;
-                            const effectiveDate = selectedDate || firstForecastDate;
-                            
-                            // Check if selected date is in forecast range
-                            const isForecastDate = displayData.dailyForecast.some(d => d.date === effectiveDate);
-                            
-                            return formatDate(isForecastDate ? effectiveDate : firstForecastDate);
-                          })()}</div>
+                            <div className="small text-muted">Selected Date</div>
+                            <div className="fw-bold">{(() => {
+                              // Get the effective date (default to first forecast date if selected is before forecast range)
+                              const firstForecastDate = displayData.dailyForecast[0].date;
+                              const effectiveDate = selectedDate || firstForecastDate;
+
+                              // Check if selected date is in forecast range
+                              const isForecastDate = displayData.dailyForecast.some(d => d.date === effectiveDate);
+
+                              return formatDate(isForecastDate ? effectiveDate : firstForecastDate);
+                            })()}</div>
                           </div>
                         </Col>
                         <Col xs={12} sm={4}>
@@ -951,32 +984,32 @@ const SalesForcastingScreen = () => {
                               const effectiveDate = selectedDate || firstForecastDate;
                               const isForecastDate = displayData.dailyForecast.some(d => d.date === effectiveDate);
                               const dateToUse = isForecastDate ? effectiveDate : firstForecastDate;
-                              
+
                               return formatCurrency((displayData.dailyForecast.find(d => d.date === dateToUse) || {}).predicted || 0);
                             })()}</div>
                             {selectedForecastRow?.lower80 !== undefined &&
                               selectedForecastRow?.upper80 !== undefined && (
-                              <div className="small text-muted mt-1">
-                                80% interval: {formatCurrency(selectedForecastRow.lower80)} to{' '}
-                                {formatCurrency(selectedForecastRow.upper80)}
-                              </div>
-                            )}
+                                <div className="small text-muted mt-1">
+                                  80% interval: {formatCurrency(selectedForecastRow.lower80)} to{' '}
+                                  {formatCurrency(selectedForecastRow.upper80)}
+                                </div>
+                              )}
                           </div>
                         </Col>
                         <Col xs={12} sm={4}>
                           <div className="forecast-summary-item">
-                          <div className="small text-muted">Total Items (predicted)</div>
-                          <div className="fw-bold">{(() => {
-                            const firstForecastDate = displayData.dailyForecast[0].date;
-                            const effectiveDate = selectedDate || firstForecastDate;
-                            const isForecastDate = displayData.dailyForecast.some(d => d.date === effectiveDate);
-                            const dateToUse = isForecastDate ? effectiveDate : firstForecastDate;
-                            
-                            return displayData.categoryForecast.reduce((sum, cat) => {
-                              const row = (cat.daily_forecasts || []).find(r => r.date === dateToUse);
-                              return sum + (row?.predicted_quantity || 0);
-                            }, 0);
-                          })()}</div>
+                            <div className="small text-muted">Total Items (predicted)</div>
+                            <div className="fw-bold">{(() => {
+                              const firstForecastDate = displayData.dailyForecast[0].date;
+                              const effectiveDate = selectedDate || firstForecastDate;
+                              const isForecastDate = displayData.dailyForecast.some(d => d.date === effectiveDate);
+                              const dateToUse = isForecastDate ? effectiveDate : firstForecastDate;
+
+                              return displayData.categoryForecast.reduce((sum, cat) => {
+                                const row = (cat.daily_forecasts || []).find(r => r.date === dateToUse);
+                                return sum + (row?.predicted_quantity || 0);
+                              }, 0);
+                            })()}</div>
                           </div>
                         </Col>
                       </Row>
@@ -992,22 +1025,22 @@ const SalesForcastingScreen = () => {
                         </thead>
                         <tbody>
                           {displayData.categoryForecast.map((cat, idx) => {
-                              const firstForecastDate = displayData.dailyForecast[0].date;
-                              const effectiveDate = selectedDate || firstForecastDate;
-                              const isForecastDate = displayData.dailyForecast.some(d => d.date === effectiveDate);
-                              const dateToUse = isForecastDate ? effectiveDate : firstForecastDate;
-                              
-                              const row = (cat.daily_forecasts || []).find(r => r.date === dateToUse);
-                              const qty = row?.predicted_quantity || 0;
-                              const amount = row?.predicted_revenue ?? null;
-                              return (
-                                <tr key={idx}>
-                                  <td className="p-3">{cat.category}</td>
-                                  <td className="p-3">{qty}</td>
-                                  <td className="p-3">{amount !== null ? formatCurrency(amount) : '—'}</td>
-                                </tr>
-                              );
-                            })}
+                            const firstForecastDate = displayData.dailyForecast[0].date;
+                            const effectiveDate = selectedDate || firstForecastDate;
+                            const isForecastDate = displayData.dailyForecast.some(d => d.date === effectiveDate);
+                            const dateToUse = isForecastDate ? effectiveDate : firstForecastDate;
+
+                            const row = (cat.daily_forecasts || []).find(r => r.date === dateToUse);
+                            const qty = row?.predicted_quantity || 0;
+                            const amount = row?.predicted_revenue ?? null;
+                            return (
+                              <tr key={idx}>
+                                <td className="p-3">{cat.category}</td>
+                                <td className="p-3">{qty}</td>
+                                <td className="p-3">{amount !== null ? formatCurrency(amount) : '—'}</td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </Table>
                     </Card.Body>
@@ -1045,7 +1078,7 @@ const SalesForcastingScreen = () => {
                                   <div className="small text-muted">{category.total_predicted_quantity} units</div>
                                   <div className="small text-success">Avg: {category.daily_average} units/day</div>
                                 </div>
-                                <div 
+                                <div
                                   className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
                                   style={{ width: '30px', height: '30px', backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                                 >

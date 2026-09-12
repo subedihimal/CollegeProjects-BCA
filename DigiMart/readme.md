@@ -93,13 +93,11 @@ The Python forecasting artifact API is deployed as a third Vercel service. Verce
 injects its private URL into the Express backend as `FORECAST_API_URL`, so no
 manual forecasting URL or separate hosting account is required. For local
 development, run the Flask service on port 5001 or set `FORECAST_API_URL`.
-Set `FORECAST_RECALC_SECRET` to the same long random value for the backend and
-forecasting services. The forecasting page uses it indirectly through the
-authenticated Express endpoint; it is never exposed to the browser. A manual
-recalculation can take one to two minutes. Local recalculation replaces the JSON
-artifact files. On Vercel, the generated result is returned to the current page,
-but serverless storage is temporary, so permanent deployment artifacts should
-still be generated locally and committed.
+The forecasting page can trigger a manual recalculation, which can take one to
+two minutes. Local recalculation replaces the JSON artifact files. On Vercel,
+the generated result is returned to the current page, but serverless storage is
+temporary, so permanent deployment artifacts should still be generated locally
+and committed.
 
 ## 🔑 Keywords
 DigiMart, Content-Based Filtering, Product Recommendation, SARIMA, Rolling-Origin Evaluation, Time Series Forecasting, Demand Prediction
