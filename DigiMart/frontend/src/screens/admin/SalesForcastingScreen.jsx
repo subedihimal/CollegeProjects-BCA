@@ -85,7 +85,7 @@ const Loader = ({ recalculating = false }) => {
       <h3 className="text-primary">
         {recalculating
           ? 'A forecast recalculation is in progress. Updated results will be available in approximately 1-2 minutes.'
-          : `Forecasting${dots}`}
+          : `Loading${dots}`}
       </h3>
     </div>
   );
